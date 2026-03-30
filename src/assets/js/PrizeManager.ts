@@ -7,15 +7,22 @@ export interface Prize {
 
 export default class PrizeManager {
   private prizes: Prize[];
+
   private currentPrizeId: string | null = null;
 
   constructor() {
-    this.prizes = this.loadFromStorage();
+    this.prizes = PrizeManager.loadFromStorage();
     if (!this.prizes.length) {
       this.prizes = [
-        { id: '1', name: '1st Prize', count: 1, winners: [] },
-        { id: '2', name: '2nd Prize', count: 2, winners: [] },
-        { id: '3', name: '3rd Prize', count: 5, winners: [] },
+        {
+          id: '1', name: '1st Prize', count: 1, winners: []
+        },
+        {
+          id: '2', name: '2nd Prize', count: 2, winners: []
+        },
+        {
+          id: '3', name: '3rd Prize', count: 5, winners: []
+        }
       ];
     }
   }
@@ -25,7 +32,7 @@ export default class PrizeManager {
   }
 
   get currentPrize(): Prize | null {
-    return this.prizes.find(p => p.id === this.currentPrizeId) ?? null;
+    return this.prizes.find((p) => p.id === this.currentPrizeId) ?? null;
   }
 
   selectPrize(id: string): void {
@@ -50,23 +57,23 @@ export default class PrizeManager {
   }
 
   setPrizes(prizes: Omit<Prize, 'winners'>[]): void {
-    this.prizes = prizes.map(p => ({
+    this.prizes = prizes.map((p) => ({
       ...p,
-      winners: this.prizes.find(old => old.id === p.id)?.winners ?? []
+      winners: this.prizes.find((old) => old.id === p.id)?.winners ?? []
     }));
     this.currentPrizeId = null;
     this.saveToStorage();
   }
 
   clearRecords(): void {
-    this.prizes.forEach(p => { p.winners = []; }); // eslint-disable-line no-param-reassign
+    this.prizes.forEach((p) => { p.winners = []; }); // eslint-disable-line no-param-reassign
     this.saveToStorage();
   }
 
   exportCSV(): string {
     const rows = ['獎項,姓名'];
-    this.prizes.forEach(p => {
-      p.winners.forEach(w => rows.push(`${p.name},${w}`));
+    this.prizes.forEach((p) => {
+      p.winners.forEach((w) => rows.push(`${p.name},${w}`));
     });
     return rows.join('\n');
   }
@@ -77,7 +84,7 @@ export default class PrizeManager {
     } catch (e) { /* storage unavailable */ }
   }
 
-  private loadFromStorage(): Prize[] {
+  private static loadFromStorage(): Prize[] {
     try {
       const raw = localStorage.getItem('prize-manager-data');
       return raw ? JSON.parse(raw) : [];

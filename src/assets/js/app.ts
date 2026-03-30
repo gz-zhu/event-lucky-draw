@@ -28,13 +28,13 @@ import PrizeManager from '@js/PrizeManager';
   const addPrizeRowButton = document.getElementById('add-prize-row') as HTMLButtonElement | null;
 
   if (!(
-    drawButton && fullscreenButton && settingsButton && settingsWrapper &&
-    settingsContent && settingsSaveButton && settingsCloseButton &&
-    sunburstSvg && confettiCanvas && nameListTextArea &&
-    removeNameFromListCheckbox && enableSoundCheckbox &&
-    prizeButtonsContainer && currentPrizeLabel &&
-    recordsPanel && recordsToggle && recordsClose && recordsBody &&
-    exportCsvButton && clearRecordsButton
+    drawButton && fullscreenButton && settingsButton
+    && settingsWrapper && settingsContent && settingsSaveButton
+    && settingsCloseButton && sunburstSvg && confettiCanvas
+    && nameListTextArea && removeNameFromListCheckbox && enableSoundCheckbox
+    && prizeButtonsContainer && currentPrizeLabel
+    && recordsPanel && recordsToggle && recordsClose && recordsBody
+    && exportCsvButton && clearRecordsButton
     && prizeConfigList && addPrizeRowButton
   )) {
     console.error('One or more Element ID is invalid.');
@@ -43,17 +43,28 @@ import PrizeManager from '@js/PrizeManager';
 
   const soundEffects = new SoundEffects();
   const MAX_REEL_ITEMS = 40;
-  const CONFETTI_COLORS = ['#26ccff', '#a25afd', '#ff5e7e', '#88ff5a', '#fcff42', '#ffa62d', '#ff36ff'];
+  const CONFETTI_COLORS = [
+    '#26ccff', '#a25afd', '#ff5e7e', '#88ff5a',
+    '#fcff42', '#ffa62d', '#ff36ff'
+  ];
   const prizeManager = new PrizeManager();
   let confettiAnimationId: number;
+  let slot: Slot;
 
-  const customConfetti = confetti.create(confettiCanvas, { resize: true, useWorker: true });
+  const customConfetti = confetti.create(confettiCanvas, {
+    resize: true,
+    useWorker: true
+  });
 
   const confettiAnimation = () => {
-    const windowWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+    const windowWidth = window.innerWidth
+      || document.documentElement.clientWidth
+      || document.body.clientWidth;
     const confettiScale = Math.max(0.5, Math.min(1, windowWidth / 1100));
     customConfetti({
-      particleCount: 1, gravity: 0.8, spread: 90,
+      particleCount: 1,
+      gravity: 0.8,
+      spread: 90,
       origin: { y: 0.6 },
       colors: [CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)]],
       scalar: confettiScale
@@ -66,15 +77,29 @@ import PrizeManager from '@js/PrizeManager';
     sunburstSvg.style.display = 'none';
   };
 
-  // ── Prize buttons ──────────────────────────────────────────
+  const updateCurrentPrizeLabel = () => {
+    const p = prizeManager.currentPrize;
+    currentPrizeLabel.textContent = p
+      ? `Drawing: ${p.name} (${prizeManager.remainingCount()} remaining)`
+      : 'Please select a prize';
+  };
+
+  const updateDrawButton = () => {
+    const p = prizeManager.currentPrize;
+    const hasNames = slot ? slot.names.length > 0 : false;
+    drawButton.disabled = !p || prizeManager.isCurrentPrizeFull() || !hasNames;
+  };
+
+  // Prize buttons
   const renderPrizeButtons = () => {
     prizeButtonsContainer.innerHTML = '';
-    prizeManager.allPrizes.forEach(prize => {
+    prizeManager.allPrizes.forEach((prize) => {
       const btn = document.createElement('button');
       const isFull = prize.winners.length >= prize.count;
       const isActive = prizeManager.currentPrize?.id === prize.id;
       btn.className = `prize-select-btn${isActive ? ' active' : ''}${isFull ? ' full' : ''}`;
-      btn.innerHTML = `<span class="prize-btn-name">${prize.name}</span><span class="prize-btn-meta">${prize.winners.length}/${prize.count} ppl</span>`;
+      btn.innerHTML = `<span class="prize-btn-name">${prize.name}</span>`
+        + `<span class="prize-btn-meta">${prize.winners.length}/${prize.count} ppl</span>`;
       btn.disabled = isFull;
       btn.addEventListener('click', () => {
         prizeManager.selectPrize(prize.id);
@@ -87,32 +112,21 @@ import PrizeManager from '@js/PrizeManager';
     });
   };
 
-const updateCurrentPrizeLabel = () => {
-    const p = prizeManager.currentPrize;
-    currentPrizeLabel.textContent = p
-      ? `Drawing: ${p.name} (${prizeManager.remainingCount()} remaining)`
-      : 'Please select a prize';
-  };
-
-  const updateDrawButton = () => {
-    const p = prizeManager.currentPrize;
-    drawButton.disabled = !p || prizeManager.isCurrentPrizeFull() || !slot.names.length;
-  };
-
-  // ── Records panel ──────────────────────────────────────────
+  // Records panel
   const renderRecords = () => {
     recordsBody.innerHTML = '';
     const prizes = prizeManager.allPrizes;
-    const hasAny = prizes.some(p => p.winners.length > 0);
+    const hasAny = prizes.some((p) => p.winners.length > 0);
     if (!hasAny) {
       recordsBody.innerHTML = '<p class="records-empty">No records yet</p>';
       return;
     }
-    prizes.forEach(prize => {
+    prizes.forEach((prize) => {
       if (!prize.winners.length) return;
       const group = document.createElement('div');
       group.className = 'records-group';
-      group.innerHTML = `<div class="records-group-title">${prize.name} <span>${prize.winners.length}/${prize.count} winners</span></div>`;
+      group.innerHTML = `<div class="records-group-title">${prize.name} `
+        + `<span>${prize.winners.length}/${prize.count} winners</span></div>`;
       const list = document.createElement('div');
       list.className = 'records-list';
       prize.winners.forEach((w, i) => {
@@ -137,22 +151,24 @@ const updateCurrentPrizeLabel = () => {
 
   exportCsvButton.addEventListener('click', () => {
     const csv = prizeManager.exportCSV();
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = 'lucky-draw-records.csv'; a.click();
+    a.href = url;
+    a.download = 'lucky-draw-records.csv';
+    a.click();
   });
 
   clearRecordsButton.addEventListener('click', () => {
-    // eslint-disable-next-line no-restricted-globals
-if (!confirm('Clear all records?')) return;
+    // eslint-disable-next-line no-alert
+    if (!window.confirm('Clear all records?')) return;
     prizeManager.clearRecords();
     renderPrizeButtons();
     updateCurrentPrizeLabel();
     renderRecords();
   });
 
-  // ── Prize config in settings ───────────────────────────────
+  // Prize config in settings
   const renderPrizeConfig = () => {
     prizeConfigList.innerHTML = '';
     prizeManager.allPrizes.forEach((prize) => {
@@ -160,9 +176,12 @@ if (!confirm('Clear all records?')) return;
       row.className = 'prize-config-row';
       row.dataset.id = prize.id;
       row.innerHTML = `
-        <input class="input-field pc-name" type="text" placeholder="Prize name" value="${prize.name}">
-        <input class="input-field pc-count" type="number" min="1" value="${prize.count}" style="width:80px;text-align:center">
-        <button class="solid-button solid-button--danger pc-del" style="padding:0.4rem 0.8rem;font-size:0.875rem">Delete</button>
+        <input class="input-field pc-name" type="text"
+          placeholder="Prize name" value="${prize.name}">
+        <input class="input-field pc-count" type="number"
+          min="1" value="${prize.count}" style="width:80px;text-align:center">
+        <button class="solid-button solid-button--danger pc-del"
+          style="padding:0.4rem 0.8rem;font-size:0.875rem">Delete</button>
       `;
       row.querySelector('.pc-del')!.addEventListener('click', () => row.remove());
       prizeConfigList.appendChild(row);
@@ -174,15 +193,18 @@ if (!confirm('Clear all records?')) return;
     row.className = 'prize-config-row';
     row.dataset.id = String(Date.now());
     row.innerHTML = `
-      <input class="input-field pc-name" type="text" placeholder="Prize name" value="">
-      <input class="input-field pc-count" type="number" min="1" value="1" style="width:80px;text-align:center">
-      <button class="solid-button solid-button--danger pc-del" style="padding:0.4rem 0.8rem;font-size:0.875rem">Delete</button>
+      <input class="input-field pc-name" type="text"
+        placeholder="Prize name" value="">
+      <input class="input-field pc-count" type="number"
+        min="1" value="1" style="width:80px;text-align:center">
+      <button class="solid-button solid-button--danger pc-del"
+        style="padding:0.4rem 0.8rem;font-size:0.875rem">Delete</button>
     `;
     row.querySelector('.pc-del')!.addEventListener('click', () => row.remove());
     prizeConfigList.appendChild(row);
   });
 
-  // ── Spin callbacks ─────────────────────────────────────────
+  // Spin callbacks
   const onSpinStart = () => {
     stopWinningAnimation();
     drawButton.disabled = true;
@@ -194,21 +216,18 @@ if (!confirm('Clear all records?')) return;
     confettiAnimation();
     sunburstSvg.style.display = 'block';
     await soundEffects.win();
-
-    // Record winner
     const winnerEl = document.querySelector('#reel > div:last-child');
     if (winnerEl) {
       prizeManager.addWinner(winnerEl.textContent ?? '');
     }
-
     renderPrizeButtons();
     updateCurrentPrizeLabel();
     updateDrawButton();
     settingsButton.disabled = false;
   };
 
-  // ── Slot instance ──────────────────────────────────────────
-  const slot = new Slot({
+  // Slot instance
+  slot = new Slot({
     reelContainerSelector: '#reel',
     maxReelItems: MAX_REEL_ITEMS,
     onSpinStart,
@@ -216,7 +235,7 @@ if (!confirm('Clear all records?')) return;
     onNameListChanged: stopWinningAnimation
   });
 
-  // ── Settings panel ─────────────────────────────────────────
+  // Settings panel
   const onSettingsOpen = () => {
     nameListTextArea.value = slot.names.join('\n');
     removeNameFromListCheckbox.checked = slot.shouldRemoveWinnerFromNameList;
@@ -242,7 +261,10 @@ if (!confirm('Clear all records?')) return;
   }
 
   fullscreenButton.addEventListener('click', () => {
-    if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); return; }
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+      return;
+    }
     document.exitFullscreen();
   });
 
@@ -250,17 +272,15 @@ if (!confirm('Clear all records?')) return;
 
   settingsSaveButton.addEventListener('click', () => {
     slot.names = nameListTextArea.value
-      ? nameListTextArea.value.split(/\n/).filter(n => Boolean(n.trim()))
+      ? nameListTextArea.value.split(/\n/).filter((n) => Boolean(n.trim()))
       : [];
     slot.shouldRemoveWinnerFromNameList = removeNameFromListCheckbox.checked;
     soundEffects.mute = !enableSoundCheckbox.checked;
-
-    // Save prize config
     const rows = Array.from(prizeConfigList.querySelectorAll('.prize-config-row'));
-    const newPrizes = rows.map(row => ({
+    const newPrizes = rows.map((row) => ({
       id: (row as HTMLElement).dataset.id ?? String(Date.now()),
       name: (row.querySelector('.pc-name') as HTMLInputElement).value.trim() || 'Prize',
-      count: parseInt((row.querySelector('.pc-count') as HTMLInputElement).value, 10) || 1,
+      count: parseInt((row.querySelector('.pc-count') as HTMLInputElement).value, 10) || 1
     }));
     prizeManager.setPrizes(newPrizes);
     renderPrizeButtons();
@@ -271,7 +291,7 @@ if (!confirm('Clear all records?')) return;
 
   settingsCloseButton.addEventListener('click', onSettingsClose);
 
-  // ── Init ───────────────────────────────────────────────────
+  // Init
   renderPrizeButtons();
   updateCurrentPrizeLabel();
   updateDrawButton();
