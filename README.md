@@ -161,7 +161,7 @@ Free, no server required. 無料、サーバー不要。
 yarn start
 ```
 
-Open your browser at / ブラウザで開く: `http://localhost:8080`
+Open your browser at / ブラウザで開く: `http://localhost:8888`
 
 ---
 
