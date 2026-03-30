@@ -26,6 +26,7 @@ import PrizeManager from '@js/PrizeManager';
   const clearRecordsButton = document.getElementById('clear-records') as HTMLButtonElement | null;
   const prizeConfigList = document.getElementById('prize-config-list') as HTMLDivElement | null;
   const addPrizeRowButton = document.getElementById('add-prize-row') as HTMLButtonElement | null;
+  const csvUpload = document.getElementById('csv-upload') as HTMLInputElement | null;
 
   if (!(
     drawButton && fullscreenButton && settingsButton
@@ -234,6 +235,7 @@ import PrizeManager from '@js/PrizeManager';
     onSpinEnd,
     onNameListChanged: stopWinningAnimation
   });
+  updateDrawButton();
 
   // Settings panel
   const onSettingsOpen = () => {
@@ -290,9 +292,26 @@ import PrizeManager from '@js/PrizeManager';
   });
 
   settingsCloseButton.addEventListener('click', onSettingsClose);
+  document.getElementById('settings-close-x')?.addEventListener('click', onSettingsClose);
+  // CSV upload
+  csvUpload?.addEventListener('change', () => {
+    const file = csvUpload.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      const names = text
+        .split('\n')
+        .map((line) => line.split(',')[0].replace(/^"|"$/g, '').trim())
+        .filter(Boolean);
+      nameListTextArea.value = names.join('\n');
+    };
+    reader.readAsText(file, 'UTF-8');
+    csvUpload.value = '';
+  });
 
   // Init
   renderPrizeButtons();
   updateCurrentPrizeLabel();
-  updateDrawButton();
+  drawButton.disabled = true;
 })();

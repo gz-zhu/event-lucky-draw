@@ -6,3 +6,16 @@
     transform: rotate(360deg);
   }
 }
+
+@keyframes title-glow {
+  from {
+    filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.8))
+      drop-shadow(0 0 15px rgba(255, 255, 255, 0.4))
+      drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+  }
+  to {
+    filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 1))
+      drop-shadow(0 0 35px rgba(255, 255, 255, 0.75))
+      drop-shadow(0 4px 16px rgba(0, 0, 0, 0.6));
+  }
+}

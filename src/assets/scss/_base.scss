@@ -29,14 +29,7 @@ body {
 }
 
 #app {
-  background: linear-gradient(
-    240deg,
-    $color-red-step1 0.13%,
-    $color-red-step2 26.19%,
-    $color-red-step3 52.6%,
-    $color-red-step4 79.08%,
-    $color-red-step5 100%
-  );
+  background: url('~@images/Cover.jpg') center center / cover no-repeat fixed;
   color: $color-text-light;
   padding: 0 3.125rem;
   min-height: 100%;
