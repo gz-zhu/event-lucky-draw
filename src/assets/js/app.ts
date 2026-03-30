@@ -78,6 +78,16 @@ import PrizeManager from '@js/PrizeManager';
     sunburstSvg.style.display = 'none';
   };
 
+  const maskName = (name: string) => {
+    const parts = name.split(/(\s+|—|-)/);
+    return parts.map((part) => {
+      if (/^\s+$/.test(part) || part === '—' || part === '-') return part;
+      if (part.length <= 2) return part;
+      const keep = Math.ceil(part.length / 3);
+      return part.slice(0, keep) + '***';
+    }).join('');
+  };
+  
   const updateCurrentPrizeLabel = () => {
     const p = prizeManager.currentPrize;
     currentPrizeLabel.textContent = p
@@ -217,17 +227,44 @@ import PrizeManager from '@js/PrizeManager';
     confettiAnimation();
     sunburstSvg.style.display = 'block';
     await soundEffects.win();
+
     const winnerEl = document.querySelector('#reel > div:last-child');
-    if (winnerEl) {
-      prizeManager.addWinner(winnerEl.textContent ?? '');
+    const rawName = winnerEl?.textContent ?? '';
+    if (winnerEl && rawName) {
+      prizeManager.addWinner(rawName);
+      setTimeout(() => {
+        winnerEl.textContent = maskName(rawName);
+      }, 100);
     }
+
+    const prizeName = prizeManager.currentPrize?.name ?? '';
+    const feedList = document.getElementById('winners-feed__list');
+    if (feedList && rawName) {
+      const entry = document.createElement('div');
+      entry.className = 'winner-entry';
+      entry.innerHTML = `
+        <div class="winner-entry__prize">${prizeName}</div>
+        <div class="winner-entry__name">${maskName(rawName)}</div>
+      `;
+      feedList.insertBefore(entry, feedList.firstChild);
+      while (feedList.children.length > 8) {
+        feedList.removeChild(feedList.lastChild!);
+      }
+      const totalEl = document.getElementById('winners-total');
+      if (totalEl) {
+        const total = prizeManager.allPrizes
+          .reduce((sum, p) => sum + p.winners.length, 0);
+        totalEl.textContent = String(total);
+      }
+    }
+
     renderPrizeButtons();
     updateCurrentPrizeLabel();
     updateDrawButton();
     settingsButton.disabled = false;
   };
 
-  // Slot instance
+     // Slot instance
   slot = new Slot({
     reelContainerSelector: '#reel',
     maxReelItems: MAX_REEL_ITEMS,
@@ -310,8 +347,33 @@ import PrizeManager from '@js/PrizeManager';
     csvUpload.value = '';
   });
 
-  // Init
+// Init
   renderPrizeButtons();
   updateCurrentPrizeLabel();
   drawButton.disabled = true;
+
+  // Restore ticker from storage
+  const tickerContent = document.getElementById('winners-ticker__content');
+  if (tickerContent) {
+    prizeManager.allPrizes.forEach((prize) => {
+      prize.winners.forEach((w) => {
+        const item = document.createElement('span');
+        item.className = 'ticker-item';
+        item.innerHTML = `
+          <span class="ticker-item__prize">${prize.name}</span>
+          <span class="ticker-item__sep">·</span>
+          <span>${maskName(w)}</span>
+        `;
+        tickerContent.appendChild(item);
+      });
+    });
+  }
+
+  // Warn before closing
+  window.addEventListener('beforeunload', (e) => {
+    const total = prizeManager.allPrizes.reduce((sum, p) => sum + p.winners.length, 0);
+    if (total > 0) {
+      e.preventDefault();
+    }
+  });
 })();

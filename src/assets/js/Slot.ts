@@ -181,9 +181,21 @@ export default class Slot {
 
     const fragment = document.createDocumentFragment();
 
-    randomNames.forEach((name) => {
+    randomNames.forEach((name, index) => {
       const newReelItem = document.createElement('div');
-      newReelItem.innerHTML = name;
+      const isLast = index === randomNames.length - 1;
+      if (isLast) {
+        newReelItem.innerHTML = name;
+      } else {
+        const parts = name.split(/(\s+|—|-)/);
+        const masked = parts.map((part) => {
+          if (/^\s+$/.test(part) || part === '—' || part === '-') return part;
+          if (part.length <= 2) return part;
+          const keep = Math.ceil(part.length / 3);
+          return `${part.slice(0, keep)}***`;
+        }).join('');
+        newReelItem.innerHTML = masked;
+      }
       fragment.appendChild(newReelItem);
     });
 
