@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lucky Draw — Display</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito Sans', sans-serif;
+      background: url('assets/images/Cover.jpg') center center / cover no-repeat fixed #1a1a1a;
+      color: #fff;
+      height: 100vh;
+      overflow: hidden;
+      -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    }
+
+    /* ── Canvas lights ── */
+    canvas#lights {
+      position: fixed;
+      inset: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── Winner ticker (top bar) ── */
+    .ticker {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 2.4rem;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,215,0,0.25);
+      display: flex;
+      align-items: center;
+      z-index: 20;
+      overflow: hidden;
+    }
+
+    .ticker__label {
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: #ffd700;
+      letter-spacing: 0.12em;
+      padding: 0 1rem;
+      white-space: nowrap;
+      border-right: 1px solid rgba(255,255,255,0.15);
+      height: 100%;
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .ticker__track {
+      flex: 1;
+      overflow: hidden;
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+
+    .ticker__content {
+      display: flex;
+      align-items: center;
+      gap: 2.5rem;
+      white-space: nowrap;
+      animation: ticker-scroll 25s linear infinite;
+      padding-left: 100%;
+    }
+
+    @keyframes ticker-scroll {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
+
+    .ticker-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.78rem;
+      color: rgba(29, 24, 46, 0.88);
+    }
+
+    .ticker-item__prize {
+      color: #ffd700;
+      font-weight: 700;
+      font-size: 0.68rem;
+    }
+
+    .ticker-item__sep { color: rgba(255,255,255,0.25); }
+
+    /* ── Main layout ── */
+    .display {
+      position: relative;
+      z-index: 1;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .layout {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1.3fr 1fr;
+      gap: 0;
+      padding: 0;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .layout {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1.3fr 1fr;
+      gap: 0.85rem;
+      padding: 0.85rem;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    /* ── Glass card ── */
+    .glass, .center-col {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: none;
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 1.5rem 1.25rem;
+  justify-content: center;   /* ← 新增這行 */
+}
+
+    .center-col {
+      align-items: center;
+      justify-content: center;
+      gap: 0.9rem;
+    }
+
+    .card-title {
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: rgba(255,215,0,0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      padding-bottom: 0.6rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      margin-bottom: 0.75rem;
+      flex-shrink: 0;
+    }
+
+    .scroll-body {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
+    /* ── Winners ── */
+    .prize-block__name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #948532;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.35rem;
+    }
+
+    .prize-block__list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .winner-chip {
+      background: rgba(255,255,255,0.07);
+      border-left: 2px solid rgba(52, 48, 27, 0.55);
+      border-radius: 0.35rem;
+      padding: 0.28rem 0.65rem;
+      font-size: 0.82rem;
+      color: rgba(42, 61, 100, 0.9);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .prize-block__pending {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.28);
+      font-style: italic;
+    }
+
+    /* ── Center ── */
+    .center-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.9rem;
+      background: transparent;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+
+    .center-time {
+      font-family: 'Playfair Display', serif;
+      font-size: 5rem;
+      font-weight: 700;
+      color: #fffafa;
+      letter-spacing: 0.08em;
+      text-shadow: 0 0 30px rgba(255,255,255,0.2);
+      line-height: 1;
+    }
+
+    .center-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 4rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #ffffff 0%, #ffe066 35%, #ffffff89 65%, #ffd700 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 0.08em;
+      animation: title-glow 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes title-glow {
+      from {
+        filter: drop-shadow(0 1px 0 rgba(255,255,255,0.8))
+                drop-shadow(0 0 15px rgba(255,255,255,0.4))
+                drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+      }
+      to {
+        filter: drop-shadow(0 1px 0 rgba(255,255,255,1))
+                drop-shadow(0 0 35px rgba(255,255,255,0.75))
+                drop-shadow(0 4px 16px rgba(0,0,0,0.6));
+      }
+    }
+
+    .center-stats {
+      display: flex;
+      gap: 2.5rem;
+    }
+
+    .stat { text-align: center; }
+
+    .stat__num {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #ffd700;
+      line-height: 1;
+    }
+
+    .stat__label {
+      font-size: 0.8rem;
+      color: rgb(255, 255, 255);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      margin-top: 0.2rem;
+    }
+
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: rgba(255,255,255,0.08);
+      margin: 0.25rem 0;
+    }
+
+    /* ── Countdown ── */
+    .countdown-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 3rem;
+      font-weight: 700;
+      color: #ffd700;
+      letter-spacing: 0.04em;
+      text-shadow: 0 0 20px rgba(255,215,0,0.35);
+    }
+
+    .countdown-ctrl {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .ctrl-input {
+      width: 56px;
+      padding: 0.35rem 0.5rem;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 0.4rem;
+      background: rgba(255,255,255,0.08);
+      color: #010000b6;
+      font-size: 0.85rem;
+      text-align: center;
+      font-family: 'Nunito Sans', sans-serif;
+    }
+
+    .ctrl-label {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.35);
+    }
+
+    .ctrl-btn {
+      padding: 0.35rem 0.9rem;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 0.4rem;
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-family: 'Nunito Sans', sans-serif;
+      transition: background 0.15s;
+    }
+
+    .ctrl-btn:hover { background: rgba(255,255,255,0.16); }
+
+    .ctrl-btn.gold {
+      background: rgba(255,215,0,0.18);
+      border-color: rgba(255,215,0,0.5);
+      color: #ffd700;
+    }
+
+    /* ── Upcoming ── */
+    .upcoming-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255,255,255,0.05);
+      border-radius: 0.2rem;
+      padding: 0.55rem 0.75rem;
+    }
+
+    .upcoming-row__name {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .upcoming-row__sub {
+      font-size: 0.68rem;
+      color: rgba(255,255,255,0.35);
+      margin-top: 0.1rem;
+    }
+
+    .badge {
+      padding: 0.22rem 0.7rem;
+      border-radius: 2rem;
+      font-size: 0.65rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .badge--done {
+      background: rgba(76,175,80,0.18);
+      color: #4caf50;
+      border: 1px solid rgba(76,175,80,0.3);
+    }
+
+    .badge--pending {
+      background: rgba(255,215,0,0.14);
+      color: #ffd700;
+      border: 1px solid rgba(255,215,0,0.3);
+    }
+
+    .center-date {
+      font-size: 1rem;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.1em;
+      margin-top: 0.4rem;
+    }
+
+  </style>
+</head>
+<body>
+
+<canvas id="lights"></canvas>
+
+<div class="display">
+
+  <!-- Three-column layout -->
+  <div class="layout">
+
+    <!-- Left: Winners -->
+    <div class="glass">
+      <div class="card-title">Winners</div>
+      <div class="scroll-body" id="winners-body"></div>
+    </div>
+
+    <!-- Center -->
+    <div class="glass center-col">
+      <div class="center-title">Lucky Draw</div>
+      <div class="center-time" id="clock">00:00:00</div>
+      <div class="center-date" id="date-display"></div>
+      <div class="center-stats">
+        <div class="stat">
+          <div class="stat__num" id="stat-winners">0</div>
+          <div class="stat__label">Winners so far</div>
+        </div>
+        <div class="stat">
+          <div class="stat__num" id="stat-remaining">0</div>
+          <div class="stat__label">Prizes remaining</div>
+        </div>
+      </div> 
+    </div>
+
+    <!-- Right: Upcoming -->
+    <div class="glass">
+      <div class="card-title">Upcoming Prizes</div>
+      <div class="scroll-body" id="upcoming-body"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Background lights ──────────────────────────────────────
+  const cv = document.getElementById('lights');
+  const cx = cv.getContext('2d');
+  function resizeCv() { cv.width = window.innerWidth; cv.height = window.innerHeight; }
+  resizeCv();
+  window.addEventListener('resize', resizeCv);
+
+  const COLS = ['#ff4444','#ff8800','#ffdd00','#44ff44','#44aaff','#aa44ff','#ff44aa','#ffffff'];
+  const pts = Array.from({length: 55}, () => ({
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * window.innerHeight,
+    r: Math.random() * 3 + 1.5,
+    c: COLS[Math.floor(Math.random() * COLS.length)],
+    a: Math.random(),
+    s: Math.random() * 0.012 + 0.005,
+    p: Math.random() * Math.PI * 2
+  }));
+
+  function drawLights(t) {
+    cx.clearRect(0, 0, cv.width, cv.height);
+    pts.forEach(l => {
+      l.a = 0.25 + 0.75 * Math.abs(Math.sin(t * l.s + l.p));
+      cx.save();
+      cx.globalAlpha = l.a * 0.45;
+      cx.shadowBlur = 8;
+      cx.shadowColor = l.c;
+      cx.fillStyle = l.c;
+      cx.beginPath();
+      cx.arc(l.x, l.y, l.r, 0, Math.PI * 2);
+      cx.fill();
+      cx.restore();
+    });
+    requestAnimationFrame(drawLights);
+  }
+  requestAnimationFrame(drawLights);
+
+  // ── Clock ──────────────────────────────────────────────────
+  function tick() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+      now.toLocaleTimeString('en-GB');
+    document.getElementById('date-display').textContent =
+      now.toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  }
+  setInterval(tick, 1000); tick();
+
+  // ── Mask name ──────────────────────────────────────────────
+  function mask(name) {
+    return name.split(/(\s+|—|-)/).map(p => {
+      if (/^\s+$/.test(p) || p === '—' || p === '-') return p;
+      if (p.length <= 2) return p;
+      return p.slice(0, Math.ceil(p.length / 3)) + '***';
+    }).join('');
+  }
+
+  // ── Load data ──────────────────────────────────────────────
+  function load() {
+    try { return JSON.parse(localStorage.getItem('prize-manager-data') || '[]'); }
+    catch(e) { return []; }
+  }
+
+  // ── Render winners ─────────────────────────────────────────
+  function renderWinners(prizes) {
+    const body = document.getElementById('winners-body');
+    body.innerHTML = '';
+    prizes.forEach(p => {
+      const block = document.createElement('div');
+      block.className = 'prize-block';
+      const nameEl = document.createElement('div');
+      nameEl.className = 'prize-block__name';
+      nameEl.textContent = p.name + ' · ' + p.winners.length + '/' + p.count;
+      block.appendChild(nameEl);
+      if (p.winners.length) {
+        const list = document.createElement('div');
+        list.className = 'prize-block__list';
+        p.winners.forEach(w => {
+          const chip = document.createElement('div');
+          chip.className = 'winner-chip';
+          chip.textContent = mask(w);
+          list.appendChild(chip);
+        });
+        block.appendChild(list);
+      }
+      const rem = p.count - p.winners.length;
+      if (rem > 0) {
+        const pending = document.createElement('div');
+        pending.className = 'prize-block__pending';
+        pending.textContent = rem + ' spot' + (rem > 1 ? 's' : '') + ' remaining';
+        block.appendChild(pending);
+      }
+      body.appendChild(block);
+    });
+  }
+
+  // ── Render upcoming ────────────────────────────────────────
+  function renderUpcoming(prizes) {
+    const body = document.getElementById('upcoming-body');
+    body.innerHTML = '';
+    prizes.forEach(p => {
+      const done = p.winners.length >= p.count;
+      const rem = p.count - p.winners.length;
+      const row = document.createElement('div');
+      row.className = 'upcoming-row';
+      row.innerHTML = '<div><div class="upcoming-row__name">' + p.name + '</div>'
+        + '<div class="upcoming-row__sub">' + (done ? 'Completed' : rem + ' spot' + (rem > 1 ? 's' : '') + ' left') + '</div></div>'
+        + '<div class="badge ' + (done ? 'badge--done' : 'badge--pending') + '">'
+        + (done ? '✓ Done' : 'Upcoming') + '</div>';
+      body.appendChild(row);
+    });
+  }
+
+  // ── Render stats ───────────────────────────────────────────
+  function renderStats(prizes) {
+    const total = prizes.reduce((s, p) => s + p.winners.length, 0);
+    const rem = prizes.reduce((s, p) => s + Math.max(0, p.count - p.winners.length), 0);
+    document.getElementById('stat-winners').textContent = total;
+    document.getElementById('stat-remaining').textContent = rem;
+  }
+
+  // ── Refresh all ────────────────────────────────────────────
+  localStorage.getItem('prize-manager-data')
+  function refresh() {
+    const prizes = load();
+    renderWinners(prizes);
+    renderUpcoming(prizes);
+    renderStats(prizes);
+  }
+
+  refresh();
+  setInterval(refresh, 2000);
+
+  // ── Countdown ──────────────────────────────────────────────
+  let timer = null;
+  let secs = 300;
+
+  function fmt(s) {
+    return String(Math.floor(s / 60)).padStart(2,'0') + ':' + String(s % 60).padStart(2,'0');
+  }
+
+  function toggleCountdown() {
+    if (timer) {
+      clearInterval(timer); timer = null;
+      document.querySelector('.ctrl-btn.gold').textContent = 'Start';
+      return;
+    }
+    secs = (parseInt(document.getElementById('countdown-mins').value) || 5) * 60;
+    document.getElementById('countdown-display').textContent = fmt(secs);
+    document.querySelector('.ctrl-btn.gold').textContent = 'Pause';
+    timer = setInterval(() => {
+      secs--;
+      document.getElementById('countdown-display').textContent = fmt(secs);
+      if (secs <= 0) {
+        clearInterval(timer); timer = null;
+        document.querySelector('.ctrl-btn.gold').textContent = 'Start';
+      }
+    }, 1000);
+  }
+
+  function resetCountdown() {
+    if (timer) { clearInterval(timer); timer = null; }
+    secs = (parseInt(document.getElementById('countdown-mins').value) || 5) * 60;
+    document.getElementById('countdown-display').textContent = fmt(secs);
+    document.querySelector('.ctrl-btn.gold').textContent = 'Start';
+  }
+</script>
+</body>
+</html>
+```
+
+---
+
+改完 `yarn build`，然後開啟：
+```
+http://localhost:8888/display.html

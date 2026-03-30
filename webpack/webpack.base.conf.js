@@ -37,6 +37,8 @@ module.exports = {
           to: 'assets/images/og',
           globOptions: { ignore: ['**/.DS_Store'] }
         },
+        { from: path.resolve(__dirname, '../src/assets/images/Cover.jpg'), to: 'assets/images/Cover.jpg' },
+        { from: path.resolve(__dirname, '../src/assets/images/light-blubs.svg'), to: 'assets/images/light-blubs.svg' },
         {
           from: path.resolve(__dirname, '../src/assets/images/touch-icons'),
           to: 'assets/images/touch-icons',
@@ -48,6 +50,17 @@ module.exports = {
     }),
     new HtmlWebpackPlugin({
       template: path.resolve(__dirname, '../src/index.pug'),
+      filename: 'index.html',
+      chunks: ['app', 'vendor'],
+      minify: {
+        removeComments: true,
+        collapseWhitespace: true
+      }
+    }),
+    new HtmlWebpackPlugin({
+      template: path.resolve(__dirname, '../src/display.html'),
+      filename: 'display.html',
+      chunks: [],
       minify: {
         removeComments: true,
         collapseWhitespace: true
