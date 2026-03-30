@@ -509,7 +509,7 @@
   }
 
   // ── Load data ──────────────────────────────────────────────
-  function load() {
+ function load() {
     try { return JSON.parse(localStorage.getItem('prize-manager-data') || '[]'); }
     catch(e) { return []; }
   }
@@ -581,6 +581,27 @@
     renderStats(prizes);
   }
 
+  // Firebase realtime sync
+  import('https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js').then(({ initializeApp }) => {
+    import('https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js').then(({ getDatabase, ref, onValue }) => {
+      const firebaseConfig = {
+        apiKey: 'AIzaSyBzJJ3yeO-_Yozikwds9_6PPwyAn788SHU',
+        databaseURL: 'https://event-luckydraw-default-rtdb.asia-southeast1.firebasedatabase.app',
+        projectId: 'event-luckydraw',
+        appId: '1:186125547633:web:e94e9fab2ba797ffe3c3d0'
+      };
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+      onValue(ref(db, 'prizes'), function(snapshot) {
+        var data = snapshot.val();
+        if (data) {
+          localStorage.setItem('prize-manager-data', JSON.stringify(data));
+          refresh();
+        }
+      });
+    });
+  });
+  
   refresh();
   setInterval(refresh, 2000);
 
