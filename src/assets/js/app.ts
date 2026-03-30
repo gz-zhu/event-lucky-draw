@@ -258,6 +258,22 @@ import PrizeManager from '@js/PrizeManager';
       }
     }
 
+    // Update ticker
+    const tickerContent = document.getElementById('winners-ticker__content');
+    if (tickerContent) {
+      tickerContent.innerHTML = '';
+      prizeManager.allPrizes.forEach((prize) => {
+        prize.winners.forEach((w) => {
+          const item = document.createElement('span');
+          item.className = 'ticker-item';
+          item.innerHTML = `<span class="ticker-item__prize">${prize.name}</span>`
+            + `<span class="ticker-item__sep">·</span>`
+            + `<span>${maskName(w)}</span>`;
+          tickerContent.appendChild(item);
+        });
+      });
+    }
+    
     renderPrizeButtons();
     updateCurrentPrizeLabel();
     updateDrawButton();
