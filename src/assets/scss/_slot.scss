@@ -32,7 +32,7 @@
       drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
 animation: title-glow 4s ease-in-out infinite alternate;
 
-    @media only screen and #{$mobile} {
+    @media #{$mobile} {
       font-size: 2rem;
       letter-spacing: 0.04em;
     }
