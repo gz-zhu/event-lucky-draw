@@ -382,7 +382,34 @@
       letter-spacing: 0.1em;
       margin-top: 0.4rem;
     }
+@media (max-width: 768px) {
+      .layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+        overflow-y: auto;
+      }
 
+      .glass, .center-col, .right-col {
+        min-height: auto;
+        padding: 1rem;
+      }
+
+      .center-time {
+        font-size: 3rem;
+      }
+
+      .center-title {
+        font-size: 2.5rem;
+      }
+
+      .center-date {
+        font-size: 0.8rem;
+      }
+
+      .stat__num {
+        font-size: 1.6rem;
+      }
+    }
   </style>
 </head>
 <body>

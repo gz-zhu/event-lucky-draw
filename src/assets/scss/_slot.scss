@@ -30,7 +30,12 @@
     filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.8))
       drop-shadow(0 0 20px rgba(255, 255, 255, 0.6))
       drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
-    animation: title-glow 4s ease-in-out infinite alternate;
+animation: title-glow 4s ease-in-out infinite alternate;
+
+    @media only screen and #{$mobile} {
+      font-size: 2rem;
+      letter-spacing: 0.04em;
+    }
   }
   width: 100%;
   margin: $title-margin-top 0 $title-margin-bottom 0;
@@ -38,6 +43,7 @@
   z-index: $z-index-title; // make sure title on top of sunburst
   color: $color-title-border;
   display: inline-block;
+  
 
   @each $media-query, $factor in $scale-factors {
     @media #{$media-query} {
