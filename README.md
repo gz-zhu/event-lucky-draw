@@ -156,7 +156,7 @@ Free, no server, no command line needed after this point.
 yarn start
 ```
 
-Open: `http://localhost:8080`
+Open: `http://localhost:8888`
 
 ---
 
