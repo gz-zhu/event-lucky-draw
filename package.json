@@ -1,7 +1,7 @@
 {
-  "name": "random-name-picker",
+  "name": "event-lucky-draw",
   "version": "2.1.0",
-  "description": "Simple HTML5 random name picker for picking lucky draw winner using Web Animations and AudioContext API.",
+  "description": "A beautiful event lucky draw app with prize tiers, winner records, CSV import, and festive animations.",
   "private": true,
   "scripts": {
     "build": "webpack --config webpack/webpack.prod.conf.js",
@@ -11,7 +11,7 @@
     "prepare": "husky install",
     "extract-latest-change-log": "node scripts/extractLatestChangeLog.js"
   },
-  "author": "Ice Lam",
+  "author": "gz-zhu",
   "license": "MIT",
   "devDependencies": {
     "@babel/core": "^7.23.9",
