@@ -15,6 +15,45 @@ A beautiful lucky draw app for events — prize tiers, winner records, CSV impor
 - 🎊 Confetti + festive lights animation
 - 💾 Auto-saves settings in browser
 - 🖼️ Custom background image support
+- 📺 Live winner ticker bar at the top
+
+---
+
+## ⚡ Quick Commands / よく使うコマンド
+
+```bash
+# Start local dev server / ローカル起動
+yarn start
+
+# Build for production / 本番ビルド
+yarn build
+
+# Install dependencies / 依存関係インストール
+yarn install
+
+# Force reinstall (when things break) / 再インストール
+rmdir /s /q node_modules && yarn install   # Windows
+rm -rf node_modules && yarn install        # Mac
+```
+
+**Upload changes to GitHub / GitHub に更新をアップロード:**
+```bash
+git add .
+git commit --no-verify -m "describe what changed"
+git push
+```
+
+**Common commit message prefixes:**
+
+| Prefix | Use for |
+|--------|---------|
+| `feat:` | New feature |
+| `fix:` | Bug fix |
+| `style:` | Visual changes |
+| `docs:` | README / documentation |
+| `chore:` | Maintenance |
+
+> 🌐 Local preview runs at: **http://localhost:8888**
 
 ---
 
@@ -66,7 +105,6 @@ If it shows v20 or higher, see the troubleshooting section below.
 #### 2. Yarn
 
 Open terminal and run:
-
 ```bash
 npm install -g yarn
 ```
@@ -87,7 +125,6 @@ yarn -v
 3. Keep all default settings → click **Next** throughout
 
 **Mac:**
-Open terminal and run:
 ```bash
 xcode-select --install
 ```
@@ -100,8 +137,6 @@ git --version
 ---
 
 > ✅ Once all three show version numbers, proceed to Step 1.
->
-> 3つ全てバージョンが表示されたら、Step 1 へ進んでください。
 
 ---
 
@@ -121,8 +156,6 @@ yarn install
 ```
 
 > ⏳ This may take 2–5 minutes. Wait until you see "Done".
->
-> 2〜5 分かかる場合があります。"Done" が表示されるまで待ってください。
 
 ---
 
@@ -132,31 +165,26 @@ yarn install
 yarn build
 ```
 
-Output files will be in the `/dist` folder. / ビルドファイルは `/dist` フォルダに出力されます。
+Output files will be in the `/dist` folder.
 
 ---
 
 ### 🌐 Step 4 — Deploy / デプロイ
 
-#### Option A — Netlify ⭐ (Recommended / 推奨)
-
-Free, no server, no command line needed after this point.
-無料、サーバー不要。
+#### Option A — Netlify ⭐ (Recommended)
 
 1. Go to https://netlify.com → Sign up free
 2. Click **"Add new site"** → **"Deploy manually"**
 3. Drag and drop the entire `/dist` folder
 4. Done! Public URL is generated instantly.
 
----
-
-#### Option B — Local preview only / ローカル確認のみ
+#### Option B — Local preview only
 
 ```bash
 yarn start
 ```
 
-Open: `http://localhost:8888`
+Open: **http://localhost:8888**
 
 ---
 
@@ -196,15 +224,12 @@ yarn build
 
 ### ❌ `node -v` shows v20 / v22 / v24 (wrong version)
 
-You need to switch to Node.js 18. Options:
-
 **Option A — Uninstall and reinstall:**
-- Windows: Go to **Control Panel** → **Uninstall a program** → uninstall Node.js → reinstall v18 from link above
-- Mac: Run `sudo rm -rf /usr/local/{bin/{node,npm},lib/node_modules/npm,lib/node,share/man/*/node*}` then reinstall
+- Windows: Control Panel → Uninstall Node.js → reinstall v18 from link above
+- Mac: `sudo rm -rf /usr/local/{bin/{node,npm},lib/node_modules/npm,lib/node}` then reinstall
 
-**Option B — Use nvm (recommended for developers):**
+**Option B — Use nvm:**
 ```bash
-# Install nvm first: https://github.com/nvm-sh/nvm
 nvm install 18
 nvm use 18
 node -v  # should show v18.x.x
@@ -218,14 +243,19 @@ node -v  # should show v18.x.x
 error /node_modules/node-sass: Command failed
 ```
 
-**Solution:**
+Check Node version first:
 ```bash
-node -v  # Check — must be v18.x.x
+node -v  # must be v18.x.x
 ```
-If Node version is correct, try:
+
+Then try:
 ```bash
-rmdir /s /q node_modules   # Windows
-# or: rm -rf node_modules  # Mac
+# Windows:
+rmdir /s /q node_modules
+yarn install
+
+# Mac:
+rm -rf node_modules
 yarn install
 ```
 
@@ -233,25 +263,15 @@ yarn install
 
 ### ❌ `yarn` is not recognized
 
-```
-'yarn' is not recognized as an internal or external command
-```
-
-**Solution:**
 ```bash
 npm install -g yarn
 ```
-Then close and reopen your terminal.
+Close and reopen terminal.
 
 ---
 
 ### ❌ `webpack` is not recognized after `yarn install`
 
-```
-'webpack' is not recognized as an internal or external command
-```
-
-**Solution — reinstall all dependencies from scratch:**
 ```bash
 # Windows:
 rmdir /s /q node_modules
@@ -268,27 +288,21 @@ yarn build
 
 ### ❌ `git` is not recognized
 
-**Solution:**
 - Windows: Download from https://git-scm.com/download/win and reinstall
-- After install, close and reopen terminal completely
+- Close and reopen terminal after install
 
 ---
 
 ### ❌ Page is blank after deployment
 
-**Cause:** You uploaded the wrong folder.
-
-**Solution:** Make sure you upload the `/dist` folder (not the root project folder).
-The `/dist` folder is created after running `yarn build`.
+Make sure you uploaded the `/dist` folder (not the root project folder).
+Run `yarn build` first if `/dist` doesn't exist.
 
 ---
 
 ### ❌ CSV file not loading names correctly
 
-**Cause:** Names may not be in the first column.
-
-**Solution:**
-- Open your CSV in Excel or a text editor
+- Open your CSV in Excel
 - Make sure names are in **Column A** (first column)
 - Save as `.csv` format and try again
 
@@ -296,15 +310,12 @@ The `/dist` folder is created after running `yarn build`.
 
 ### ❌ Settings not saving after refresh
 
-**Cause:** Browser localStorage may be disabled.
-
-**Solution:**
-- Try a different browser (Chrome recommended)
+- Try Chrome browser
 - Make sure you are not in private/incognito mode
 
 ---
 
-## 🛠️ Tech Stack / 技術スタック
+## 🛠️ Tech Stack
 
 TypeScript · Pug · SCSS · Webpack · Web Animations API · AudioContext API · Canvas API
 
