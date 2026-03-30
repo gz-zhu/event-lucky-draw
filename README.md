@@ -1,58 +1,120 @@
 # 🎰 Event Lucky Draw
 
-A simple and beautiful lucky draw app for events. Pick winners by prize tier with confetti animation and sound effects.
+A beautiful lucky draw app for events — with prize tiers, winner records, CSV import, and festive animations.
 
-抽選アプリ。賞ごとに当選者を抽選できます。紙吹雪アニメーションとサウンドエフェクト付き。
+抽選アプリ。賞ごとに当選者を抽選・記録できます。CSV インポート、紙吹雪、彩燈アニメーション付き。
 
 ---
 
 ## ✨ Features / 機能
 
-- 🏆 Multiple prize tiers (1st, 2nd, 3rd prize, etc.)
-- 🎯 Set how many winners per prize
-- 🎊 Confetti animation + sound effects
-- 📋 Winner records with CSV export
-- 💾 Auto-saves settings in browser
+- 🏆 Multiple prize tiers (1st, 2nd, 3rd …)
+- 👥 Set winner count per prize
+- 📂 Import participant list via CSV file
+- 📋 Winner records panel with CSV export
+- 🎊 Confetti + festive lights animation
+- 💾 Auto-saves settings in browser (localStorage)
+- 🖼️ Custom background image support
 
 ---
 
-## 🖥️ Preview / プレビュー
+## 🚀 Deployment Guide / デプロイガイド
 
-> Select a prize tier → Enter names → Click Draw → Winner appears!
->
-> 賞を選ぶ → 名前を入力 → Drawをクリック → 当選者が表示！
+### ✅ Step 0 — What you need first / まず必要なもの
 
----
+| Tool | Download |
+|------|----------|
+| Node.js v18+ | https://nodejs.org |
+| Yarn | https://yarnpkg.com |
+| Git | https://git-scm.com |
 
-## 🚀 Getting Started / はじめ方
+After installing, open a terminal and verify:
 
-### Requirements / 必要環境
+インストール後、ターミナルで確認：
 
-- [Node.js](https://nodejs.org/) v18 or above / v18以上
-- [Yarn](https://yarnpkg.com/) package manager
-
-Check your versions / バージョン確認:
 ```bash
-node -v
-yarn -v
+node -v    # should show v18.x.x or higher
+yarn -v    # should show 1.x.x
+git --version
 ```
 
 ---
 
-### Installation / インストール
+### 📦 Step 1 — Get the code / コードを取得
 
-**1. Clone this repository / リポジトリをクローン**
 ```bash
 git clone https://github.com/gz-zhu/event-lucky-draw.git
 cd event-lucky-draw
 ```
 
-**2. Install dependencies / 依存関係をインストール**
+---
+
+### 📥 Step 2 — Install dependencies / 依存関係をインストール
+
 ```bash
 yarn install
 ```
 
-**3. Start development server / 開発サーバーを起動**
+> ⏳ This may take 1–2 minutes. Wait until it finishes.
+>
+> 1〜2 分かかる場合があります。完了まで待ってください。
+
+---
+
+### 🔨 Step 3 — Build the project / プロジェクトをビルド
+
+```bash
+yarn build
+```
+
+All output files will be generated in the `/dist` folder.
+
+ビルドされたファイルは `/dist` フォルダに出力されます。
+
+---
+
+### 🌐 Step 4 — Deploy / デプロイ
+
+Choose one of the options below / 以下のいずれかを選んでください：
+
+---
+
+#### Option A — Netlify (Recommended / 推奨) ⭐
+
+Free, no server required. 無料、サーバー不要。
+
+1. Go to https://netlify.com and sign up for free
+2. Click **"Add new site"** → **"Deploy manually"**
+3. Drag and drop the entire `/dist` folder into the upload area
+4. Done! You'll get a public URL instantly.
+
+---
+
+1. https://netlify.com にアクセスして無料登録
+2. **"Add new site"** → **"Deploy manually"** をクリック
+3. `/dist` フォルダ全体をアップロードエリアにドラッグ＆ドロップ
+4. 完了！すぐに公開 URL が発行されます。
+
+---
+
+#### Option B — GitHub Pages
+
+1. Push this repo to your own GitHub account
+2. Go to your repo → **Settings** → **Pages**
+3. Set source to **"Deploy from a branch"** → branch: `main`, folder: `/dist`
+4. Wait 1–2 minutes, then access `https://yourusername.github.io/event-lucky-draw`
+
+---
+
+1. このリポジトリを自分の GitHub アカウントにプッシュ
+2. リポジトリ → **Settings** → **Pages** へ移動
+3. ソースを **"Deploy from a branch"** → ブランチ: `main`、フォルダ: `/dist` に設定
+4. 1〜2 分後にアクセス可能
+
+---
+
+#### Option C — Local preview / ローカルで確認
+
 ```bash
 yarn start
 ```
@@ -63,69 +125,86 @@ Open your browser at / ブラウザで開く: `http://localhost:8080`
 
 ## 🎮 How to Use / 使い方
 
-### Step 1 — Add names / 名前を追加
-Click the ⚙️ **Settings** button (top right).  
-右上の ⚙️ **Settings** ボタンをクリック。
+### 1. Add participants / 参加者を追加
 
-Paste your participant list, one name per line:  
-参加者リストを貼り付け（1行に1名）:
+Click ⚙️ **Settings** (top right) → **Name List**
+
+**Option A** — Paste names manually, one per line:
 ```
 Alice
 Bob
 Charlie
-Diana
 ```
 
-### Step 2 — Set up prizes / 賞を設定
-In Settings → **Prize Settings**, set the prize name and number of winners.  
-Settings → **Prize Settings** で、賞の名前と当選者数を設定。
+**Option B** — Click **Upload CSV** and select a `.csv` file.
+The first column will be used as names. CSV の第一列が名前として読み込まれます。
 
-Click **Save** when done. / 完了したら **Save** をクリック。
-
-### Step 3 — Draw! / 抽選！
-1. Click a prize button (1st Prize / 2nd Prize …) to select it  
-   賞ボタン（1st Prize / 2nd Prize …）をクリックして選択
-2. Click **Draw** to start spinning  
-   **Draw** をクリックして抽選開始
-3. The winner is displayed with confetti 🎊  
-   当選者が紙吹雪とともに表示されます 🎊
-
-### Step 4 — View records / 記録を確認
-Click the ✅ **Records** button (top right) to see all winners.  
-右上の ✅ **Records** ボタンで全当選者を確認。
-
-Click **Export CSV** to download results.  
-**Export CSV** で結果をダウンロード。
+Click **Save** when done.
 
 ---
 
-## 🏗️ Build for Production / 本番ビルド
+### 2. Configure prizes / 賞を設定
 
+In Settings → **Prize Settings**:
+
+- Enter prize name (e.g. "Grand Prize")
+- Set winner count
+- Click **+ Add Prize** to add more tiers
+- Click **Save**
+
+---
+
+### 3. Draw! / 抽選！
+
+1. Click a prize button at the top of the screen
+2. Click **Draw** to start spinning
+3. The winner is revealed with confetti 🎊
+
+---
+
+### 4. View & export records / 記録の確認とエクスポート
+
+Click the ✅ icon (top right) to open the records panel.
+
+- **Export CSV** — download all winners as a spreadsheet
+- **Clear** — reset all records
+
+---
+
+## 🖼️ Changing the Background / 背景画像の変更
+
+Replace the file at:
+```
+src/assets/images/Cover.jpg
+```
+with your own image (JPG or PNG), keeping the same filename. Then rebuild:
 ```bash
 yarn build
 ```
 
-Output files will be in the `/dist` folder.  
-ビルドされたファイルは `/dist` フォルダに出力されます。
+---
+
+## ❓ Troubleshooting / よくある問題
+
+| Problem | Solution |
+|---------|----------|
+| `node -v` shows error | Install Node.js from https://nodejs.org |
+| `yarn install` fails | Run `npm install -g yarn` first |
+| Page blank after build | Make sure you uploaded `/dist`, not the root folder |
+| CSV names not loading | Check that names are in the **first column** |
+| Settings not saving | Make sure your browser allows localStorage |
 
 ---
 
 ## 🛠️ Tech Stack / 技術スタック
 
-| | |
-|---|---|
-| Language | TypeScript |
-| Template | Pug |
-| Style | SCSS |
-| Bundler | Webpack |
-| Animation | Web Animations API |
-| Sound | AudioContext API |
+TypeScript · Pug · SCSS · Webpack · Web Animations API · AudioContext API
 
 ---
 
 ## 📄 License
 
-This project is based on [random-name-picker](https://github.com/icelam/random-name-picker) by [Ice Lam](https://github.com/icelam), licensed under the [MIT License](./LICENSE).
+Based on [random-name-picker](https://github.com/icelam/random-name-picker) by [Ice Lam](https://github.com/icelam), MIT License.
 
 ---
 
