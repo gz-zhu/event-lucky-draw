@@ -1,63 +1,134 @@
-<p align="center">
-    <img alt="Random Name Picker for Lucky Draw" src="./logo.svg" width="100" />
-</p>
-<h1 align="center">Random Name Picker for Lucky Draw</h1>
-<p align="center">
-    Simple HTML5 random name picker for picking lucky draw winner using Web Animations and AudioContext API
-</p>
+# 🎰 Event Lucky Draw
 
-<p align="center">
-    <a href="https://www.typescriptlang.org/"><img height="20" src="https://img.shields.io/badge/built_with-TypeScript-007acc.svg?logo=typescript" alt="Built with TypeScript"></a>
-    <a href="https://nodejs.org/en/"><img height="20" src="https://img.shields.io/badge/Node.js-18-026e00.svg?logo=Node.js" alt="Node.js"></a>
-    <a href="https://yarnpkg.com/"><img height="20" src="https://img.shields.io/badge/Yarn-1-25799f.svg?logo=Yarn" alt="Yarn"></a>
-    <a href="https://eslint.org/"><img height="20" src="https://img.shields.io/badge/code_style-ESLint-5b5be0.svg?logo=eslint" alt="Code Style"></a>
-    <a href="https://conventionalcommits.org"><img height="20" src="https://img.shields.io/badge/conventional_commits-1.0.0-yellow.svg" alt="Conventional Commits"></a>
-    <a href="./LICENSE"><img height="20" src="https://img.shields.io/github/license/icelam/random-name-picker?logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAEFCu8CAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAHKADAAQAAAABAAAAHAAAAABHddaYAAAC5UlEQVRIDd2WPWtVQRCGby5pVASLiGghQSxyG8Ui2KWwCfkH9olY2JneQkiR0oCIxH/gB+qVFDYBIWBAbAIRSbCRpLXwIxLiPT7vnNm9e87ZxJtUwYH3zO47Mzv7Mbv3tlo5KYriGtgAJ81OY1ENdG/YI4boFEOI911BXgY/pdtwGuAtXpvmB1tAXHDnUolE5urkPOQo6MqA3pXWmJJL4Bb4rQ7yEYfxsjnIF29NJIoNC6e5fxOL/qN+9KCz7AaLpN8zI415N2i2EptpGrkRIjGeAuvR6IY1hSFLFUOug9Ms2M7ZxIUNytm1mnME186sdI2BOCwAyQMg54ugzSmKmwbPwSbolKH+hbAtQdsOoF+BsF3anUVwBdiOWRidFZDKTTrKEAJTm3GVrGkHzw/uPZbyx7DNNLfB7KGmRsCcr+/gjaiPSpAOTyX9qG4L/XBDdWXDDf1M+wtQ5fwCOtcb4Dto6VpLmzByB6gqdHbTItGSJdAGqibJQhmRfCF7IN4beSF2G9CqnGXQrxofXU+EykllNeoczRgYytDKMubDIRK0g5MF8rE69cGu0u9nlUcqaUZ41W0qK2nGcSzr4D2wV9U9wxp1rnpxn8agXAOHMQ9cy9kbHM7ngY4gFb03TxrO/yfBUifTtXt78jCrjY/jgEFnMn45LuNWUtknuu7NSm7D3QEn3HbatV1Q2jvgIRf1sfODKQaeymxZoMLlTqsq1LF+HvaTqQOzEzUCfni0/eNIA+DfuE3KEtbsegckGmMktTXacnBHPVe687ugkpT+axCkkhBSyRSjWI2xf1KMMVmYiQdWksK9BEFiQoiYLIlvJA3/zeTzCejP0RbB6YPbhZuB+0pR3KcdX0LaJtju0ZgBL8Bd+sbz2QIaU2OfBX3BaQLsgZysQtrk0M8Sh1A0w3DyyYnGnAiZ4gqZ/TvI2A8OGd1YIbF7+F3P+B6dYpYdsJNZgrjO0UdOIhmom0nwL0pnfnzkL1803jAoKhvyAAAAAElFTkSuQmCC" alt="License"></a>
-    <a href="https://github.com/icelam/random-name-picker/releases"><img alt="Current version" src="https://img.shields.io/github/v/release/icelam/random-name-picker.svg?sort=semver&label=latest&logo=github"/></a>
-</p>
+A simple and beautiful lucky draw app for events. Pick winners by prize tier with confetti animation and sound effects.
 
-## Live Demo
-Demo is available at [https://pinkylam.me/playground/random-name-picker](https://pinkylam.me/playground/random-name-picker)
+抽選アプリ。賞ごとに当選者を抽選できます。紙吹雪アニメーションとサウンドエフェクト付き。
 
-### Technology Stack
-* Pug
-* CSS3 (SCSS)
-* Web Animations API
-* AudioContext API
+---
 
-## Development
+## ✨ Features / 機能
 
-### Prerequisite
-* Node 18 above or nvm installed
-* Yarn or NPM installed
+- 🏆 Multiple prize tiers (1st, 2nd, 3rd prize, etc.)
+- 🎯 Set how many winners per prize
+- 🎊 Confetti animation + sound effects
+- 📋 Winner records with CSV export
+- 💾 Auto-saves settings in browser
 
-### Install dependencies
-To install dependencies:
+---
+
+## 🖥️ Preview / プレビュー
+
+> Select a prize tier → Enter names → Click Draw → Winner appears!
+>
+> 賞を選ぶ → 名前を入力 → Drawをクリック → 当選者が表示！
+
+---
+
+## 🚀 Getting Started / はじめ方
+
+### Requirements / 必要環境
+
+- [Node.js](https://nodejs.org/) v18 or above / v18以上
+- [Yarn](https://yarnpkg.com/) package manager
+
+Check your versions / バージョン確認:
+```bash
+node -v
+yarn -v
+```
+
+---
+
+### Installation / インストール
+
+**1. Clone this repository / リポジトリをクローン**
+```bash
+git clone https://github.com/gz-zhu/event-lucky-draw.git
+cd event-lucky-draw
+```
+
+**2. Install dependencies / 依存関係をインストール**
 ```bash
 yarn install
 ```
 
-### Start development server
-To start the development server:
+**3. Start development server / 開発サーバーを起動**
 ```bash
 yarn start
 ```
 
-### Build production
-To build the project for production:
+Open your browser at / ブラウザで開く: `http://localhost:8080`
+
+---
+
+## 🎮 How to Use / 使い方
+
+### Step 1 — Add names / 名前を追加
+Click the ⚙️ **Settings** button (top right).  
+右上の ⚙️ **Settings** ボタンをクリック。
+
+Paste your participant list, one name per line:  
+参加者リストを貼り付け（1行に1名）:
+```
+Alice
+Bob
+Charlie
+Diana
+```
+
+### Step 2 — Set up prizes / 賞を設定
+In Settings → **Prize Settings**, set the prize name and number of winners.  
+Settings → **Prize Settings** で、賞の名前と当選者数を設定。
+
+Click **Save** when done. / 完了したら **Save** をクリック。
+
+### Step 3 — Draw! / 抽選！
+1. Click a prize button (1st Prize / 2nd Prize …) to select it  
+   賞ボタン（1st Prize / 2nd Prize …）をクリックして選択
+2. Click **Draw** to start spinning  
+   **Draw** をクリックして抽選開始
+3. The winner is displayed with confetti 🎊  
+   当選者が紙吹雪とともに表示されます 🎊
+
+### Step 4 — View records / 記録を確認
+Click the ✅ **Records** button (top right) to see all winners.  
+右上の ✅ **Records** ボタンで全当選者を確認。
+
+Click **Export CSV** to download results.  
+**Export CSV** で結果をダウンロード。
+
+---
+
+## 🏗️ Build for Production / 本番ビルド
+
 ```bash
 yarn build
 ```
-All the build files can be found in `/dist` folder.
 
-## General Guidance on Deployment
+Output files will be in the `/dist` folder.  
+ビルドされたファイルは `/dist` フォルダに出力されます。
 
-This app works fine under common static web hosting choices. Here's a general outline of the steps you can follow:
+---
 
-1. Set up your CI/CD pipeline to use Node.js and arn images. (If you prefer not to use a CI/CD pipeline, make sure you have both Node.js and Yarn installed on your machine.)
+## 🛠️ Tech Stack / 技術スタック
 
-2. Start by installing the project dependencies. Run the command `yarn install` to ensure that all the necessary npm packages are installed and ready for the build process. To optimize costs and improve the efficiency of your CI/CD pipeline, you can consider adding a cache for the `node_modules` directory. Check your specific CI/CD tool's documentation for cache configuration options.
+| | |
+|---|---|
+| Language | TypeScript |
+| Template | Pug |
+| Style | SCSS |
+| Bundler | Webpack |
+| Animation | Web Animations API |
+| Sound | AudioContext API |
 
-3. Next, you'll need to build the project. Use the command `yarn build` to initiate the build process. This command will compile and bundle the source code, generating the assets required for hosting.
+---
 
-4. Once the build process is complete, you'll need to copy all the generated assets located under the `/dist` directory. The specific command to accomplish this may vary depending on the CI/CD tool and OS you're using. Typically, you'll need to include a step in your pipeline that copies the contents of the `/dist` directory to a storage accessible by your chosen static web hosting service.
+## 📄 License
+
+This project is based on [random-name-picker](https://github.com/icelam/random-name-picker) by [Ice Lam](https://github.com/icelam), licensed under the [MIT License](./LICENSE).
+
+---
+
+## 👤 Maintainer
+
+**gz-zhu** — [github.com/gz-zhu](https://github.com/gz-zhu)

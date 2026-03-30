@@ -1,8 +1,8 @@
 import confetti from 'canvas-confetti';
 import Slot from '@js/Slot';
 import SoundEffects from '@js/SoundEffects';
+import PrizeManager from '@js/PrizeManager';
 
-// Initialize slot machine
 (() => {
   const drawButton = document.getElementById('draw-button') as HTMLButtonElement | null;
   const fullscreenButton = document.getElementById('fullscreen-button') as HTMLButtonElement | null;
@@ -16,68 +16,173 @@ import SoundEffects from '@js/SoundEffects';
   const nameListTextArea = document.getElementById('name-list') as HTMLTextAreaElement | null;
   const removeNameFromListCheckbox = document.getElementById('remove-from-list') as HTMLInputElement | null;
   const enableSoundCheckbox = document.getElementById('enable-sound') as HTMLInputElement | null;
+  const prizeButtonsContainer = document.getElementById('prize-buttons') as HTMLDivElement | null;
+  const currentPrizeLabel = document.getElementById('current-prize-label') as HTMLDivElement | null;
+  const recordsPanel = document.getElementById('records-panel') as HTMLDivElement | null;
+  const recordsToggle = document.getElementById('records-toggle') as HTMLButtonElement | null;
+  const recordsClose = document.getElementById('records-close') as HTMLButtonElement | null;
+  const recordsBody = document.getElementById('records-body') as HTMLDivElement | null;
+  const exportCsvButton = document.getElementById('export-csv') as HTMLButtonElement | null;
+  const clearRecordsButton = document.getElementById('clear-records') as HTMLButtonElement | null;
+  const prizeConfigList = document.getElementById('prize-config-list') as HTMLDivElement | null;
+  const addPrizeRowButton = document.getElementById('add-prize-row') as HTMLButtonElement | null;
 
-  // Graceful exit if necessary elements are not found
   if (!(
-    drawButton
-    && fullscreenButton
-    && settingsButton
-    && settingsWrapper
-    && settingsContent
-    && settingsSaveButton
-    && settingsCloseButton
-    && sunburstSvg
-    && confettiCanvas
-    && nameListTextArea
-    && removeNameFromListCheckbox
-    && enableSoundCheckbox
+    drawButton && fullscreenButton && settingsButton && settingsWrapper &&
+    settingsContent && settingsSaveButton && settingsCloseButton &&
+    sunburstSvg && confettiCanvas && nameListTextArea &&
+    removeNameFromListCheckbox && enableSoundCheckbox &&
+    prizeButtonsContainer && currentPrizeLabel &&
+    recordsPanel && recordsToggle && recordsClose && recordsBody &&
+    exportCsvButton && clearRecordsButton
+    && prizeConfigList && addPrizeRowButton
   )) {
-    console.error('One or more Element ID is invalid. This is possibly a bug.');
-    return;
-  }
-
-  if (!(confettiCanvas instanceof HTMLCanvasElement)) {
-    console.error('Confetti canvas is not an instance of Canvas. This is possibly a bug.');
+    console.error('One or more Element ID is invalid.');
     return;
   }
 
   const soundEffects = new SoundEffects();
   const MAX_REEL_ITEMS = 40;
   const CONFETTI_COLORS = ['#26ccff', '#a25afd', '#ff5e7e', '#88ff5a', '#fcff42', '#ffa62d', '#ff36ff'];
-  let confettiAnimationId;
+  const prizeManager = new PrizeManager();
+  let confettiAnimationId: number;
 
-  /** Confeetti animation instance */
-  const customConfetti = confetti.create(confettiCanvas, {
-    resize: true,
-    useWorker: true
-  });
+  const customConfetti = confetti.create(confettiCanvas, { resize: true, useWorker: true });
 
-  /** Triggers cconfeetti animation until animation is canceled */
   const confettiAnimation = () => {
-    const windowWidth = window.innerWidth || document.documentElement.clientWidth || document.getElementsByTagName('body')[0].clientWidth;
+    const windowWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
     const confettiScale = Math.max(0.5, Math.min(1, windowWidth / 1100));
-
     customConfetti({
-      particleCount: 1,
-      gravity: 0.8,
-      spread: 90,
+      particleCount: 1, gravity: 0.8, spread: 90,
       origin: { y: 0.6 },
       colors: [CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)]],
       scalar: confettiScale
     });
-
     confettiAnimationId = window.requestAnimationFrame(confettiAnimation);
   };
 
-  /** Function to stop the winning animation */
   const stopWinningAnimation = () => {
-    if (confettiAnimationId) {
-      window.cancelAnimationFrame(confettiAnimationId);
-    }
+    if (confettiAnimationId) window.cancelAnimationFrame(confettiAnimationId);
     sunburstSvg.style.display = 'none';
   };
 
-  /**  Function to be trigger before spinning */
+  // ── Prize buttons ──────────────────────────────────────────
+  const renderPrizeButtons = () => {
+    prizeButtonsContainer.innerHTML = '';
+    prizeManager.allPrizes.forEach(prize => {
+      const btn = document.createElement('button');
+      const isFull = prize.winners.length >= prize.count;
+      const isActive = prizeManager.currentPrize?.id === prize.id;
+      btn.className = `prize-select-btn${isActive ? ' active' : ''}${isFull ? ' full' : ''}`;
+      btn.innerHTML = `<span class="prize-btn-name">${prize.name}</span><span class="prize-btn-meta">${prize.winners.length}/${prize.count} ppl</span>`;
+      btn.disabled = isFull;
+      btn.addEventListener('click', () => {
+        prizeManager.selectPrize(prize.id);
+        renderPrizeButtons();
+        updateCurrentPrizeLabel();
+        updateDrawButton();
+        stopWinningAnimation();
+      });
+      prizeButtonsContainer.appendChild(btn);
+    });
+  };
+
+const updateCurrentPrizeLabel = () => {
+    const p = prizeManager.currentPrize;
+    currentPrizeLabel.textContent = p
+      ? `Drawing: ${p.name} (${prizeManager.remainingCount()} remaining)`
+      : 'Please select a prize';
+  };
+
+  const updateDrawButton = () => {
+    const p = prizeManager.currentPrize;
+    drawButton.disabled = !p || prizeManager.isCurrentPrizeFull() || !slot.names.length;
+  };
+
+  // ── Records panel ──────────────────────────────────────────
+  const renderRecords = () => {
+    recordsBody.innerHTML = '';
+    const prizes = prizeManager.allPrizes;
+    const hasAny = prizes.some(p => p.winners.length > 0);
+    if (!hasAny) {
+      recordsBody.innerHTML = '<p class="records-empty">No records yet</p>';
+      return;
+    }
+    prizes.forEach(prize => {
+      if (!prize.winners.length) return;
+      const group = document.createElement('div');
+      group.className = 'records-group';
+      group.innerHTML = `<div class="records-group-title">${prize.name} <span>${prize.winners.length}/${prize.count} winners</span></div>`;
+      const list = document.createElement('div');
+      list.className = 'records-list';
+      prize.winners.forEach((w, i) => {
+        const item = document.createElement('div');
+        item.className = 'records-item';
+        item.textContent = `${i + 1}. ${w}`;
+        list.appendChild(item);
+      });
+      group.appendChild(list);
+      recordsBody.appendChild(group);
+    });
+  };
+
+  recordsToggle.addEventListener('click', () => {
+    renderRecords();
+    recordsPanel.style.display = 'block';
+  });
+
+  recordsClose.addEventListener('click', () => {
+    recordsPanel.style.display = 'none';
+  });
+
+  exportCsvButton.addEventListener('click', () => {
+    const csv = prizeManager.exportCSV();
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'lucky-draw-records.csv'; a.click();
+  });
+
+  clearRecordsButton.addEventListener('click', () => {
+    // eslint-disable-next-line no-restricted-globals
+if (!confirm('Clear all records?')) return;
+    prizeManager.clearRecords();
+    renderPrizeButtons();
+    updateCurrentPrizeLabel();
+    renderRecords();
+  });
+
+  // ── Prize config in settings ───────────────────────────────
+  const renderPrizeConfig = () => {
+    prizeConfigList.innerHTML = '';
+    prizeManager.allPrizes.forEach((prize) => {
+      const row = document.createElement('div');
+      row.className = 'prize-config-row';
+      row.dataset.id = prize.id;
+      row.innerHTML = `
+        <input class="input-field pc-name" type="text" placeholder="Prize name" value="${prize.name}">
+        <input class="input-field pc-count" type="number" min="1" value="${prize.count}" style="width:80px;text-align:center">
+        <button class="solid-button solid-button--danger pc-del" style="padding:0.4rem 0.8rem;font-size:0.875rem">Delete</button>
+      `;
+      row.querySelector('.pc-del')!.addEventListener('click', () => row.remove());
+      prizeConfigList.appendChild(row);
+    });
+  };
+
+  addPrizeRowButton.addEventListener('click', () => {
+    const row = document.createElement('div');
+    row.className = 'prize-config-row';
+    row.dataset.id = String(Date.now());
+    row.innerHTML = `
+      <input class="input-field pc-name" type="text" placeholder="Prize name" value="">
+      <input class="input-field pc-count" type="number" min="1" value="1" style="width:80px;text-align:center">
+      <button class="solid-button solid-button--danger pc-del" style="padding:0.4rem 0.8rem;font-size:0.875rem">Delete</button>
+    `;
+    row.querySelector('.pc-del')!.addEventListener('click', () => row.remove());
+    prizeConfigList.appendChild(row);
+  });
+
+  // ── Spin callbacks ─────────────────────────────────────────
   const onSpinStart = () => {
     stopWinningAnimation();
     drawButton.disabled = true;
@@ -85,16 +190,24 @@ import SoundEffects from '@js/SoundEffects';
     soundEffects.spin((MAX_REEL_ITEMS - 1) / 10);
   };
 
-  /**  Functions to be trigger after spinning */
   const onSpinEnd = async () => {
     confettiAnimation();
     sunburstSvg.style.display = 'block';
     await soundEffects.win();
-    drawButton.disabled = false;
+
+    // Record winner
+    const winnerEl = document.querySelector('#reel > div:last-child');
+    if (winnerEl) {
+      prizeManager.addWinner(winnerEl.textContent ?? '');
+    }
+
+    renderPrizeButtons();
+    updateCurrentPrizeLabel();
+    updateDrawButton();
     settingsButton.disabled = false;
   };
 
-  /** Slot instance */
+  // ── Slot instance ──────────────────────────────────────────
   const slot = new Slot({
     reelContainerSelector: '#reel',
     maxReelItems: MAX_REEL_ITEMS,
@@ -103,62 +216,63 @@ import SoundEffects from '@js/SoundEffects';
     onNameListChanged: stopWinningAnimation
   });
 
-  /** To open the setting page */
+  // ── Settings panel ─────────────────────────────────────────
   const onSettingsOpen = () => {
-    nameListTextArea.value = slot.names.length ? slot.names.join('\n') : '';
+    nameListTextArea.value = slot.names.join('\n');
     removeNameFromListCheckbox.checked = slot.shouldRemoveWinnerFromNameList;
     enableSoundCheckbox.checked = !soundEffects.mute;
+    renderPrizeConfig();
     settingsWrapper.style.display = 'block';
   };
 
-  /** To close the setting page */
   const onSettingsClose = () => {
     settingsContent.scrollTop = 0;
     settingsWrapper.style.display = 'none';
   };
 
-  // Click handler for "Draw" button
   drawButton.addEventListener('click', () => {
-    if (!slot.names.length) {
-      onSettingsOpen();
-      return;
-    }
-
+    if (!slot.names.length) { onSettingsOpen(); return; }
+    if (!prizeManager.currentPrize) return;
     slot.spin();
   });
 
-  // Hide fullscreen button when it is not supported
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore - for older browsers support
+  // @ts-expect-error - older browsers
   if (!(document.documentElement.requestFullscreen && document.exitFullscreen)) {
     fullscreenButton.remove();
   }
 
-  // Click handler for "Fullscreen" button
   fullscreenButton.addEventListener('click', () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen();
-      return;
-    }
-
-    if (document.exitFullscreen) {
-      document.exitFullscreen();
-    }
+    if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); return; }
+    document.exitFullscreen();
   });
 
-  // Click handler for "Settings" button
   settingsButton.addEventListener('click', onSettingsOpen);
 
-  // Click handler for "Save" button for setting page
   settingsSaveButton.addEventListener('click', () => {
     slot.names = nameListTextArea.value
-      ? nameListTextArea.value.split(/\n/).filter((name) => Boolean(name.trim()))
+      ? nameListTextArea.value.split(/\n/).filter(n => Boolean(n.trim()))
       : [];
     slot.shouldRemoveWinnerFromNameList = removeNameFromListCheckbox.checked;
     soundEffects.mute = !enableSoundCheckbox.checked;
+
+    // Save prize config
+    const rows = Array.from(prizeConfigList.querySelectorAll('.prize-config-row'));
+    const newPrizes = rows.map(row => ({
+      id: (row as HTMLElement).dataset.id ?? String(Date.now()),
+      name: (row.querySelector('.pc-name') as HTMLInputElement).value.trim() || 'Prize',
+      count: parseInt((row.querySelector('.pc-count') as HTMLInputElement).value, 10) || 1,
+    }));
+    prizeManager.setPrizes(newPrizes);
+    renderPrizeButtons();
+    updateCurrentPrizeLabel();
+    updateDrawButton();
     onSettingsClose();
   });
 
-  // Click handler for "Discard and close" button for setting page
   settingsCloseButton.addEventListener('click', onSettingsClose);
+
+  // ── Init ───────────────────────────────────────────────────
+  renderPrizeButtons();
+  updateCurrentPrizeLabel();
+  updateDrawButton();
 })();

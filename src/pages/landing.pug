@@ -4,6 +4,10 @@ include ../mixins/icons
   .control-group
     button#fullscreen-button.icon-button.icon-button--small
       +svg-icon.red.big(svg-icon-name='fullscreen')
+    button#records-toggle.icon-button.icon-button--small(title="Records")
+      svg(width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2")
+        path(d="M9 11l3 3L22 4")
+        path(d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11")
     button#settings-button.icon-button.icon-button--small
       +svg-icon.red.big(svg-icon-name='settings')
 
@@ -11,8 +15,11 @@ include ../mixins/icons
 
   #lucky-draw
     .title
-      //- Pug loader currently does not handle webpack alias so we will use relative path here
       include ../assets/images/title.svg
+
+    #prize-buttons.prize-buttons
+
+    #current-prize-label.current-prize-label Please select a prize
 
     .slot
       .slot__outer
@@ -23,7 +30,18 @@ include ../mixins/icons
       #sunburst.sunburst
         img(src="~@images/sunburst.svg" alt="sunburst")
 
-    button#draw-button.solid-button Draw
+    button#draw-button.solid-button(disabled) Draw
+
+  #records-panel.records-panel(style="display:none")
+    .records-panel__inner
+      .records-header
+        h2 Records
+        .records-actions
+          button#export-csv.solid-button(style="font-size:0.875rem;padding:0.5rem 1rem") Export CSV
+          button#clear-records.solid-button.solid-button--danger(style="font-size:0.875rem;padding:0.5rem 1rem") Clear
+          button#records-close.icon-button.icon-button--small
+            +svg-icon.red.big(svg-icon-name='close')
+      #records-body.records-body
 
   #settings.settings
     #settings-panel.settings__panel
@@ -44,7 +62,16 @@ include ../mixins/icons
           label.input--switch
             input(type="checkbox" checked="true" id="enable-sound")
             span.slider
-      div.settings__panel__group
-        button#settings-save.solid-button.solid-button Save
-        button#settings-close.solid-button.solid-button--danger Discard and close
 
+        div.input-group
+          label.input-label Prize Settings
+          .prize-config-header
+            span Name
+            span Count
+            span
+          #prize-config-list.prize-config-list
+          button#add-prize-row.solid-button(style="margin-top:0.75rem;width:100%;font-size:0.875rem") + Add Prize
+
+      div.settings__panel__group
+        button#settings-save.solid-button Save
+        button#settings-close.solid-button.solid-button--danger Discard and close
