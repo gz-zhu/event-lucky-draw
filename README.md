@@ -20,25 +20,67 @@ A beautiful lucky draw app for events — with prize tiers, winner records, CSV 
 
 ## 🚀 Deployment Guide / デプロイガイド
 
-### ✅ Step 0 — What you need first / まず必要なもの
+### ✅ Step 0 — Install required tools / 必要ツールのインストール
 
-| Tool | Download |
-|------|----------|
-| Node.js v18+ | https://nodejs.org |
-| Yarn | https://yarnpkg.com |
-| Git | https://git-scm.com |
+#### 1. Node.js
 
-After installing, open a terminal and verify:
+**Windows:**
+1. Go to https://nodejs.org
+2. Download the **LTS** version (recommended)
+3. Run the installer — keep all default settings and click Next
+4. Restart your terminal after installation
 
-インストール後、ターミナルで確認：
+**Mac:**
+1. Go to https://nodejs.org
+2. Download the **LTS** version
+3. Run the `.pkg` installer
 
+Verify / 確認:
 ```bash
 node -v    # should show v18.x.x or higher
+```
+
+---
+
+#### 2. Yarn
+
+After Node.js is installed, open terminal and run:
+
+Node.js インストール後、ターミナルで実行：
+```bash
+npm install -g yarn
+```
+
+Verify / 確認:
+```bash
 yarn -v    # should show 1.x.x
+```
+
+---
+
+#### 3. Git
+
+**Windows:**
+1. Go to https://git-scm.com
+2. Download and run the installer
+3. Keep all default settings and click Next throughout
+
+**Mac:**
+Open terminal and run:
+```bash
+xcode-select --install
+```
+
+Verify / 確認:
+```bash
 git --version
 ```
 
 ---
+
+> ✅ Once all three show version numbers, you are ready to proceed.
+>
+> 3つ全てバージョン番号が表示されたら、次のステップへ進めます。
 
 ### 📦 Step 1 — Get the code / コードを取得
 
