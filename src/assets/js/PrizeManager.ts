@@ -2,17 +2,17 @@ import { initializeApp, getApps } from 'firebase/app';
 import { getDatabase, ref, set } from 'firebase/database';
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyBzJJ3yeO-_Yozikwds9_6PPwyAn788SHU',
-  authDomain: 'event-luckydraw.firebaseapp.com',
-  databaseURL: 'https://event-luckydraw-default-rtdb.asia-southeast1.firebasedatabase.app',
-  projectId: 'event-luckydraw',
-  storageBucket: 'event-luckydraw.firebasestorage.app',
-  messagingSenderId: '186125547633',
-  appId: '1:186125547633:web:e94e9fab2ba797ffe3c3d0',
-};
+    apiKey: "AIzaSyBzJJ3yeO-_Yozikwds9_6PPwyAn788SHU",
+    authDomain: "event-luckydraw.firebaseapp.com",
+    databaseURL: "https://event-luckydraw-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "event-luckydraw",
+    storageBucket: "event-luckydraw.firebasestorage.app",
+    messagingSenderId: "186125547633",
+    appId: "1:186125547633:web:fa86b83131dc480be3c3d0"
+  };
 
-const firebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-const db = getDatabase(firebaseApp);
+  // Initialize Firebase
+const db = getDatabase(getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]);
 
 export interface Prize {
   id: string;
