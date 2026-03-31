@@ -1,3 +1,19 @@
+import { initializeApp, getApps } from 'firebase/app';
+import { getDatabase, ref, set } from 'firebase/database';
+
+const firebaseConfig = {
+  apiKey: 'AIzaSyBzJJ3yeO-_Yozikwds9_6PPwyAn788SHU',
+  authDomain: 'event-luckydraw.firebaseapp.com',
+  databaseURL: 'https://event-luckydraw-default-rtdb.asia-southeast1.firebasedatabase.app',
+  projectId: 'event-luckydraw',
+  storageBucket: 'event-luckydraw.firebasestorage.app',
+  messagingSenderId: '186125547633',
+  appId: '1:186125547633:web:e94e9fab2ba797ffe3c3d0',
+};
+
+const firebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+const db = getDatabase(firebaseApp);
+
 export interface Prize {
   id: string;
   name: string;
@@ -14,15 +30,9 @@ export default class PrizeManager {
     this.prizes = PrizeManager.loadFromStorage();
     if (!this.prizes.length) {
       this.prizes = [
-        {
-          id: '1', name: '1st Prize', count: 1, winners: []
-        },
-        {
-          id: '2', name: '2nd Prize', count: 2, winners: []
-        },
-        {
-          id: '3', name: '3rd Prize', count: 5, winners: []
-        }
+        { id: '1', name: '1st Prize', count: 1, winners: [] },
+        { id: '2', name: '2nd Prize', count: 2, winners: [] },
+        { id: '3', name: '3rd Prize', count: 5, winners: [] },
       ];
     }
   }
@@ -44,6 +54,7 @@ export default class PrizeManager {
     if (!prize) return;
     prize.winners.push(name);
     this.saveToStorage();
+    this.saveToFirebase();
   }
 
   isCurrentPrizeFull(): boolean {
@@ -59,23 +70,31 @@ export default class PrizeManager {
   setPrizes(prizes: Omit<Prize, 'winners'>[]): void {
     this.prizes = prizes.map((p) => ({
       ...p,
-      winners: this.prizes.find((old) => old.id === p.id)?.winners ?? []
+      winners: this.prizes.find((old) => old.id === p.id)?.winners ?? [],
     }));
     this.currentPrizeId = null;
     this.saveToStorage();
+    this.saveToFirebase();
   }
 
   clearRecords(): void {
     this.prizes.forEach((p) => { p.winners = []; }); // eslint-disable-line no-param-reassign
     this.saveToStorage();
+    this.saveToFirebase();
   }
 
   exportCSV(): string {
-    const rows = ['獎項,姓名'];
+    const rows = ['Prize,Name'];
     this.prizes.forEach((p) => {
       p.winners.forEach((w) => rows.push(`${p.name},${w}`));
     });
     return rows.join('\n');
+  }
+
+  private saveToFirebase(): void {
+    try {
+      set(ref(db, 'prizes'), this.prizes);
+    } catch (e) { /* firebase unavailable */ }
   }
 
   private saveToStorage(): void {
