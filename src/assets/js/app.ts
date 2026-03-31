@@ -1,3 +1,53 @@
+// Stars background animation
+const initStars = () => {
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;';
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  const COLORS = ['#ffffff', '#FFD700', '#ff9ef5', '#9ef5ff', '#a0ff9e', '#ffb347', '#ff8800', '#aa44ff'];
+  type Star = { x: number; y: number; r: number; color: string; speed: number; phase: number; alpha: number };
+
+  const stars: Star[] = Array.from({ length: 70 }, () => ({
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * window.innerHeight,
+    r: Math.random() * 2 + 0.8,
+    color: COLORS[Math.floor(Math.random() * COLORS.length)],
+    speed: Math.random() * 0.012 + 0.004,
+    phase: Math.random() * Math.PI * 2,
+    alpha: Math.random()
+  }));
+
+  const resize = () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  };
+
+  const draw = (t: number) => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    stars.forEach((s) => {
+      s.alpha = 0.15 + 0.85 * Math.abs(Math.sin(t * s.speed + s.phase));
+      ctx.save();
+      ctx.globalAlpha = s.alpha * 0.9;
+      ctx.shadowBlur = 6;
+      ctx.shadowColor = s.color;
+      ctx.fillStyle = s.color;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+    requestAnimationFrame(draw);
+  };
+
+  window.addEventListener('resize', resize);
+  resize();
+  requestAnimationFrame(draw);
+};
+
+initStars();
+
 import confetti from 'canvas-confetti';
 import Slot from '@js/Slot';
 import SoundEffects from '@js/SoundEffects';
