@@ -33,6 +33,13 @@ include ../mixins/icons
     #prize-buttons.prize-buttons
 
     #current-prize-label.current-prize-label(style="display:none") Please select a prize
+
+    #countdown-bar.countdown-bar(style="display:none")
+      .countdown-bar__time#countdown-bar-time 00:00
+      .countdown-bar__controls
+        button#countdown-toggle.solid-button.countdown-bar__btn Start
+        button#countdown-reset.solid-button.countdown-bar__btn.solid-button--secondary Reset
+
     .main-clock-wrap
       #main-clock-time.main-clock-time 00:00:00
       #main-clock-date.main-clock-date
@@ -94,6 +101,7 @@ include ../mixins/icons
           .prize-config-header
             span Name
             span Count
+            span ⏱ min
             span
           #prize-config-list.prize-config-list
           button#add-prize-row.solid-button(style="margin-top:0.75rem;width:100%;font-size:0.875rem") + Add Prize

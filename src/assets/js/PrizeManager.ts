@@ -1,6 +1,16 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { getDatabase, ref, set } from 'firebase/database';
 
+export interface CountdownState {
+  prizeId: string;
+  minutes: number;
+  /** Unix ms when last started; null when not running */
+  startedAt: number | null;
+  /** Seconds remaining at last pause; null when not paused */
+  pausedRemaining: number | null;
+  running: boolean;
+}
+
 const firebaseConfig = {
     apiKey: "AIzaSyBzJJ3yeO-_Yozikwds9_6PPwyAn788SHU",
     authDomain: "event-luckydraw.firebaseapp.com",
@@ -18,6 +28,8 @@ export interface Prize {
   id: string;
   name: string;
   count: number;
+  /** Countdown duration in minutes for this prize (0 = no countdown) */
+  countdownMinutes?: number;
   winners: string[];
   winnerTimestamps?: string[];
   winnerSeeds?: string[];
@@ -106,6 +118,38 @@ export default class PrizeManager {
       });
     });
     return rows.join('\n');
+  }
+
+  // ── Countdown state (synced to Firebase + localStorage) ──────
+
+  startCountdown(prizeId: string, minutes: number, resumeFromSeconds?: number): void {
+    const totalSecs = minutes * 60;
+    const elapsed = resumeFromSeconds !== undefined ? totalSecs - resumeFromSeconds : 0;
+    const state: CountdownState = {
+      prizeId,
+      minutes,
+      startedAt: Date.now() - elapsed * 1000,
+      pausedRemaining: null,
+      running: true,
+    };
+    this.saveCountdownState(state);
+  }
+
+  pauseCountdown(remaining: number): void {
+    const raw = localStorage.getItem('draw-countdown');
+    try {
+      const prev: CountdownState = raw ? JSON.parse(raw) : {};
+      this.saveCountdownState({ ...prev, running: false, startedAt: null, pausedRemaining: remaining });
+    } catch { /* ignore */ }
+  }
+
+  resetCountdown(prizeId: string, minutes: number): void {
+    this.saveCountdownState({ prizeId, minutes, startedAt: null, pausedRemaining: null, running: false });
+  }
+
+  private saveCountdownState(state: CountdownState): void {
+    try { localStorage.setItem('draw-countdown', JSON.stringify(state)); } catch (e) { /* ignore */ }
+    try { set(ref(db, 'countdown'), state).catch(() => {}); } catch (e) { /* ignore */ }
   }
 
   private saveToFirebase(): void {

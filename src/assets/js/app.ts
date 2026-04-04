@@ -2,7 +2,7 @@
 import confetti from 'canvas-confetti';
 import Slot from '@js/Slot';
 import SoundEffects from '@js/SoundEffects';
-import PrizeManager from '@js/PrizeManager';
+import PrizeManager, { CountdownState } from '@js/PrizeManager';
 
 const initStars = () => {
   const canvas = document.createElement('canvas');
@@ -105,6 +105,74 @@ initStars();
   let confettiAnimationId: number;
   let slot: Slot;
 
+  // ── Per-prize countdown bar ───────────────────────────────────
+  const countdownBarEl = document.getElementById('countdown-bar') as HTMLDivElement | null;
+  const countdownBarTimeEl = document.getElementById('countdown-bar-time') as HTMLDivElement | null;
+  const countdownToggleBtn = document.getElementById('countdown-toggle') as HTMLButtonElement | null;
+  const countdownResetBtn = document.getElementById('countdown-reset') as HTMLButtonElement | null;
+  let countdownTimerId: number | null = null;
+  let countdownSecsLeft = 0;
+  let countdownRunning = false;
+
+  const fmtSecs = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+
+  const refreshCountdownDisplay = () => {
+    if (!countdownBarTimeEl) return;
+    countdownBarTimeEl.textContent = fmtSecs(Math.max(0, countdownSecsLeft));
+    countdownBarTimeEl.classList.toggle('urgent', countdownSecsLeft <= 30 && countdownSecsLeft > 0);
+  };
+
+  const stopCountdownTimer = () => {
+    if (countdownTimerId !== null) { clearInterval(countdownTimerId); countdownTimerId = null; }
+    countdownRunning = false;
+    if (countdownToggleBtn) countdownToggleBtn.textContent = 'Start';
+  };
+
+  const updateCountdownBar = () => {
+    const p = prizeManager.currentPrize;
+    const mins = p?.countdownMinutes ?? 0;
+    if (!countdownBarEl || !p || !mins) {
+      if (countdownBarEl) countdownBarEl.style.display = 'none';
+      stopCountdownTimer();
+      return;
+    }
+    countdownBarEl.style.display = 'flex';
+    // If not running, reset to this prize's duration
+    if (!countdownRunning) {
+      countdownSecsLeft = mins * 60;
+      refreshCountdownDisplay();
+    }
+  };
+
+  countdownToggleBtn?.addEventListener('click', () => {
+    const p = prizeManager.currentPrize;
+    if (!p || !(p.countdownMinutes ?? 0)) return;
+    if (countdownRunning) {
+      // Pause
+      stopCountdownTimer();
+      prizeManager.pauseCountdown(countdownSecsLeft);
+    } else {
+      // Start / Resume
+      countdownRunning = true;
+      if (countdownToggleBtn) countdownToggleBtn.textContent = 'Pause';
+      prizeManager.startCountdown(p.id, p.countdownMinutes!, countdownSecsLeft);
+      countdownTimerId = window.setInterval(() => {
+        countdownSecsLeft = Math.max(0, countdownSecsLeft - 1);
+        refreshCountdownDisplay();
+        if (countdownSecsLeft <= 0) stopCountdownTimer();
+      }, 1000);
+    }
+  });
+
+  countdownResetBtn?.addEventListener('click', () => {
+    const p = prizeManager.currentPrize;
+    if (!p || !(p.countdownMinutes ?? 0)) return;
+    stopCountdownTimer();
+    countdownSecsLeft = (p.countdownMinutes ?? 0) * 60;
+    refreshCountdownDisplay();
+    prizeManager.resetCountdown(p.id, p.countdownMinutes!);
+  });
+
   const customConfetti = confetti.create(confettiCanvas, {
     resize: true,
     useWorker: true
@@ -194,10 +262,12 @@ initStars();
         + `<span class="prize-btn-meta">${prize.winners.length}/${prize.count} ppl</span>`;
       btn.disabled = isFull;
       btn.addEventListener('click', () => {
+        stopCountdownTimer();           // stop any running countdown before switching
         prizeManager.selectPrize(prize.id);
         renderPrizeButtons();
         updateCurrentPrizeLabel();
         updateDrawButton();
+        updateCountdownBar();
         stopWinningAnimation();
       });
       prizeButtonsContainer.appendChild(btn);
@@ -262,39 +332,29 @@ initStars();
   });
 
   // Prize config in settings
+  const makePrizeRow = (id: string, name: string, count: number, cdMins: number): HTMLDivElement => {
+    const row = document.createElement('div');
+    row.className = 'prize-config-row';
+    row.dataset.id = id;
+    row.innerHTML = `
+      <input class="input-field pc-name" type="text" placeholder="Prize name" value="${name}">
+      <input class="input-field pc-count" type="number" min="1" value="${count}" style="text-align:center">
+      <input class="input-field pc-countdown" type="number" min="0" max="60" value="${cdMins}" style="text-align:center" title="Countdown minutes (0 = off)">
+      <button class="solid-button solid-button--danger pc-del" style="padding:0.4rem 0.8rem;font-size:0.875rem">✕</button>
+    `;
+    row.querySelector('.pc-del')!.addEventListener('click', () => row.remove());
+    return row;
+  };
+
   const renderPrizeConfig = () => {
     prizeConfigList.innerHTML = '';
     prizeManager.allPrizes.forEach((prize) => {
-      const row = document.createElement('div');
-      row.className = 'prize-config-row';
-      row.dataset.id = prize.id;
-      row.innerHTML = `
-        <input class="input-field pc-name" type="text"
-          placeholder="Prize name" value="${prize.name}">
-        <input class="input-field pc-count" type="number"
-          min="1" value="${prize.count}" style="width:80px;text-align:center">
-        <button class="solid-button solid-button--danger pc-del"
-          style="padding:0.4rem 0.8rem;font-size:0.875rem">Delete</button>
-      `;
-      row.querySelector('.pc-del')!.addEventListener('click', () => row.remove());
-      prizeConfigList.appendChild(row);
+      prizeConfigList.appendChild(makePrizeRow(prize.id, prize.name, prize.count, prize.countdownMinutes ?? 0));
     });
   };
 
   addPrizeRowButton.addEventListener('click', () => {
-    const row = document.createElement('div');
-    row.className = 'prize-config-row';
-    row.dataset.id = String(Date.now());
-    row.innerHTML = `
-      <input class="input-field pc-name" type="text"
-        placeholder="Prize name" value="">
-      <input class="input-field pc-count" type="number"
-        min="1" value="1" style="width:80px;text-align:center">
-      <button class="solid-button solid-button--danger pc-del"
-        style="padding:0.4rem 0.8rem;font-size:0.875rem">Delete</button>
-    `;
-    row.querySelector('.pc-del')!.addEventListener('click', () => row.remove());
-    prizeConfigList.appendChild(row);
+    prizeConfigList.appendChild(makePrizeRow(String(Date.now()), '', 1, 0));
   });
 
   // Spin callbacks
@@ -482,13 +542,16 @@ initStars();
     const newPrizes = rows.map((row) => ({
       id: (row as HTMLElement).dataset.id ?? String(Date.now()),
       name: (row.querySelector('.pc-name') as HTMLInputElement).value.trim() || 'Prize',
-      count: Math.max(1, parseInt((row.querySelector('.pc-count') as HTMLInputElement).value, 10) || 1)
+      count: Math.max(1, parseInt((row.querySelector('.pc-count') as HTMLInputElement).value, 10) || 1),
+      countdownMinutes: Math.max(0, parseInt((row.querySelector('.pc-countdown') as HTMLInputElement).value, 10) || 0),
     }));
     prizeManager.setPrizes(newPrizes);
     renderPrizeButtons();
     updateCurrentPrizeLabel();
     updateDrawButton();
     updateParticipantCount();
+    stopCountdownTimer();
+    updateCountdownBar();
     onSettingsClose();
   });
 
@@ -521,6 +584,7 @@ initStars();
   // Init
   renderPrizeButtons();
   updateCurrentPrizeLabel();
+  updateCountdownBar();
   drawButton.disabled = true;
 
   // Restore ticker from storage

@@ -453,14 +453,9 @@
         </div>
       </div>
       <div id="seed-display" class="center-seed" style="display:none"></div>
-      <div class="divider"></div>
-      <div class="countdown-num" id="countdown-display">05:00</div>
-      <div class="countdown-ctrl">
-        <input id="countdown-mins" class="ctrl-input" type="number" min="1" max="60" value="5">
-        <span class="ctrl-label">min</span>
-        <button class="ctrl-btn gold" onclick="toggleCountdown()">Start</button>
-        <button class="ctrl-btn" onclick="resetCountdown()">Reset</button>
-      </div>
+      <div class="divider" id="countdown-divider" style="display:none"></div>
+      <div class="countdown-num" id="countdown-display" style="display:none">--:--</div>
+      <div class="countdown-label" id="countdown-label" style="display:none;font-size:0.68rem;color:rgba(255,215,0,0.5);letter-spacing:0.12em;text-transform:uppercase;text-align:center"></div>
     </div>
 
     <!-- Right: Upcoming -->
@@ -635,6 +630,15 @@
       }, function() {
         if (fbStatus) { fbStatus.textContent = '🔴 offline'; fbStatus.style.color = 'rgba(255,100,100,0.6)'; }
       });
+      // Listen to countdown state from main app
+      onValue(ref(db, 'countdown'), function(snapshot) {
+        var state = snapshot.val();
+        if (state) {
+          localStorage.setItem('draw-countdown', JSON.stringify(state));
+          lastCdHash = JSON.stringify(state);
+          applyCountdownState(state);
+        }
+      });
     });
   }).catch(() => {
     if (fbStatus) { fbStatus.textContent = '🔴 offline'; fbStatus.style.color = 'rgba(255,100,100,0.6)'; }
@@ -643,39 +647,57 @@
   refresh();
   setInterval(refresh, 2000);
 
-  // ── Countdown ──────────────────────────────────────────────
-  let timer = null;
-  let secs = 300;
+  // ── Countdown (read-only, driven by main app via Firebase) ───
+  let cdTimer = null;
+  let cdSecs = 0;
 
-  function fmt(s) {
-    return String(Math.floor(s / 60)).padStart(2,'0') + ':' + String(s % 60).padStart(2,'0');
+  function fmtCd(s) {
+    return String(Math.floor(s / 60)).padStart(2,'0') + ':' + String(Math.max(0,s) % 60).padStart(2,'0');
   }
 
-  function toggleCountdown() {
-    if (timer) {
-      clearInterval(timer); timer = null;
-      document.querySelector('.ctrl-btn.gold').textContent = 'Start';
-      return;
+  const cdEl = document.getElementById('countdown-display');
+  const cdDivider = document.getElementById('countdown-divider');
+  const cdLabel = document.getElementById('countdown-label');
+
+  function showCountdown(show) {
+    [cdEl, cdDivider, cdLabel].forEach(el => { if (el) el.style.display = show ? 'block' : 'none'; });
+  }
+
+  function applyCountdownState(state) {
+    if (cdTimer) { clearInterval(cdTimer); cdTimer = null; }
+    if (!state || !state.minutes) { showCountdown(false); return; }
+    showCountdown(true);
+    if (state.running && state.startedAt) {
+      const elapsed = Math.floor((Date.now() - state.startedAt) / 1000);
+      cdSecs = Math.max(0, state.minutes * 60 - elapsed);
+      cdTimer = setInterval(() => {
+        cdSecs = Math.max(0, cdSecs - 1);
+        if (cdEl) {
+          cdEl.textContent = fmtCd(cdSecs);
+          cdEl.style.color = cdSecs <= 30 && cdSecs > 0 ? '#ff6060' : '#ffd700';
+        }
+        if (cdSecs <= 0) { clearInterval(cdTimer); cdTimer = null; }
+      }, 1000);
+      if (cdLabel) cdLabel.textContent = '⏱ countdown';
+    } else {
+      cdSecs = state.pausedRemaining !== null ? state.pausedRemaining : state.minutes * 60;
+      if (cdLabel) cdLabel.textContent = state.pausedRemaining !== null ? '⏸ paused' : '⏱ ready';
     }
-    secs = (parseInt(document.getElementById('countdown-mins').value) || 5) * 60;
-    document.getElementById('countdown-display').textContent = fmt(secs);
-    document.querySelector('.ctrl-btn.gold').textContent = 'Pause';
-    timer = setInterval(() => {
-      secs--;
-      document.getElementById('countdown-display').textContent = fmt(secs);
-      if (secs <= 0) {
-        clearInterval(timer); timer = null;
-        document.querySelector('.ctrl-btn.gold').textContent = 'Start';
-      }
-    }, 1000);
+    if (cdEl) {
+      cdEl.textContent = fmtCd(cdSecs);
+      cdEl.style.color = '#ffd700';
+    }
   }
 
-  function resetCountdown() {
-    if (timer) { clearInterval(timer); timer = null; }
-    secs = (parseInt(document.getElementById('countdown-mins').value) || 5) * 60;
-    document.getElementById('countdown-display').textContent = fmt(secs);
-    document.querySelector('.ctrl-btn.gold').textContent = 'Start';
+  // Poll localStorage as same-device fallback
+  let lastCdHash = '';
+  function pollCountdown() {
+    try {
+      const raw = localStorage.getItem('draw-countdown') || '';
+      if (raw && raw !== lastCdHash) { lastCdHash = raw; applyCountdownState(JSON.parse(raw)); }
+    } catch(e) {}
   }
+  setInterval(pollCountdown, 1000);
 </script>
 </body>
 </html>
