@@ -111,7 +111,7 @@
       width: $switch-handle-diameter;
       left: $switch-slider-padding;
       bottom: $switch-slider-padding;
-      background-color: $color-switch-handle-disabled;
+      background-color: #fff;
       -webkit-transition: 0.4s;
       transition: 0.4s;
       border-radius: $switch-handle-diameter;
@@ -124,8 +124,12 @@
     height: 0;
   }
 
+  input:checked + .slider {
+    background-color: #27ae60;
+  }
+
   input:checked + .slider:before {
-    background-color: $color-switch-handle;
+    background-color: #fff;
     transform: translateX(
       $switch-slider-width - ($switch-slider-padding * 2) -
         $switch-handle-diameter
