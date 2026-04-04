@@ -541,18 +541,22 @@
 }
 
 .prize-reset-btn {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: #e67e22;
+  border: none;
   border-radius: 0.4rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: #fff;
   cursor: pointer;
-  font-size: 0.72rem;
-  padding: 0.25rem 0.65rem;
-  transition: all 0.15s;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.3rem 0.8rem;
+  transition: background 0.15s;
 
   &:hover {
-    border-color: rgba(255, 215, 0, 0.5);
-    color: #ffd700;
+    background: #cf6d17;
+  }
+
+  &:active {
+    background: #b85d10;
   }
 }
 
