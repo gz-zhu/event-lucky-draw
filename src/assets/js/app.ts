@@ -105,72 +105,109 @@ initStars();
   let confettiAnimationId: number;
   let slot: Slot;
 
-  // ── Per-prize countdown bar ───────────────────────────────────
+  // ── Countdown config (standalone module) ─────────────────────
   const countdownBarEl = document.getElementById('countdown-bar') as HTMLDivElement | null;
   const countdownBarTimeEl = document.getElementById('countdown-bar-time') as HTMLDivElement | null;
   const countdownToggleBtn = document.getElementById('countdown-toggle') as HTMLButtonElement | null;
   const countdownResetBtn = document.getElementById('countdown-reset') as HTMLButtonElement | null;
-  let countdownTimerId: number | null = null;
-  let countdownSecsLeft = 0;
-  let countdownRunning = false;
+  const countdownCfgPrize = document.getElementById('countdown-cfg-prize') as HTMLSelectElement | null;
+  const countdownCfgMins = document.getElementById('countdown-cfg-mins') as HTMLInputElement | null;
+
+  interface CountdownConfig { prizeId: string; minutes: number; }
+
+  const getCountdownConfig = (): CountdownConfig | null => {
+    try {
+      const raw = localStorage.getItem('draw-countdown-config');
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  };
+
+  const saveCountdownConfig = (cfg: CountdownConfig | null): void => {
+    try {
+      if (cfg) {
+        localStorage.setItem('draw-countdown-config', JSON.stringify(cfg));
+      } else {
+        localStorage.removeItem('draw-countdown-config');
+      }
+    } catch (e) { /* ignore */ }
+  };
 
   const fmtSecs = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
-  const refreshCountdownDisplay = () => {
-    if (!countdownBarTimeEl) return;
-    countdownBarTimeEl.textContent = fmtSecs(Math.max(0, countdownSecsLeft));
-    countdownBarTimeEl.classList.toggle('urgent', countdownSecsLeft <= 30 && countdownSecsLeft > 0);
+  const getCountdownSecsRemaining = (cfg: CountdownConfig): number => {
+    try {
+      const raw = localStorage.getItem('draw-countdown');
+      if (!raw) return cfg.minutes * 60;
+      const state = JSON.parse(raw);
+      if (state.prizeId !== cfg.prizeId) return cfg.minutes * 60;
+      if (state.running && state.startedAt) {
+        const elapsed = Math.floor((Date.now() - state.startedAt) / 1000);
+        return Math.max(0, state.minutes * 60 - elapsed);
+      }
+      if (!state.running && state.pausedRemaining !== null) return state.pausedRemaining;
+    } catch { /* ignore */ }
+    return cfg.minutes * 60;
   };
 
-  const stopCountdownTimer = () => {
-    if (countdownTimerId !== null) { clearInterval(countdownTimerId); countdownTimerId = null; }
-    countdownRunning = false;
-    if (countdownToggleBtn) countdownToggleBtn.textContent = 'Start';
+  const isCountdownRunning = (cfg: CountdownConfig): boolean => {
+    try {
+      const raw = localStorage.getItem('draw-countdown');
+      if (!raw) return false;
+      const state = JSON.parse(raw);
+      return state.running && state.prizeId === cfg.prizeId;
+    } catch { return false; }
   };
 
   const updateCountdownBar = () => {
+    const cfg = getCountdownConfig();
     const p = prizeManager.currentPrize;
-    const mins = p?.countdownMinutes ?? 0;
-    if (!countdownBarEl || !p || !mins) {
+    if (!countdownBarEl || !cfg || !p || cfg.prizeId !== p.id) {
       if (countdownBarEl) countdownBarEl.style.display = 'none';
-      stopCountdownTimer();
       return;
     }
     countdownBarEl.style.display = 'flex';
-    // If not running, reset to this prize's duration
-    if (!countdownRunning) {
-      countdownSecsLeft = mins * 60;
-      refreshCountdownDisplay();
+    const secs = getCountdownSecsRemaining(cfg);
+    if (countdownBarTimeEl) {
+      countdownBarTimeEl.textContent = fmtSecs(secs);
+      countdownBarTimeEl.classList.toggle('urgent', secs <= 60 && secs > 0);
     }
+    if (countdownToggleBtn) countdownToggleBtn.textContent = isCountdownRunning(cfg) ? 'Pause' : 'Start';
   };
 
+  setInterval(updateCountdownBar, 1000);
+
   countdownToggleBtn?.addEventListener('click', () => {
-    const p = prizeManager.currentPrize;
-    if (!p || !(p.countdownMinutes ?? 0)) return;
-    if (countdownRunning) {
-      // Pause
-      stopCountdownTimer();
-      prizeManager.pauseCountdown(countdownSecsLeft);
+    const cfg = getCountdownConfig();
+    if (!cfg) return;
+    if (isCountdownRunning(cfg)) {
+      prizeManager.pauseCountdown(getCountdownSecsRemaining(cfg));
     } else {
-      // Start / Resume
-      countdownRunning = true;
-      if (countdownToggleBtn) countdownToggleBtn.textContent = 'Pause';
-      prizeManager.startCountdown(p.id, p.countdownMinutes!, countdownSecsLeft);
-      countdownTimerId = window.setInterval(() => {
-        countdownSecsLeft = Math.max(0, countdownSecsLeft - 1);
-        refreshCountdownDisplay();
-        if (countdownSecsLeft <= 0) stopCountdownTimer();
-      }, 1000);
+      try {
+        const raw = localStorage.getItem('draw-countdown');
+        const state = raw ? JSON.parse(raw) : null;
+        const resumeFrom = (state?.prizeId === cfg.prizeId && state?.pausedRemaining !== null)
+          ? state.pausedRemaining as number : undefined;
+        prizeManager.startCountdown(cfg.prizeId, cfg.minutes, resumeFrom);
+      } catch {
+        prizeManager.startCountdown(cfg.prizeId, cfg.minutes);
+      }
     }
+    updateCountdownBar();
   });
 
   countdownResetBtn?.addEventListener('click', () => {
-    const p = prizeManager.currentPrize;
-    if (!p || !(p.countdownMinutes ?? 0)) return;
-    stopCountdownTimer();
-    countdownSecsLeft = (p.countdownMinutes ?? 0) * 60;
-    refreshCountdownDisplay();
-    prizeManager.resetCountdown(p.id, p.countdownMinutes!);
+    const cfg = getCountdownConfig();
+    if (!cfg) return;
+    prizeManager.resetCountdown(cfg.prizeId, cfg.minutes);
+    updateCountdownBar();
+  });
+
+  const countdownCancelBtn = document.getElementById('countdown-cancel') as HTMLButtonElement | null;
+  countdownCancelBtn?.addEventListener('click', () => {
+    saveCountdownConfig(null);
+    prizeManager.clearCountdown();
+    renderPrizeButtons();
+    updateCountdownBar();
   });
 
   const customConfetti = confetti.create(confettiCanvas, {
@@ -253,16 +290,17 @@ initStars();
   // Prize buttons
   const renderPrizeButtons = () => {
     prizeButtonsContainer.innerHTML = '';
+    const cfg = getCountdownConfig();
     prizeManager.allPrizes.forEach((prize) => {
       const btn = document.createElement('button');
       const isFull = prize.winners.length >= prize.count;
       const isActive = prizeManager.currentPrize?.id === prize.id;
+      const hasCountdown = cfg?.prizeId === prize.id;
       btn.className = `prize-select-btn${isActive ? ' active' : ''}${isFull ? ' full' : ''}`;
-      btn.innerHTML = `<span class="prize-btn-name">${prize.name}</span>`
+      btn.innerHTML = `<span class="prize-btn-name">${prize.name}${hasCountdown ? ' ⏱' : ''}</span>`
         + `<span class="prize-btn-meta">${prize.winners.length}/${prize.count} ppl</span>`;
       btn.disabled = isFull;
       btn.addEventListener('click', () => {
-        stopCountdownTimer();           // stop any running countdown before switching
         prizeManager.selectPrize(prize.id);
         renderPrizeButtons();
         updateCurrentPrizeLabel();
@@ -331,30 +369,96 @@ initStars();
     renderRecords();
   });
 
+  // Custom 24-hour time picker popup (shared, appended to body)
+  const buildTimePicker = (): { popup: HTMLDivElement; hourSel: HTMLSelectElement; minSel: HTMLSelectElement } => {
+    const popup = document.createElement('div');
+    popup.className = 'drawtime-picker-popup';
+    popup.style.display = 'none';
+
+    const hourSel = document.createElement('select');
+    hourSel.className = 'drawtime-sel';
+    for (let h = 0; h < 24; h++) {
+      const o = document.createElement('option');
+      o.value = String(h).padStart(2, '0');
+      o.textContent = String(h).padStart(2, '0');
+      hourSel.appendChild(o);
+    }
+    const colon = document.createElement('span');
+    colon.className = 'drawtime-colon';
+    colon.textContent = ':';
+    const minSel = document.createElement('select');
+    minSel.className = 'drawtime-sel';
+    for (let m = 0; m < 60; m++) {
+      const o = document.createElement('option');
+      o.value = String(m).padStart(2, '0');
+      o.textContent = String(m).padStart(2, '0');
+      minSel.appendChild(o);
+    }
+    popup.appendChild(hourSel);
+    popup.appendChild(colon);
+    popup.appendChild(minSel);
+    document.body.appendChild(popup);
+    return { popup, hourSel, minSel };
+  };
+
+  let activePickerClose: (() => void) | null = null;
+
   // Prize config in settings
-  const makePrizeRow = (id: string, name: string, count: number, cdMins: number): HTMLDivElement => {
+  const makePrizeRow = (id: string, name: string, count: number, drawTime: string): HTMLDivElement => {
     const row = document.createElement('div');
     row.className = 'prize-config-row';
     row.dataset.id = id;
     row.innerHTML = `
       <input class="input-field pc-name" type="text" placeholder="Prize name" value="${name}">
       <input class="input-field pc-count" type="number" min="1" value="${count}" style="text-align:center">
-      <input class="input-field pc-countdown" type="number" min="0" max="60" value="${cdMins}" style="text-align:center" title="Countdown minutes (0 = off)">
+      <input class="input-field pc-drawtime" type="text" pattern="[0-2][0-9]:[0-5][0-9]"
+        placeholder="HH:MM" value="${drawTime}" style="text-align:center;cursor:pointer" readonly>
       <button class="solid-button solid-button--danger pc-del" style="padding:0.4rem 0.8rem;font-size:0.875rem">✕</button>
     `;
     row.querySelector('.pc-del')!.addEventListener('click', () => row.remove());
+
+    const dtText = row.querySelector('.pc-drawtime') as HTMLInputElement;
+    const { popup, hourSel, minSel } = buildTimePicker();
+    const closePopup = () => { popup.style.display = 'none'; };
+
+    popup.addEventListener('click', (e) => e.stopPropagation());
+
+    dtText.addEventListener('click', () => {
+      if (activePickerClose && activePickerClose !== closePopup) activePickerClose();
+      if (popup.style.display !== 'none') { closePopup(); activePickerClose = null; return; }
+
+      const parts = dtText.value.split(':');
+      if (parts.length === 2) {
+        hourSel.value = parts[0].padStart(2, '0');
+        minSel.value = parts[1].padStart(2, '0');
+      }
+
+      const rect = dtText.getBoundingClientRect();
+      popup.style.top = `${rect.bottom + 4}px`;
+      popup.style.left = 'auto';
+      popup.style.right = `${window.innerWidth - rect.right}px`;
+      popup.style.display = 'flex';
+      activePickerClose = closePopup;
+      skipPickerClose = true;
+    });
+
+    // Apply selection immediately when selects change
+    const applySelection = () => { dtText.value = `${hourSel.value}:${minSel.value}`; };
+    hourSel.addEventListener('change', applySelection);
+    minSel.addEventListener('change', applySelection);
+
     return row;
   };
 
   const renderPrizeConfig = () => {
     prizeConfigList.innerHTML = '';
     prizeManager.allPrizes.forEach((prize) => {
-      prizeConfigList.appendChild(makePrizeRow(prize.id, prize.name, prize.count, prize.countdownMinutes ?? 0));
+      prizeConfigList.appendChild(makePrizeRow(prize.id, prize.name, prize.count, prize.drawTime ?? ''));
     });
   };
 
   addPrizeRowButton.addEventListener('click', () => {
-    prizeConfigList.appendChild(makePrizeRow(String(Date.now()), '', 1, 0));
+    prizeConfigList.appendChild(makePrizeRow(String(Date.now()), '', 1, ''));
   });
 
   // Spin callbacks
@@ -495,11 +599,26 @@ initStars();
   }
 
   // Settings panel
+  const refreshCountdownCfgSelect = () => {
+    if (!countdownCfgPrize) return;
+    const cfg = getCountdownConfig();
+    countdownCfgPrize.innerHTML = '<option value="">— Select prize —</option>';
+    prizeManager.allPrizes.forEach((p) => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.name;
+      if (cfg?.prizeId === p.id) opt.selected = true;
+      countdownCfgPrize.appendChild(opt);
+    });
+    if (countdownCfgMins) countdownCfgMins.value = cfg ? String(cfg.minutes) : '';
+  };
+
   const onSettingsOpen = () => {
     nameListTextArea.value = slot.names.join('\n');
     removeNameFromListCheckbox.checked = slot.shouldRemoveWinnerFromNameList;
     enableSoundCheckbox.checked = !soundEffects.mute;
     renderPrizeConfig();
+    refreshCountdownCfgSelect();
     settingsWrapper.style.display = 'block';
   };
 
@@ -539,18 +658,32 @@ initStars();
     slot.shouldRemoveWinnerFromNameList = removeNameFromListCheckbox.checked;
     soundEffects.mute = !enableSoundCheckbox.checked;
     const rows = Array.from(prizeConfigList.querySelectorAll('.prize-config-row'));
-    const newPrizes = rows.map((row) => ({
-      id: (row as HTMLElement).dataset.id ?? String(Date.now()),
-      name: (row.querySelector('.pc-name') as HTMLInputElement).value.trim() || 'Prize',
-      count: Math.max(1, parseInt((row.querySelector('.pc-count') as HTMLInputElement).value, 10) || 1),
-      countdownMinutes: Math.max(0, parseInt((row.querySelector('.pc-countdown') as HTMLInputElement).value, 10) || 0),
-    }));
+    const newPrizes = rows.map((row) => {
+      const dt = (row.querySelector('.pc-drawtime') as HTMLInputElement).value.trim();
+      return {
+        id: (row as HTMLElement).dataset.id ?? String(Date.now()),
+        name: (row.querySelector('.pc-name') as HTMLInputElement).value.trim() || 'Prize',
+        count: Math.max(1, parseInt((row.querySelector('.pc-count') as HTMLInputElement).value, 10) || 1),
+        ...(dt ? { drawTime: dt } : {}),
+      };
+    });
     prizeManager.setPrizes(newPrizes);
+
+    // Save countdown config
+    const cfgPrizeId = countdownCfgPrize?.value ?? '';
+    const cfgMins = parseInt(countdownCfgMins?.value ?? '', 10);
+    if (cfgPrizeId && cfgMins > 0) {
+      saveCountdownConfig({ prizeId: cfgPrizeId, minutes: cfgMins });
+      prizeManager.resetCountdown(cfgPrizeId, cfgMins);
+    } else {
+      saveCountdownConfig(null);
+      prizeManager.clearCountdown();
+    }
+
     renderPrizeButtons();
     updateCurrentPrizeLabel();
     updateDrawButton();
     updateParticipantCount();
-    stopCountdownTimer();
     updateCountdownBar();
     onSettingsClose();
   });
@@ -603,6 +736,13 @@ initStars();
       });
     });
   }
+
+  // Close time picker popup when clicking outside
+  let skipPickerClose = false;
+  document.addEventListener('click', () => {
+    if (skipPickerClose) { skipPickerClose = false; return; }
+    if (activePickerClose) { activePickerClose(); activePickerClose = null; }
+  });
 
   // Firebase sync error toast
   const showToast = (msg: string, color = 'rgba(220,60,60,0.92)') => {

@@ -28,8 +28,8 @@ export interface Prize {
   id: string;
   name: string;
   count: number;
-  /** Countdown duration in minutes for this prize (0 = no countdown) */
-  countdownMinutes?: number;
+  /** Scheduled draw time shown on the display screen, e.g. "19:30" */
+  drawTime?: string;
   winners: string[];
   winnerTimestamps?: string[];
   winnerSeeds?: string[];
@@ -145,6 +145,11 @@ export default class PrizeManager {
 
   resetCountdown(prizeId: string, minutes: number): void {
     this.saveCountdownState({ prizeId, minutes, startedAt: null, pausedRemaining: null, running: false });
+  }
+
+  clearCountdown(): void {
+    try { localStorage.removeItem('draw-countdown'); } catch (e) { /* ignore */ }
+    try { set(ref(db, 'countdown'), null).catch(() => {}); } catch (e) { /* ignore */ }
   }
 
   private saveCountdownState(state: CountdownState): void {

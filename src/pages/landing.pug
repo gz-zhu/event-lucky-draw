@@ -39,6 +39,7 @@ include ../mixins/icons
       .countdown-bar__controls
         button#countdown-toggle.solid-button.countdown-bar__btn Start
         button#countdown-reset.solid-button.countdown-bar__btn.solid-button--secondary Reset
+        button#countdown-cancel.solid-button.countdown-bar__btn.countdown-bar__btn--cancel Cancel
 
     .main-clock-wrap
       #main-clock-time.main-clock-time 00:00:00
@@ -101,10 +102,23 @@ include ../mixins/icons
           .prize-config-header
             span Name
             span Count
-            span ⏱ min
+            span Draw Time
             span
           #prize-config-list.prize-config-list
           button#add-prize-row.solid-button(style="margin-top:0.75rem;width:100%;font-size:0.875rem") + Add Prize
+
+        div.input-group
+          .countdown-cfg-header
+            label.input-label ⏱ Countdown Timer
+          p.countdown-cfg-hint
+            | Select a prize and set a duration. Staff will see a Start / Pause / Reset bar on the main screen when that prize is active.
+          .countdown-cfg-row
+            select#countdown-cfg-prize.input-field.countdown-cfg-select
+              option(value="") — Select prize —
+            .countdown-cfg-duration
+              input#countdown-cfg-mins.input-field(type="number" min="1" max="99" placeholder="min")
+              span.countdown-cfg-unit min
+          p.countdown-cfg-clear-hint Leave prize blank to disable the countdown.
 
       div.settings__panel__group
         button#settings-save.solid-button Save

@@ -200,7 +200,8 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
+      padding-top: 6vh;
       gap: 0.9rem;
       background: transparent;
       backdrop-filter: none;
@@ -571,7 +572,8 @@
       const rem = p.count - p.winners.length;
       const row = document.createElement('div');
       row.className = 'upcoming-row';
-      row.innerHTML = '<div><div class="upcoming-row__name">' + p.name + '</div>'
+      const timeBadge = p.drawTime ? '<span style="font-size:0.7rem;color:#ffd700;margin-left:0.4rem;opacity:0.85">⏰ ' + p.drawTime + '</span>' : '';
+      row.innerHTML = '<div><div class="upcoming-row__name">' + p.name + timeBadge + '</div>'
         + '<div class="upcoming-row__sub">' + (done ? 'Completed' : rem + ' spot' + (rem > 1 ? 's' : '') + ' left') + '</div></div>'
         + '<div class="badge ' + (done ? 'badge--done' : 'badge--pending') + '">'
         + (done ? '✓ Done' : 'Upcoming') + '</div>';
@@ -633,11 +635,10 @@
       // Listen to countdown state from main app
       onValue(ref(db, 'countdown'), function(snapshot) {
         var state = snapshot.val();
-        if (state) {
-          localStorage.setItem('draw-countdown', JSON.stringify(state));
-          lastCdHash = JSON.stringify(state);
-          applyCountdownState(state);
-        }
+        var raw = state ? JSON.stringify(state) : '';
+        localStorage.setItem('draw-countdown', raw);
+        lastCdHash = raw;
+        applyCountdownState(state);
       });
     });
   }).catch(() => {
@@ -660,54 +661,68 @@
   const cdLabel = document.getElementById('countdown-label');
 
   function showCountdown(show) {
-    [cdEl, cdDivider, cdLabel].forEach(el => { if (el) el.style.display = show ? 'block' : 'none'; });
+    [cdEl, cdDivider, cdLabel].forEach(function(el) { if (el) el.style.display = show ? 'block' : 'none'; });
   }
 
   function getPrizeName(prizeId) {
     try {
-      const prizes = load();
-      const p = prizes.find(function(x) { return x.id === prizeId; });
+      var prizes = load();
+      var p = prizes.find(function(x) { return x.id === prizeId; });
       return p ? p.name : '';
     } catch(e) { return ''; }
   }
 
+  function showTimesUp(prizeName) {
+    showCountdown(true);
+    if (cdLabel) {
+      cdLabel.textContent = (prizeName ? prizeName + '  ·  ' : '') + '🎉 TIME\'S UP!';
+      cdLabel.style.color = '#FFEA60';
+    }
+    if (cdEl) { cdEl.textContent = '00:00'; cdEl.style.color = '#FFF260'; }
+    // Auto-hide after 10 seconds
+    setTimeout(function() { showCountdown(false); if (cdLabel) cdLabel.style.color = '#ffd700'; }, 10000);
+  }
+
   function applyCountdownState(state) {
     if (cdTimer) { clearInterval(cdTimer); cdTimer = null; }
+    // No active countdown → hide everything
     if (!state || !state.minutes) { showCountdown(false); return; }
+    var prizeName = getPrizeName(state.prizeId);
+    var namePrefix = prizeName ? prizeName + '  ·  ' : '';
     showCountdown(true);
-    const prizeName = getPrizeName(state.prizeId);
-    const namePrefix = prizeName ? prizeName + '  ·  ' : '';
     if (state.running && state.startedAt) {
-      const elapsed = Math.floor((Date.now() - state.startedAt) / 1000);
+      var elapsed = Math.floor((Date.now() - state.startedAt) / 1000);
       cdSecs = Math.max(0, state.minutes * 60 - elapsed);
-      cdTimer = setInterval(() => {
+      if (cdSecs <= 0) { showTimesUp(prizeName); return; }
+      cdTimer = setInterval(function() {
         cdSecs = Math.max(0, cdSecs - 1);
         if (cdEl) {
           cdEl.textContent = fmtCd(cdSecs);
-          cdEl.style.color = cdSecs <= 30 && cdSecs > 0 ? '#ff6060' : '#ffd700';
+          cdEl.style.color = cdSecs <= 30 && cdSecs > 0 ? '#FFEC60' : '#ffd700';
         }
-        if (cdSecs <= 0) { clearInterval(cdTimer); cdTimer = null; }
+        if (cdSecs <= 0) { clearInterval(cdTimer); cdTimer = null; showTimesUp(prizeName); }
       }, 1000);
-      if (cdLabel) cdLabel.textContent = namePrefix + '⏱ countdown';
+      if (cdLabel) { cdLabel.textContent = namePrefix + '⏱ COUNTDOWN'; cdLabel.style.color = '#ffd700'; }
     } else {
       cdSecs = state.pausedRemaining !== null ? state.pausedRemaining : state.minutes * 60;
-      if (cdLabel) cdLabel.textContent = namePrefix + (state.pausedRemaining !== null ? '⏸ paused' : '⏱ ready');
+      if (cdLabel) { cdLabel.textContent = namePrefix + (state.pausedRemaining !== null ? '⏸ PAUSED' : '⏱ READY'); cdLabel.style.color = '#ffd700'; }
     }
-    if (cdEl) {
-      cdEl.textContent = fmtCd(cdSecs);
-      cdEl.style.color = '#ffd700';
-    }
+    if (cdEl) { cdEl.textContent = fmtCd(cdSecs); cdEl.style.color = '#ffd700'; }
   }
 
   // Poll localStorage as same-device fallback
-  let lastCdHash = '';
+  var lastCdHash = '';
   function pollCountdown() {
     try {
-      const raw = localStorage.getItem('draw-countdown') || '';
-      if (raw && raw !== lastCdHash) { lastCdHash = raw; applyCountdownState(JSON.parse(raw)); }
+      var raw = localStorage.getItem('draw-countdown') || '';
+      if (raw !== lastCdHash) {
+        lastCdHash = raw;
+        applyCountdownState(raw ? JSON.parse(raw) : null);
+      }
     } catch(e) {}
   }
   setInterval(pollCountdown, 1000);
+  applyCountdownState(null);
 </script>
 </body>
 </html>
