@@ -14,7 +14,7 @@ const initStars = () => {
   const COLORS = ['#ffffff', '#FFD700', '#ff9ef5', '#9ef5ff', '#a0ff9e', '#ffb347', '#ff8800', '#aa44ff'];
   type Star = { x: number; y: number; r: number; color: string; speed: number; phase: number; alpha: number };
 
-  const stars: Star[] = Array.from({ length: 70 }, () => ({
+  const stars: Star[] = Array.from({ length: 40 }, () => ({
     x: Math.random() * window.innerWidth,
     y: Math.random() * window.innerHeight,
     r: Math.random() * 2 + 0.8,
@@ -152,6 +152,10 @@ initStars();
     const p = prizeManager.currentPrize;
     const hasNames = slot ? slot.names.length > 0 : false;
     drawButton.disabled = !p || prizeManager.isCurrentPrizeFull() || !hasNames;
+    if (!p) drawButton.title = 'Please select a prize first';
+    else if (prizeManager.isCurrentPrizeFull()) drawButton.title = 'All winners for this prize have been drawn';
+    else if (!hasNames) drawButton.title = 'Add participants in Settings first';
+    else drawButton.title = '';
   };
 
   const updateParticipantCount = () => {
@@ -407,13 +411,21 @@ initStars();
   };
 
   if (localStorage.getItem('draw-recovery-pending')) {
-    const saved: string[] = JSON.parse(localStorage.getItem('draw-recovery-names') || '[]');
+    let saved: string[] = [];
+    try {
+      const parsed = JSON.parse(localStorage.getItem('draw-recovery-names') || '[]');
+      if (Array.isArray(parsed)) saved = parsed.filter((n) => typeof n === 'string');
+    } catch { /* corrupted data — skip recovery */ }
     if (saved.length && recoveryBanner && recoveryMessage) {
       recoveryMessage.textContent = `⚠ Draw was interrupted. Restore ${saved.length} names to pool?`;
       recoveryBanner.style.display = 'flex';
     }
     recoveryRestore?.addEventListener('click', () => {
-      const names: string[] = JSON.parse(localStorage.getItem('draw-recovery-names') || '[]');
+      let names: string[] = [];
+      try {
+        const parsed = JSON.parse(localStorage.getItem('draw-recovery-names') || '[]');
+        if (Array.isArray(parsed)) names = parsed.filter((n) => typeof n === 'string');
+      } catch { /* ignore */ }
       slot.names = names;
       updateParticipantCount();
       updateDrawButton();
@@ -470,7 +482,7 @@ initStars();
     const newPrizes = rows.map((row) => ({
       id: (row as HTMLElement).dataset.id ?? String(Date.now()),
       name: (row.querySelector('.pc-name') as HTMLInputElement).value.trim() || 'Prize',
-      count: parseInt((row.querySelector('.pc-count') as HTMLInputElement).value, 10) || 1
+      count: Math.max(1, parseInt((row.querySelector('.pc-count') as HTMLInputElement).value, 10) || 1)
     }));
     prizeManager.setPrizes(newPrizes);
     renderPrizeButtons();
@@ -496,6 +508,11 @@ initStars();
       const filtered = filterOutWinners(names);
       showDedupeNotice(names.length - filtered.length);
       nameListTextArea.value = filtered.join('\n');
+      if (dedupeNoticeEl && filtered.length > 0) {
+        const base = dedupeNoticeEl.textContent || '';
+        dedupeNoticeEl.textContent = `✓ Loaded ${filtered.length} names from CSV${base ? `  ·  ${base}` : ''}`;
+        dedupeNoticeEl.classList.add('visible');
+      }
     };
     reader.readAsText(file, 'UTF-8');
     csvUpload.value = '';
@@ -522,6 +539,18 @@ initStars();
       });
     });
   }
+
+  // Firebase sync error toast
+  const showToast = (msg: string, color = 'rgba(220,60,60,0.92)') => {
+    const toast = document.createElement('div');
+    toast.style.cssText = `position:fixed;bottom:1.25rem;left:50%;transform:translateX(-50%);background:${color};color:#fff;padding:0.5rem 1.2rem;border-radius:0.5rem;font-size:0.85rem;z-index:9999;pointer-events:none;white-space:nowrap`;
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+  };
+  document.addEventListener('firebase-sync-error', () => {
+    showToast('⚠ Firebase sync failed — data saved locally only');
+  });
 
   // Warn before closing
   window.addEventListener('beforeunload', (e) => {

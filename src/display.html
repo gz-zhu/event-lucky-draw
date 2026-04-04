@@ -110,16 +110,6 @@
       flex: 1;
       display: grid;
       grid-template-columns: 1fr 1.3fr 1fr;
-      gap: 0;
-      padding: 0;
-      overflow: hidden;
-      min-height: 0;
-    }
-
-    .layout {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 1fr 1.3fr 1fr;
       gap: 0.85rem;
       padding: 0.85rem;
       overflow: hidden;
@@ -430,6 +420,7 @@
 <body>
 
 <canvas id="lights"></canvas>
+<div id="fb-status" style="position:fixed;bottom:0.5rem;right:0.75rem;font-size:0.65rem;color:rgba(255,255,255,0.3);z-index:50;pointer-events:none">⚪ sync</div>
 
 <div class="display">
 
@@ -462,6 +453,14 @@
         </div>
       </div>
       <div id="seed-display" class="center-seed" style="display:none"></div>
+      <div class="divider"></div>
+      <div class="countdown-num" id="countdown-display">05:00</div>
+      <div class="countdown-ctrl">
+        <input id="countdown-mins" class="ctrl-input" type="number" min="1" max="60" value="5">
+        <span class="ctrl-label">min</span>
+        <button class="ctrl-btn gold" onclick="toggleCountdown()">Start</button>
+        <button class="ctrl-btn" onclick="resetCountdown()">Reset</button>
+      </div>
     </div>
 
     <!-- Right: Upcoming -->
@@ -602,16 +601,20 @@
     }
   }
 
-  // ── Refresh all ────────────────────────────────────────────
-  localStorage.getItem('prize-manager-data')
+  // ── Refresh all (only re-render when data actually changes) ───
+  let lastDataHash = '';
   function refresh() {
     const prizes = load();
+    const hash = JSON.stringify(prizes);
+    if (hash === lastDataHash) return;
+    lastDataHash = hash;
     renderWinners(prizes);
     renderUpcoming(prizes);
     renderStats(prizes);
   }
 
   // Firebase realtime sync
+  const fbStatus = document.getElementById('fb-status');
   import('https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js').then(({ initializeApp }) => {
     import('https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js').then(({ getDatabase, ref, onValue }) => {
       const firebaseConfig = {
@@ -628,10 +631,15 @@
           localStorage.setItem('prize-manager-data', JSON.stringify(data));
           refresh();
         }
+        if (fbStatus) { fbStatus.textContent = '🟢 synced'; fbStatus.style.color = 'rgba(100,255,150,0.5)'; }
+      }, function() {
+        if (fbStatus) { fbStatus.textContent = '🔴 offline'; fbStatus.style.color = 'rgba(255,100,100,0.6)'; }
       });
     });
+  }).catch(() => {
+    if (fbStatus) { fbStatus.textContent = '🔴 offline'; fbStatus.style.color = 'rgba(255,100,100,0.6)'; }
   });
-  
+
   refresh();
   setInterval(refresh, 2000);
 
@@ -671,10 +679,3 @@
 </script>
 </body>
 </html>
-```
-
----
-
-改完 `yarn build`，然後開啟：
-```
-http://localhost:8888/display.html

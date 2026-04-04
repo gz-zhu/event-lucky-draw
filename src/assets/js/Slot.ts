@@ -204,11 +204,10 @@ export default class Slot {
     console.info('Displayed items: ', randomNames);
     console.info('Winner: ', randomNames[randomNames.length - 1]);
 
-    // Remove winner form name list if necessary
+    // Remove winner from name list if necessary (all instances, to handle duplicates)
     if (shouldRemoveWinner) {
-      this.nameList.splice(this.nameList.findIndex(
-        (name) => name === randomNames[randomNames.length - 1]
-      ), 1);
+      const winner = randomNames[randomNames.length - 1];
+      this.nameList = this.nameList.filter((name) => name !== winner);
     }
 
     console.info('Remaining: ', this.nameList);

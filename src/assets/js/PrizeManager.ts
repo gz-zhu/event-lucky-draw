@@ -37,6 +37,11 @@ export default class PrizeManager {
         { id: '3', name: '3rd Prize', count: 5, winners: [] },
       ];
     }
+    // Restore last selected prize (persisted across page refresh)
+    const saved = localStorage.getItem('current-prize-id');
+    if (saved && this.prizes.some((p) => p.id === saved)) {
+      this.currentPrizeId = saved;
+    }
   }
 
   get allPrizes(): Prize[] {
@@ -49,6 +54,7 @@ export default class PrizeManager {
 
   selectPrize(id: string): void {
     this.currentPrizeId = id;
+    try { localStorage.setItem('current-prize-id', id); } catch (e) { /* ignore */ }
   }
 
   addWinner(name: string): void {
@@ -79,6 +85,7 @@ export default class PrizeManager {
       winners: this.prizes.find((old) => old.id === p.id)?.winners ?? [],
     }));
     this.currentPrizeId = null;
+    try { localStorage.removeItem('current-prize-id'); } catch (e) { /* ignore */ }
     this.saveToStorage();
     this.saveToFirebase();
   }
@@ -103,8 +110,12 @@ export default class PrizeManager {
 
   private saveToFirebase(): void {
     try {
-      set(ref(db, 'prizes'), this.prizes);
-    } catch (e) { /* firebase unavailable */ }
+      set(ref(db, 'prizes'), this.prizes).catch(() => {
+        document.dispatchEvent(new CustomEvent('firebase-sync-error'));
+      });
+    } catch (e) {
+      document.dispatchEvent(new CustomEvent('firebase-sync-error'));
+    }
   }
 
   private saveToStorage(): void {
