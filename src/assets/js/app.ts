@@ -411,6 +411,24 @@ initStars();
 
   let activePickerClose: (() => void) | null = null;
 
+  // Sync countdown prize select from current config rows (before Save)
+  const syncCountdownSelectFromRows = () => {
+    if (!countdownCfgPrize) return;
+    const previousValue = countdownCfgPrize.value;
+    countdownCfgPrize.innerHTML = '<option value="">— Select prize —</option>';
+    prizeConfigList.querySelectorAll<HTMLElement>('.prize-config-row').forEach((row) => {
+      const rowId = row.dataset.id ?? '';
+      const nameInput = row.querySelector('.pc-name') as HTMLInputElement | null;
+      const rowName = nameInput?.value.trim() || 'Prize';
+      if (!rowId) return;
+      const opt = document.createElement('option');
+      opt.value = rowId;
+      opt.textContent = rowName;
+      if (previousValue === rowId) opt.selected = true;
+      countdownCfgPrize.appendChild(opt);
+    });
+  };
+
   // Prize config in settings
   // eslint-disable-next-line max-len
   const makePrizeRow = (id: string, name: string, count: number, drawTime: string): HTMLDivElement => {
@@ -425,6 +443,7 @@ initStars();
       <button class="solid-button solid-button--danger pc-del" style="padding:0.4rem 0.8rem;font-size:0.875rem">✕</button>
     `;
     row.querySelector('.pc-del')!.addEventListener('click', () => row.remove());
+    (row.querySelector('.pc-name') as HTMLInputElement).addEventListener('input', syncCountdownSelectFromRows);
 
     const dtText = row.querySelector('.pc-drawtime') as HTMLInputElement;
     const {
@@ -469,6 +488,9 @@ initStars();
       prizeConfigList.appendChild(makePrizeRow(prize.id, prize.name, prize.count, prize.drawTime ?? ''));
     });
   };
+
+  // Sync countdown select when rows are added or removed
+  new MutationObserver(syncCountdownSelectFromRows).observe(prizeConfigList, { childList: true });
 
   addPrizeRowButton.addEventListener('click', () => {
     prizeConfigList.appendChild(makePrizeRow(String(Date.now()), '', 1, ''));
