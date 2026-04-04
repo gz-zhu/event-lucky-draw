@@ -152,6 +152,22 @@ export default class Slot {
   }
 
   /**
+   * Dynamically update reel item count and speed before a spin
+   * @param items  Number of reel items to scroll through
+   * @param msPerItem  Milliseconds per reel item
+   */
+  public updateSpinParams(items: number, msPerItem: number): void {
+    this.maxReelItems = items;
+    if (!this.reelAnimation?.effect) return;
+    (this.reelAnimation.effect as KeyframeEffect).setKeyframes([
+      { transform: 'none', filter: 'blur(0)' },
+      { filter: 'blur(1px)', offset: 0.5 },
+      { transform: `translateY(-${(items - 1) * (7.5 * 16)}px)`, filter: 'blur(0)' }
+    ]);
+    this.reelAnimation.effect.updateTiming({ duration: items * msPerItem });
+  }
+
+  /**
    * Function for spinning the slot
    * @returns Whether the spin is completed successfully
    */

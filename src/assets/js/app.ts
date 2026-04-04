@@ -99,6 +99,20 @@ initStars();
 
   const soundEffects = new SoundEffects();
   const MAX_REEL_ITEMS = 60;
+
+  // Calculate dynamic spin params based on participant count and remaining prize slots.
+  // More participants = more items scroll + faster speed.
+  // More remaining slots = fewer items per spin (total time stays proportional).
+  // eslint-disable-next-line max-len
+  const calcSpinParams = (participantCount: number, remainingSlots: number): { items: number; msPerItem: number } => {
+    const log = Math.log10(Math.max(participantCount, 10));
+    const baseItems = Math.round(log * 25); // 10 people→25, 100→50, 1000→75, 10000→100
+    const items = Math.max(Math.round(baseItems / Math.max(remainingSlots, 1)), 15);
+    const msPerItem = Math.max(Math.round(200 - log * 40), 60); // 10p→160ms, 100p→120ms, 1000+→60ms
+    return { items, msPerItem };
+  };
+
+  let currentSpinDurationMs = MAX_REEL_ITEMS * 150;
   const CONFETTI_COLORS = [
     '#26ccff', '#a25afd', '#ff5e7e', '#88ff5a',
     '#fcff42', '#ffa62d', '#ff36ff'
@@ -515,7 +529,7 @@ initStars();
       localStorage.setItem('draw-recovery-names', JSON.stringify(slot.names));
       localStorage.setItem('draw-recovery-pending', '1');
     } catch (e) { /* ignore */ }
-    soundEffects.spin((MAX_REEL_ITEMS - 1) * 0.15);
+    soundEffects.spin(currentSpinDurationMs / 1000);
   };
 
   const onSpinEnd = async () => {
@@ -669,7 +683,12 @@ initStars();
 
   drawButton.addEventListener('click', () => {
     if (!slot.names.length) { onSettingsOpen(); return; }
-    if (!prizeManager.currentPrize) return;
+    const { currentPrize } = prizeManager;
+    if (!currentPrize) return;
+    const remaining = Math.max(currentPrize.count - (currentPrize.winners?.length ?? 0), 1);
+    const { items, msPerItem } = calcSpinParams(slot.names.length, remaining);
+    currentSpinDurationMs = items * msPerItem;
+    slot.updateSpinParams(items, msPerItem);
     slot.spin();
   });
 
