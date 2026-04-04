@@ -372,7 +372,7 @@ initStars();
 
   // Custom 24-hour time picker popup (shared, appended to body)
   // eslint-disable-next-line max-len
-  const buildTimePicker = (): { popup: HTMLDivElement; hourSel: HTMLSelectElement; minSel: HTMLSelectElement } => {
+  const buildTimePicker = (): { popup: HTMLDivElement; hourSel: HTMLSelectElement; minSel: HTMLSelectElement; okBtn: HTMLButtonElement } => {
     const popup = document.createElement('div');
     popup.className = 'drawtime-picker-popup';
     popup.style.display = 'none';
@@ -396,11 +396,17 @@ initStars();
       o.textContent = String(m).padStart(2, '0');
       minSel.appendChild(o);
     }
+    const okBtn = document.createElement('button');
+    okBtn.className = 'drawtime-ok-btn';
+    okBtn.textContent = 'OK';
     popup.appendChild(hourSel);
     popup.appendChild(colon);
     popup.appendChild(minSel);
+    popup.appendChild(okBtn);
     document.body.appendChild(popup);
-    return { popup, hourSel, minSel };
+    return {
+      popup, hourSel, minSel, okBtn
+    };
   };
 
   let activePickerClose: (() => void) | null = null;
@@ -421,7 +427,9 @@ initStars();
     row.querySelector('.pc-del')!.addEventListener('click', () => row.remove());
 
     const dtText = row.querySelector('.pc-drawtime') as HTMLInputElement;
-    const { popup, hourSel, minSel } = buildTimePicker();
+    const {
+      popup, hourSel, minSel, okBtn
+    } = buildTimePicker();
     const closePopup = () => { popup.style.display = 'none'; };
 
     popup.addEventListener('click', (e) => e.stopPropagation());
@@ -437,7 +445,7 @@ initStars();
       }
 
       const rect = dtText.getBoundingClientRect();
-      popup.style.top = `${rect.bottom + 4}px`;
+      popup.style.top = `${rect.top}px`;
       popup.style.left = 'auto';
       popup.style.right = `${window.innerWidth - rect.right}px`;
       popup.style.display = 'flex';
@@ -446,10 +454,11 @@ initStars();
       skipPickerClose = true;
     });
 
-    // Apply selection immediately when selects change
-    const applySelection = () => { dtText.value = `${hourSel.value}:${minSel.value}`; };
-    hourSel.addEventListener('change', applySelection);
-    minSel.addEventListener('change', applySelection);
+    okBtn.addEventListener('click', () => {
+      dtText.value = `${hourSel.value}:${minSel.value}`;
+      closePopup();
+      activePickerClose = null;
+    });
 
     return row;
   };
