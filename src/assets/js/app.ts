@@ -774,11 +774,8 @@ initStars();
     showToast('⚠ Firebase sync failed — data saved locally only');
   });
 
-  // Warn before closing
+  // Warn before closing/refreshing
   window.addEventListener('beforeunload', (e) => {
-    const total = prizeManager.allPrizes.reduce((sum, p) => sum + p.winners.length, 0);
-    if (total > 0) {
-      e.preventDefault();
-    }
+    e.preventDefault();
   });
 })();
