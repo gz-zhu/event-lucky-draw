@@ -529,6 +529,33 @@
 }
 
 // ── Prize config in settings ──────────────────────────────────
+.prize-settings-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+
+  .input-label {
+    margin-bottom: 0;
+  }
+}
+
+.prize-reset-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 0.4rem;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  font-size: 0.72rem;
+  padding: 0.25rem 0.65rem;
+  transition: all 0.15s;
+
+  &:hover {
+    border-color: rgba(255, 215, 0, 0.5);
+    color: #ffd700;
+  }
+}
+
 .prize-config-header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 58px 88px auto;
