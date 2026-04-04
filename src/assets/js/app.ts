@@ -2,7 +2,7 @@
 import confetti from 'canvas-confetti';
 import Slot from '@js/Slot';
 import SoundEffects from '@js/SoundEffects';
-import PrizeManager, { CountdownState } from '@js/PrizeManager';
+import PrizeManager from '@js/PrizeManager';
 
 const initStars = () => {
   const canvas = document.createElement('canvas');
@@ -14,7 +14,7 @@ const initStars = () => {
   const COLORS = ['#ffffff', '#FFD700', '#ff9ef5', '#9ef5ff', '#a0ff9e', '#ffb347', '#ff8800', '#aa44ff'];
   type Star = { x: number; y: number; r: number; color: string; speed: number; phase: number; alpha: number };
 
-  const stars: Star[] = Array.from({ length: 40 }, () => ({
+  const stars: Star[] = Array.from({ length: 75 }, () => ({
     x: Math.random() * window.innerWidth,
     y: Math.random() * window.innerHeight,
     r: Math.random() * 2 + 0.8,
