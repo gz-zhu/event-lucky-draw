@@ -123,7 +123,7 @@
       font-family: 'Playfair Display', serif;
       font-size: 3rem;
       font-weight: 700;
-      background: linear-gradient(135deg, #ffffff 0%, #ffe066 40%, #ffd700 100%);
+      background: linear-gradient(135deg, #ffdc15 0%, #eb4d4d 40%, #f5903d 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -140,12 +140,13 @@
 
     .info-clock {
       font-family: 'Playfair Display', serif;
-      font-size: 4.5rem;
+      font-size: 2.8rem;
       font-weight: 700;
       color: #fffafa;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.02em;
       text-shadow: 0 0 20px rgba(255,255,255,0.15);
       line-height: 1;
+      white-space: nowrap;
     }
 
     .info-date {
@@ -416,10 +417,10 @@
       font-style: italic;
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 700px) {
       .display { flex-direction: column; overflow-y: auto; }
       .info-panel { width: 100%; border-right: none; border-bottom: 1px solid rgba(255,215,0,0.1); padding: 1rem; }
-      .info-clock { font-size: 2rem; }
+      .info-clock { font-size: 0.7rem; }
       .prizes-grid { grid-template-columns: 1fr; }
     }
   </style>

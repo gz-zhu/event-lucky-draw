@@ -1,0 +1,2 @@
+# Force LF line endings for all text files (required by ESLint linebreak-style rule)
+* text=auto eol=lf

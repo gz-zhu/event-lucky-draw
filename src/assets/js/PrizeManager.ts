@@ -12,16 +12,16 @@ export interface CountdownState {
 }
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBzJJ3yeO-_Yozikwds9_6PPwyAn788SHU",
-    authDomain: "event-luckydraw.firebaseapp.com",
-    databaseURL: "https://event-luckydraw-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "event-luckydraw",
-    storageBucket: "event-luckydraw.firebasestorage.app",
-    messagingSenderId: "186125547633",
-    appId: "1:186125547633:web:fa86b83131dc480be3c3d0"
-  };
+  apiKey: 'AIzaSyBzJJ3yeO-_Yozikwds9_6PPwyAn788SHU',
+  authDomain: 'event-luckydraw.firebaseapp.com',
+  databaseURL: 'https://event-luckydraw-default-rtdb.asia-southeast1.firebasedatabase.app',
+  projectId: 'event-luckydraw',
+  storageBucket: 'event-luckydraw.firebasestorage.app',
+  messagingSenderId: '186125547633',
+  appId: '1:186125547633:web:fa86b83131dc480be3c3d0'
+};
 
-  // Initialize Firebase
+// Initialize Firebase
 const db = getDatabase(getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]);
 
 export interface Prize {
@@ -30,6 +30,8 @@ export interface Prize {
   count: number;
   /** Scheduled draw time shown on the display screen, e.g. "19:30" */
   drawTime?: string;
+  /** Optional prize item description shown on the display screen */
+  description?: string;
   winners: string[];
   winnerTimestamps?: string[];
   winnerSeeds?: string[];
@@ -44,9 +46,15 @@ export default class PrizeManager {
     this.prizes = PrizeManager.loadFromStorage();
     if (!this.prizes.length) {
       this.prizes = [
-        { id: '1', name: '1st Prize', count: 1, winners: [] },
-        { id: '2', name: '2nd Prize', count: 2, winners: [] },
-        { id: '3', name: '3rd Prize', count: 5, winners: [] },
+        {
+          id: '1', name: '1st Prize', count: 1, winners: []
+        },
+        {
+          id: '2', name: '2nd Prize', count: 2, winners: []
+        },
+        {
+          id: '3', name: '3rd Prize', count: 5, winners: []
+        }
       ];
     }
     // Restore last selected prize (persisted across page refresh)
@@ -74,7 +82,9 @@ export default class PrizeManager {
     if (!prize) return;
     prize.winners.push(name);
     if (!prize.winnerTimestamps) prize.winnerTimestamps = [];
-    prize.winnerTimestamps.push(new Date().toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+    prize.winnerTimestamps.push(new Date().toLocaleString('en-GB', {
+      day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit'
+    }));
     if (!prize.winnerSeeds) prize.winnerSeeds = [];
     prize.winnerSeeds.push(localStorage.getItem('draw-last-seed') ?? '');
     this.saveToStorage();
@@ -94,7 +104,7 @@ export default class PrizeManager {
   setPrizes(prizes: Omit<Prize, 'winners'>[]): void {
     this.prizes = prizes.map((p) => ({
       ...p,
-      winners: this.prizes.find((old) => old.id === p.id)?.winners ?? [],
+      winners: this.prizes.find((old) => old.id === p.id)?.winners ?? []
     }));
     this.currentPrizeId = null;
     try { localStorage.removeItem('current-prize-id'); } catch (e) { /* ignore */ }
@@ -103,7 +113,11 @@ export default class PrizeManager {
   }
 
   clearRecords(): void {
-    this.prizes.forEach((p) => { p.winners = []; p.winnerTimestamps = []; p.winnerSeeds = []; }); // eslint-disable-line no-param-reassign
+    this.prizes.forEach((p) => {
+      p.winners = []; // eslint-disable-line no-param-reassign
+      p.winnerTimestamps = []; // eslint-disable-line no-param-reassign
+      p.winnerSeeds = []; // eslint-disable-line no-param-reassign
+    });
     this.saveToStorage();
     this.saveToFirebase();
   }
@@ -114,6 +128,7 @@ export default class PrizeManager {
       p.winners.forEach((w, i) => {
         const ts = p.winnerTimestamps?.[i] ?? '';
         const seed = p.winnerSeeds?.[i] ?? '';
+
         rows.push(`${p.name},"${w}","${ts}","${seed}"`);
       });
     });
@@ -130,7 +145,7 @@ export default class PrizeManager {
       minutes,
       startedAt: Date.now() - elapsed * 1000,
       pausedRemaining: null,
-      running: true,
+      running: true
     };
     this.saveCountdownState(state);
   }
@@ -139,19 +154,25 @@ export default class PrizeManager {
     const raw = localStorage.getItem('draw-countdown');
     try {
       const prev: CountdownState = raw ? JSON.parse(raw) : {};
-      this.saveCountdownState({ ...prev, running: false, startedAt: null, pausedRemaining: remaining });
+      this.saveCountdownState({
+        ...prev, running: false, startedAt: null, pausedRemaining: remaining
+      });
     } catch { /* ignore */ }
   }
 
   resetCountdown(prizeId: string, minutes: number): void {
-    this.saveCountdownState({ prizeId, minutes, startedAt: null, pausedRemaining: null, running: false });
+    this.saveCountdownState({
+      prizeId, minutes, startedAt: null, pausedRemaining: null, running: false
+    });
   }
 
+  // eslint-disable-next-line class-methods-use-this
   clearCountdown(): void {
     try { localStorage.removeItem('draw-countdown'); } catch (e) { /* ignore */ }
     try { set(ref(db, 'countdown'), null).catch(() => {}); } catch (e) { /* ignore */ }
   }
 
+  // eslint-disable-next-line class-methods-use-this
   private saveCountdownState(state: CountdownState): void {
     try { localStorage.setItem('draw-countdown', JSON.stringify(state)); } catch (e) { /* ignore */ }
     try { set(ref(db, 'countdown'), state).catch(() => {}); } catch (e) { /* ignore */ }
