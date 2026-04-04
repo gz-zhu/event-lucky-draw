@@ -20,14 +20,22 @@ include ../mixins/icons
     .winners-ticker__track
       #winners-ticker__content.winners-ticker__content
 
+  #recovery-banner.recovery-banner(style="display:none")
+    span#recovery-message
+    .recovery-banner__actions
+      button#recovery-restore.solid-button Restore
+      button#recovery-dismiss.recovery-dismiss Dismiss
+
   #lucky-draw
     .title
       h1.title-text Lucky Draw
 
     #prize-buttons.prize-buttons
 
-    #current-prize-label.current-prize-label Please select a prize
-    #participant-count.participant-count
+    #current-prize-label.current-prize-label(style="display:none") Please select a prize
+    .main-clock-wrap
+      #main-clock-time.main-clock-time 00:00:00
+      #main-clock-date.main-clock-date
 
     .slot
       .slot__outer
@@ -39,6 +47,7 @@ include ../mixins/icons
         img(src="~@images/sunburst.svg" alt="sunburst")
 
     button#draw-button.solid-button(disabled) Draw
+    #participant-count.participant-count
     #draw-seed.draw-seed
 
   #records-panel.records-panel(style="display:none")

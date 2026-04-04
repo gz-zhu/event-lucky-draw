@@ -306,7 +306,11 @@ initStars();
       drawSeedEl.textContent = `SEED · ${seed}`;
       drawSeedEl.style.opacity = '1';
     }
-    try { localStorage.setItem('draw-last-seed', String(seed)); } catch (e) { /* ignore */ }
+    try {
+      localStorage.setItem('draw-last-seed', String(seed));
+      localStorage.setItem('draw-recovery-names', JSON.stringify(slot.names));
+      localStorage.setItem('draw-recovery-pending', '1');
+    } catch (e) { /* ignore */ }
     soundEffects.spin((MAX_REEL_ITEMS - 1) / 10);
   };
 
@@ -364,6 +368,8 @@ initStars();
     renderPrizeButtons();
     updateCurrentPrizeLabel();
     updateDrawButton();
+    updateParticipantCount();
+    try { localStorage.removeItem('draw-recovery-pending'); localStorage.removeItem('draw-recovery-names'); } catch (e) { /* ignore */ }
     settingsButton.disabled = false;
   };
 
@@ -377,6 +383,44 @@ initStars();
   });
   updateDrawButton();
   updateParticipantCount();
+
+  // Main clock
+  const mainClockTime = document.getElementById('main-clock-time');
+  const mainClockDate = document.getElementById('main-clock-date');
+  const tickClock = () => {
+    const now = new Date();
+    if (mainClockTime) mainClockTime.textContent = now.toLocaleTimeString('en-GB');
+    if (mainClockDate) mainClockDate.textContent = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  };
+  tickClock();
+  setInterval(tickClock, 1000);
+
+  // Interruption recovery
+  const recoveryBanner = document.getElementById('recovery-banner') as HTMLDivElement | null;
+  const recoveryMessage = document.getElementById('recovery-message') as HTMLSpanElement | null;
+  const recoveryRestore = document.getElementById('recovery-restore') as HTMLButtonElement | null;
+  const recoveryDismiss = document.getElementById('recovery-dismiss') as HTMLButtonElement | null;
+
+  const clearRecovery = () => {
+    try { localStorage.removeItem('draw-recovery-pending'); localStorage.removeItem('draw-recovery-names'); } catch (e) { /* ignore */ }
+    if (recoveryBanner) recoveryBanner.style.display = 'none';
+  };
+
+  if (localStorage.getItem('draw-recovery-pending')) {
+    const saved: string[] = JSON.parse(localStorage.getItem('draw-recovery-names') || '[]');
+    if (saved.length && recoveryBanner && recoveryMessage) {
+      recoveryMessage.textContent = `⚠ Draw was interrupted. Restore ${saved.length} names to pool?`;
+      recoveryBanner.style.display = 'flex';
+    }
+    recoveryRestore?.addEventListener('click', () => {
+      const names: string[] = JSON.parse(localStorage.getItem('draw-recovery-names') || '[]');
+      slot.names = names;
+      updateParticipantCount();
+      updateDrawButton();
+      clearRecovery();
+    });
+    recoveryDismiss?.addEventListener('click', clearRecovery);
+  }
 
   // Settings panel
   const onSettingsOpen = () => {
