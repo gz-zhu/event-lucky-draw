@@ -8,14 +8,22 @@ A beautiful lucky draw app for events — prize tiers, winner records, CSV impor
 
 ## ✨ Features / 機能
 
-- 🏆 Multiple prize tiers (1st, 2nd, 3rd …)
-- 👥 Set winner count per prize
-- 📂 Import participant list via CSV file
-- 📋 Winner records panel with CSV export
-- 🎊 Confetti + festive lights animation
-- 💾 Auto-saves settings in browser
+- 🏆 Multiple prize tiers (1st, 2nd, 3rd …) with configurable winner count
+- 📂 Import participant list via CSV
+- 📋 Winner records with timestamp and draw seed — exportable as CSV
+- 🎊 Confetti + star + festive lights animations
+- 🔥 Firebase real-time sync — winners update across all devices instantly
+- 📺 Separate display page for projector / big screen (`/display.html`)
+- 🔢 Draw seed shown per draw for full auditability
+- 🔒 Automatic winner name masking after draw (privacy protection)
+- 🚫 Auto-deduplication — past winners removed from participant pool automatically
+- ⚡ Interruption recovery — restores the pool if browser closes mid-draw
+- 🕐 Live clock and date display
+- 🖥️ Fullscreen mode
+- 💾 Auto-saves all settings in browser
 - 🖼️ Custom background image support
-- 📺 Live winner ticker bar at the top
+- 🔊 Sound effects (spinning + win fanfare)
+- 🚦 Buttons locked during spin to prevent draw errors
 
 ---
 
@@ -59,131 +67,18 @@ git push
 
 ## 🚀 Deployment Guide / デプロイガイド
 
----
+For full deployment instructions (Vercel + Firebase + custom domain), see the guide for your language:
 
-### ✅ Step 0 — Install required tools / 必要ツールのインストール
+| Language | File |
+|----------|------|
+| 中文 | [DEPLOY_GUIDE_ZH.md](./DEPLOY_GUIDE_ZH.md) |
+| English | [DEPLOY_GUIDE_EN.md](./DEPLOY_GUIDE_EN.md) |
+| 日本語 | [DEPLOY_GUIDE_JA.md](./DEPLOY_GUIDE_JA.md) |
 
----
-
-#### 1. Node.js — ⚠️ Must be version 18.x / 必ずバージョン 18.x を使用
-
-> ⚠️ **This project only works with Node.js 18.x.**
-> Do NOT install v20, v22, or v24 — they are incompatible.
->
-> ⚠️ **このプロジェクトは Node.js 18.x のみ対応しています。**
-> v20、v22、v24 はインストールしないでください。
-
-**Download Node.js 18 LTS directly:**
-
-| OS | Link |
-|----|------|
-| Windows (64-bit) | https://nodejs.org/download/release/v18.20.4/node-v18.20.4-x64.msi |
-| Mac (Intel) | https://nodejs.org/download/release/v18.20.4/node-v18.20.4.pkg |
-| Mac (Apple Silicon M1/M2) | https://nodejs.org/download/release/v18.20.4/node-v18.20.4-arm64.pkg |
-
-**Windows install steps:**
-1. Download the `.msi` file above
-2. Double-click to run the installer
-3. Keep all default settings → click **Next** → **Install**
-4. **Restart your terminal** after installation
-
-**Mac install steps:**
-1. Download the `.pkg` file above
-2. Double-click to run the installer
-3. Follow the prompts → click **Continue** → **Install**
-
-**Verify / 確認:**
-```bash
-node -v
-# Must show: v18.x.x
-```
-
-If it shows v20 or higher, see the troubleshooting section below.
-
----
-
-#### 2. Yarn
-
-Open terminal and run:
-```bash
-npm install -g yarn
-```
-
-**Verify / 確認:**
-```bash
-yarn -v
-# Should show: 1.x.x
-```
-
----
-
-#### 3. Git
-
-**Windows:**
-1. Go to https://git-scm.com/download/win
-2. Download and run the installer
-3. Keep all default settings → click **Next** throughout
-
-**Mac:**
-```bash
-xcode-select --install
-```
-
-**Verify / 確認:**
-```bash
-git --version
-```
-
----
-
-> ✅ Once all three show version numbers, proceed to Step 1.
-
----
-
-### 📦 Step 1 — Get the code / コードを取得
-
-```bash
-git clone https://github.com/gz-zhu/event-lucky-draw.git
-cd event-lucky-draw
-```
-
----
-
-### 📥 Step 2 — Install dependencies / 依存関係をインストール
-
-```bash
-yarn install
-```
-
-> ⏳ This may take 2–5 minutes. Wait until you see "Done".
-
----
-
-### 🔨 Step 3 — Build / ビルド
-
-```bash
-yarn build
-```
-
-Output files will be in the `/dist` folder.
-
----
-
-### 🌐 Step 4 — Deploy / デプロイ
-
-#### Option A — Netlify ⭐ (Recommended)
-
-1. Go to https://netlify.com → Sign up free
-2. Click **"Add new site"** → **"Deploy manually"**
-3. Drag and drop the entire `/dist` folder
-4. Done! Public URL is generated instantly.
-
-#### Option B — Local preview only
-
+**Quick local preview:**
 ```bash
 yarn start
 ```
-
 Open: **http://localhost:8888**
 
 ---
@@ -196,16 +91,25 @@ Click ⚙️ **Settings** (top right) → **Name List**
 Paste names one per line, or click **Upload CSV** to import a `.csv` file.
 (First column of CSV will be used as names.)
 
+> Any name that has already won a prize is automatically removed from the pool on import.
+
 Click **Save**.
 
 ### 2. Set up prizes / 賞を設定
 In Settings → **Prize Settings**: set name and winner count per prize. Click **Save**.
 
-### 3. Draw / 抽選
-Click a prize button → Click **Draw** → Winner appears 🎊
+### 3. (Optional) Open the display page on a projector / 大画面表示
+Click the **📺 Display** link (top of the page) to open `display.html` in a new tab.
+Put this tab on a projector or secondary screen — it shows live winners, upcoming prizes, participant stats, and a clock, all synced in real time via Firebase.
 
-### 4. Records / 記録
-Click ✅ icon (top right) → view all winners → **Export CSV** to download.
+### 4. Draw / 抽選
+Click a prize button to select it → Click **Draw** → Winner appears 🎊
+
+The winner's name is partially masked immediately after the draw (privacy).
+A **draw seed** is shown for auditability.
+
+### 5. Records / 記録
+Click ✅ icon (top right) → view all winners with timestamps → **Export CSV** to download.
 
 ---
 

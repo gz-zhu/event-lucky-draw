@@ -1,5 +1,19 @@
 # 🚀 Event Lucky Draw — Complete Deployment Guide
 
+This guide walks you through deploying your own lucky draw system from scratch.
+
+**What you'll get:**
+- 🏆 Multiple prize tiers with configurable names and winner counts
+- 📂 Bulk import participants via CSV
+- 📋 Winner records with timestamps and draw seeds — exportable as CSV
+- 🔥 Firebase real-time sync — all devices update instantly
+- 📺 Display page (`/display.html`) for projector / big screen — live winners, stats, and countdown
+- 🔢 Draw seed shown per draw for full auditability
+- 🔒 Automatic winner name masking (privacy protection)
+- 🚫 Auto-deduplication — past winners removed from the pool automatically
+- ⚡ Interruption recovery — restores the pool if browser closes mid-draw
+- 🎊 Confetti + star + festive lights animations
+
 ---
 
 ## Step 1: Install Required Tools
@@ -193,6 +207,34 @@ git commit --no-verify -m "describe changes"
 git push
 # Vercel redeploys automatically
 ```
+
+---
+
+## How to Use the App
+
+### 1. Add participants
+Click ⚙️ **Settings** (top right) → **Name List**
+
+Paste names one per line, or click **Upload CSV** to import a `.csv` file (first column used as names).
+
+> Past winners are automatically removed from the pool on import.
+
+Click **Save**.
+
+### 2. Set up prizes
+Settings → **Prize Settings**: enter prize name and winner count per prize → **Save**.
+
+### 3. (Optional) Open the display page on a projector
+Click the **📺 Display** link at the top of the page to open `display.html` in a new tab.
+Put this tab on a projector or secondary screen — it shows live winners, upcoming prizes, participant stats, and a clock, synced in real time via Firebase.
+
+### 4. Draw
+Click a prize button to select it → Click **Draw** → Winner appears 🎊
+
+The winner's name is partially masked after the draw (privacy). A draw seed is shown for auditability.
+
+### 5. Records and export
+Click the ✅ icon (top right) → view all winners with timestamps → **Export CSV** to download.
 
 ---
 
