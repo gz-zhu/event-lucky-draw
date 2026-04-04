@@ -510,15 +510,9 @@ initStars();
     // eslint-disable-next-line no-alert
     if (!window.confirm('Reset to default? All prize settings and records will be lost.')) return;
     prizeManager.setPrizes([
-      {
-        id: '1', name: '1st Prize', count: 1, winners: []
-      },
-      {
-        id: '2', name: '2nd Prize', count: 2, winners: []
-      },
-      {
-        id: '3', name: '3rd Prize', count: 5, winners: []
-      }
+      { id: '1', name: '1st Prize', count: 1 },
+      { id: '2', name: '2nd Prize', count: 2 },
+      { id: '3', name: '3rd Prize', count: 5 }
     ]);
     window.location.reload();
   });
