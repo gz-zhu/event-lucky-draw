@@ -867,15 +867,21 @@
 
 .upload-csv-btn {
   font-size: 0.75rem;
+  font-weight: 700;
   padding: 0.3rem 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: none;
   border-radius: 0.375rem;
   cursor: pointer;
-  color: $color-text-light;
-  transition: all 0.15s;
+  background: #27ae60;
+  color: #fff;
+  transition: background 0.15s;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: #219a55;
+  }
+
+  &:active {
+    background: #1a7d44;
   }
 }
 .lights-canvas {
