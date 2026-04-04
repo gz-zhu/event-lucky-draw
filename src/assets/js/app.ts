@@ -12,6 +12,7 @@ const initStars = () => {
   if (!ctx) return;
 
   const COLORS = ['#ffffff', '#FFD700', '#ff9ef5', '#9ef5ff', '#a0ff9e', '#ffb347', '#ff8800', '#aa44ff'];
+  // eslint-disable-next-line max-len
   type Star = { x: number; y: number; r: number; color: string; speed: number; phase: number; alpha: number };
 
   const stars: Star[] = Array.from({ length: 75 }, () => ({
@@ -32,6 +33,7 @@ const initStars = () => {
   const draw = (t: number) => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     stars.forEach((s) => {
+      // eslint-disable-next-line no-param-reassign
       s.alpha = 0.15 + 0.85 * Math.abs(Math.sin(t * s.speed + s.phase));
       ctx.save();
       ctx.globalAlpha = s.alpha * 0.9;
@@ -96,7 +98,7 @@ initStars();
   }
 
   const soundEffects = new SoundEffects();
-  const MAX_REEL_ITEMS = 40;
+  const MAX_REEL_ITEMS = 60;
   const CONFETTI_COLORS = [
     '#26ccff', '#a25afd', '#ff5e7e', '#88ff5a',
     '#fcff42', '#ffa62d', '#ff36ff'
@@ -206,6 +208,7 @@ initStars();
   countdownCancelBtn?.addEventListener('click', () => {
     saveCountdownConfig(null);
     prizeManager.clearCountdown();
+    // eslint-disable-next-line no-use-before-define
     renderPrizeButtons();
     updateCountdownBar();
   });
@@ -362,14 +365,13 @@ initStars();
 
   clearRecordsButton.addEventListener('click', () => {
     // eslint-disable-next-line no-alert
-    if (!window.confirm('Clear all records?')) return;
+    if (!window.confirm('Clear all records? This cannot be undone.')) return;
     prizeManager.clearRecords();
-    renderPrizeButtons();
-    updateCurrentPrizeLabel();
-    renderRecords();
+    window.location.reload();
   });
 
   // Custom 24-hour time picker popup (shared, appended to body)
+  // eslint-disable-next-line max-len
   const buildTimePicker = (): { popup: HTMLDivElement; hourSel: HTMLSelectElement; minSel: HTMLSelectElement } => {
     const popup = document.createElement('div');
     popup.className = 'drawtime-picker-popup';
@@ -377,7 +379,7 @@ initStars();
 
     const hourSel = document.createElement('select');
     hourSel.className = 'drawtime-sel';
-    for (let h = 0; h < 24; h++) {
+    for (let h = 0; h < 24; h += 1) {
       const o = document.createElement('option');
       o.value = String(h).padStart(2, '0');
       o.textContent = String(h).padStart(2, '0');
@@ -388,7 +390,7 @@ initStars();
     colon.textContent = ':';
     const minSel = document.createElement('select');
     minSel.className = 'drawtime-sel';
-    for (let m = 0; m < 60; m++) {
+    for (let m = 0; m < 60; m += 1) {
       const o = document.createElement('option');
       o.value = String(m).padStart(2, '0');
       o.textContent = String(m).padStart(2, '0');
@@ -404,6 +406,7 @@ initStars();
   let activePickerClose: (() => void) | null = null;
 
   // Prize config in settings
+  // eslint-disable-next-line max-len
   const makePrizeRow = (id: string, name: string, count: number, drawTime: string): HTMLDivElement => {
     const row = document.createElement('div');
     row.className = 'prize-config-row';
@@ -439,6 +442,7 @@ initStars();
       popup.style.right = `${window.innerWidth - rect.right}px`;
       popup.style.display = 'flex';
       activePickerClose = closePopup;
+      // eslint-disable-next-line no-use-before-define
       skipPickerClose = true;
     });
 
@@ -467,6 +471,7 @@ initStars();
     drawButton.disabled = true;
     settingsButton.disabled = true;
     prizeButtonsContainer.querySelectorAll<HTMLButtonElement>('.prize-select-btn').forEach((btn) => {
+      // eslint-disable-next-line no-param-reassign
       btn.disabled = true;
     });
     const seed = Date.now();
@@ -479,7 +484,7 @@ initStars();
       localStorage.setItem('draw-recovery-names', JSON.stringify(slot.names));
       localStorage.setItem('draw-recovery-pending', '1');
     } catch (e) { /* ignore */ }
-    soundEffects.spin((MAX_REEL_ITEMS - 1) / 10);
+    soundEffects.spin((MAX_REEL_ITEMS - 1) * 0.15);
   };
 
   const onSpinEnd = async () => {
@@ -558,7 +563,11 @@ initStars();
   const tickClock = () => {
     const now = new Date();
     if (mainClockTime) mainClockTime.textContent = now.toLocaleTimeString('en-GB');
-    if (mainClockDate) mainClockDate.textContent = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    if (mainClockDate) {
+      mainClockDate.textContent = now.toLocaleDateString('en-GB', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+      });
+    }
   };
   tickClock();
   setInterval(tickClock, 1000);
@@ -664,7 +673,7 @@ initStars();
         id: (row as HTMLElement).dataset.id ?? String(Date.now()),
         name: (row.querySelector('.pc-name') as HTMLInputElement).value.trim() || 'Prize',
         count: Math.max(1, parseInt((row.querySelector('.pc-count') as HTMLInputElement).value, 10) || 1),
-        ...(dt ? { drawTime: dt } : {}),
+        ...(dt ? { drawTime: dt } : {})
       };
     });
     prizeManager.setPrizes(newPrizes);
