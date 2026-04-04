@@ -1,4 +1,9 @@
 // Stars background animation
+import confetti from 'canvas-confetti';
+import Slot from '@js/Slot';
+import SoundEffects from '@js/SoundEffects';
+import PrizeManager from '@js/PrizeManager';
+
 const initStars = () => {
   const canvas = document.createElement('canvas');
   canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;';
@@ -48,11 +53,6 @@ const initStars = () => {
 
 initStars();
 
-import confetti from 'canvas-confetti';
-import Slot from '@js/Slot';
-import SoundEffects from '@js/SoundEffects';
-import PrizeManager from '@js/PrizeManager';
-
 (() => {
   const drawButton = document.getElementById('draw-button') as HTMLButtonElement | null;
   const fullscreenButton = document.getElementById('fullscreen-button') as HTMLButtonElement | null;
@@ -77,6 +77,9 @@ import PrizeManager from '@js/PrizeManager';
   const prizeConfigList = document.getElementById('prize-config-list') as HTMLDivElement | null;
   const addPrizeRowButton = document.getElementById('add-prize-row') as HTMLButtonElement | null;
   const csvUpload = document.getElementById('csv-upload') as HTMLInputElement | null;
+  const participantCountEl = document.getElementById('participant-count') as HTMLDivElement | null;
+  const drawSeedEl = document.getElementById('draw-seed') as HTMLDivElement | null;
+  const dedupeNoticeEl = document.getElementById('dedupe-notice') as HTMLDivElement | null;
 
   if (!(
     drawButton && fullscreenButton && settingsButton
@@ -134,10 +137,10 @@ import PrizeManager from '@js/PrizeManager';
       if (/^\s+$/.test(part) || part === '—' || part === '-') return part;
       if (part.length <= 2) return part;
       const keep = Math.ceil(part.length / 3);
-      return part.slice(0, keep) + '***';
+      return `${part.slice(0, keep)}***`;
     }).join('');
   };
-  
+
   const updateCurrentPrizeLabel = () => {
     const p = prizeManager.currentPrize;
     currentPrizeLabel.textContent = p
@@ -149,6 +152,30 @@ import PrizeManager from '@js/PrizeManager';
     const p = prizeManager.currentPrize;
     const hasNames = slot ? slot.names.length > 0 : false;
     drawButton.disabled = !p || prizeManager.isCurrentPrizeFull() || !hasNames;
+  };
+
+  const updateParticipantCount = () => {
+    const count = slot ? slot.names.length : 0;
+    if (participantCountEl) participantCountEl.textContent = `${count} participants in pool`;
+    try { localStorage.setItem('draw-participant-count', String(count)); } catch (e) { /* ignore */ }
+  };
+
+  const filterOutWinners = (names: string[]): string[] => {
+    const allWinners = new Set(
+      prizeManager.allPrizes.flatMap((p) => p.winners.map((w) => w.trim().toLowerCase()))
+    );
+    return names.filter((n) => !allWinners.has(n.trim().toLowerCase()));
+  };
+
+  const showDedupeNotice = (removed: number) => {
+    if (!dedupeNoticeEl) return;
+    if (removed > 0) {
+      dedupeNoticeEl.textContent = `⚠ ${removed} duplicate winner${removed > 1 ? 's' : ''} removed from list`;
+      dedupeNoticeEl.classList.add('visible');
+    } else {
+      dedupeNoticeEl.textContent = '';
+      dedupeNoticeEl.classList.remove('visible');
+    }
   };
 
   // Prize buttons
@@ -193,7 +220,8 @@ import PrizeManager from '@js/PrizeManager';
       prize.winners.forEach((w, i) => {
         const item = document.createElement('div');
         item.className = 'records-item';
-        item.textContent = `${i + 1}. ${w}`;
+        const ts = prize.winnerTimestamps?.[i] ?? '';
+        item.innerHTML = `<span>${i + 1}. ${w}</span>${ts ? `<span class="records-item__ts">${ts}</span>` : ''}`;
         list.appendChild(item);
       });
       group.appendChild(list);
@@ -270,6 +298,15 @@ import PrizeManager from '@js/PrizeManager';
     stopWinningAnimation();
     drawButton.disabled = true;
     settingsButton.disabled = true;
+    prizeButtonsContainer.querySelectorAll<HTMLButtonElement>('.prize-select-btn').forEach((btn) => {
+      btn.disabled = true;
+    });
+    const seed = Date.now();
+    if (drawSeedEl) {
+      drawSeedEl.textContent = `SEED · ${seed}`;
+      drawSeedEl.style.opacity = '1';
+    }
+    try { localStorage.setItem('draw-last-seed', String(seed)); } catch (e) { /* ignore */ }
     soundEffects.spin((MAX_REEL_ITEMS - 1) / 10);
   };
 
@@ -317,28 +354,29 @@ import PrizeManager from '@js/PrizeManager';
           const item = document.createElement('span');
           item.className = 'ticker-item';
           item.innerHTML = `<span class="ticker-item__prize">${prize.name}</span>`
-            + `<span class="ticker-item__sep">·</span>`
+            + '<span class="ticker-item__sep">·</span>'
             + `<span>${maskName(w)}</span>`;
           tickerContent.appendChild(item);
         });
       });
     }
-    
+
     renderPrizeButtons();
     updateCurrentPrizeLabel();
     updateDrawButton();
     settingsButton.disabled = false;
   };
 
-     // Slot instance
+  // Slot instance
   slot = new Slot({
     reelContainerSelector: '#reel',
     maxReelItems: MAX_REEL_ITEMS,
     onSpinStart,
     onSpinEnd,
-    onNameListChanged: stopWinningAnimation
+    onNameListChanged: () => { stopWinningAnimation(); updateParticipantCount(); }
   });
   updateDrawButton();
+  updateParticipantCount();
 
   // Settings panel
   const onSettingsOpen = () => {
@@ -376,9 +414,12 @@ import PrizeManager from '@js/PrizeManager';
   settingsButton.addEventListener('click', onSettingsOpen);
 
   settingsSaveButton.addEventListener('click', () => {
-    slot.names = nameListTextArea.value
+    const rawNames = nameListTextArea.value
       ? nameListTextArea.value.split(/\n/).filter((n) => Boolean(n.trim()))
       : [];
+    const filtered = filterOutWinners(rawNames);
+    showDedupeNotice(rawNames.length - filtered.length);
+    slot.names = filtered;
     slot.shouldRemoveWinnerFromNameList = removeNameFromListCheckbox.checked;
     soundEffects.mute = !enableSoundCheckbox.checked;
     const rows = Array.from(prizeConfigList.querySelectorAll('.prize-config-row'));
@@ -391,6 +432,7 @@ import PrizeManager from '@js/PrizeManager';
     renderPrizeButtons();
     updateCurrentPrizeLabel();
     updateDrawButton();
+    updateParticipantCount();
     onSettingsClose();
   });
 
@@ -407,13 +449,15 @@ import PrizeManager from '@js/PrizeManager';
         .split('\n')
         .map((line) => line.split(',')[0].replace(/^"|"$/g, '').trim())
         .filter(Boolean);
-      nameListTextArea.value = names.join('\n');
+      const filtered = filterOutWinners(names);
+      showDedupeNotice(names.length - filtered.length);
+      nameListTextArea.value = filtered.join('\n');
     };
     reader.readAsText(file, 'UTF-8');
     csvUpload.value = '';
   });
 
-// Init
+  // Init
   renderPrizeButtons();
   updateCurrentPrizeLabel();
   drawButton.disabled = true;

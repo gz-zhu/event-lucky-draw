@@ -27,6 +27,7 @@ include ../mixins/icons
     #prize-buttons.prize-buttons
 
     #current-prize-label.current-prize-label Please select a prize
+    #participant-count.participant-count
 
     .slot
       .slot__outer
@@ -38,6 +39,7 @@ include ../mixins/icons
         img(src="~@images/sunburst.svg" alt="sunburst")
 
     button#draw-button.solid-button(disabled) Draw
+    #draw-seed.draw-seed
 
   #records-panel.records-panel(style="display:none")
     .records-panel__inner
@@ -64,6 +66,7 @@ include ../mixins/icons
               input#csv-upload(type="file" accept=".csv" style="display:none")
               | Upload CSV
           textarea.input-field.input-field--textarea(rows="8" placeholder="Separate each name by line break" id="name-list")
+          #dedupe-notice.dedupe-notice
 
         div.input-group.input-group--2-column
           label.input-label(for="remove-from-list") Remove winner from list

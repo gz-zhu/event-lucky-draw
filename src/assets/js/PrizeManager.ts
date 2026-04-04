@@ -19,6 +19,8 @@ export interface Prize {
   name: string;
   count: number;
   winners: string[];
+  winnerTimestamps?: string[];
+  winnerSeeds?: string[];
 }
 
 export default class PrizeManager {
@@ -53,6 +55,10 @@ export default class PrizeManager {
     const prize = this.currentPrize;
     if (!prize) return;
     prize.winners.push(name);
+    if (!prize.winnerTimestamps) prize.winnerTimestamps = [];
+    prize.winnerTimestamps.push(new Date().toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+    if (!prize.winnerSeeds) prize.winnerSeeds = [];
+    prize.winnerSeeds.push(localStorage.getItem('draw-last-seed') ?? '');
     this.saveToStorage();
     this.saveToFirebase();
   }
@@ -78,15 +84,19 @@ export default class PrizeManager {
   }
 
   clearRecords(): void {
-    this.prizes.forEach((p) => { p.winners = []; }); // eslint-disable-line no-param-reassign
+    this.prizes.forEach((p) => { p.winners = []; p.winnerTimestamps = []; p.winnerSeeds = []; }); // eslint-disable-line no-param-reassign
     this.saveToStorage();
     this.saveToFirebase();
   }
 
   exportCSV(): string {
-    const rows = ['Prize,Name'];
+    const rows = ['Prize,Name,Date & Time,Seed'];
     this.prizes.forEach((p) => {
-      p.winners.forEach((w) => rows.push(`${p.name},${w}`));
+      p.winners.forEach((w, i) => {
+        const ts = p.winnerTimestamps?.[i] ?? '';
+        const seed = p.winnerSeeds?.[i] ?? '';
+        rows.push(`${p.name},"${w}","${ts}","${seed}"`);
+      });
     });
     return rows.join('\n');
   }

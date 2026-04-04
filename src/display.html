@@ -274,6 +274,21 @@
       margin-top: 0.2rem;
     }
 
+    .winner-ts {
+      font-size: 0.85rem;
+      color: rgba(36, 25, 71, 0.65);
+      float: right;
+      margin-left: 0.4rem;
+    }
+
+    .center-seed {
+      font-family: monospace;
+      font-size: 0.68rem;
+      color: rgba(255,215,0,0.45);
+      letter-spacing: 0.1em;
+      text-align: center;
+    }
+
     .divider {
       width: 100%;
       height: 1px;
@@ -319,7 +334,7 @@
       border: 1px solid rgba(255,255,255,0.18);
       border-radius: 0.4rem;
       background: rgba(255,255,255,0.08);
-      color: #fff;
+      color: #ffffff;
       cursor: pointer;
       font-size: 0.78rem;
       font-family: 'Nunito Sans', sans-serif;
@@ -434,6 +449,10 @@
       <div class="center-date" id="date-display"></div>
       <div class="center-stats">
         <div class="stat">
+          <div class="stat__num" id="stat-participants">—</div>
+          <div class="stat__label">Participants</div>
+        </div>
+        <div class="stat">
           <div class="stat__num" id="stat-winners">0</div>
           <div class="stat__label">Winners so far</div>
         </div>
@@ -441,7 +460,8 @@
           <div class="stat__num" id="stat-remaining">0</div>
           <div class="stat__label">Prizes remaining</div>
         </div>
-      </div> 
+      </div>
+      <div id="seed-display" class="center-seed" style="display:none"></div>
     </div>
 
     <!-- Right: Upcoming -->
@@ -528,10 +548,11 @@
       if (p.winners.length) {
         const list = document.createElement('div');
         list.className = 'prize-block__list';
-        p.winners.forEach(w => {
+        p.winners.forEach((w, i) => {
           const chip = document.createElement('div');
           chip.className = 'winner-chip';
-          chip.textContent = mask(w);
+          const ts = p.winnerTimestamps && p.winnerTimestamps[i] ? p.winnerTimestamps[i] : '';
+          chip.innerHTML = mask(w) + (ts ? '<span class="winner-ts">' + ts + '</span>' : '');
           list.appendChild(chip);
         });
         block.appendChild(list);
@@ -570,6 +591,15 @@
     const rem = prizes.reduce((s, p) => s + Math.max(0, p.count - p.winners.length), 0);
     document.getElementById('stat-winners').textContent = total;
     document.getElementById('stat-remaining').textContent = rem;
+    const participants = localStorage.getItem('draw-participant-count');
+    const participantsEl = document.getElementById('stat-participants');
+    if (participantsEl && participants !== null) participantsEl.textContent = participants;
+    const seed = localStorage.getItem('draw-last-seed');
+    const seedEl = document.getElementById('seed-display');
+    if (seedEl && seed) {
+      seedEl.textContent = 'SEED · ' + seed;
+      seedEl.style.display = 'block';
+    }
   }
 
   // ── Refresh all ────────────────────────────────────────────

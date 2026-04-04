@@ -81,7 +81,7 @@ body {
 
 .main {
   @include flex-center;
-  padding: 3.125rem 0;
+  padding: 0.5rem 0;
   width: 100%;
   max-width: $screen-xl;
   flex: 1 1 0;
