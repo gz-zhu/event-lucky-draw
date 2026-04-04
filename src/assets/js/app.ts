@@ -739,7 +739,7 @@ initStars();
       const text = e.target?.result as string;
       const names = text
         .split('\n')
-        .map((line) => line.split(',')[0].replace(/^"|"$/g, '').trim())
+        .map((line) => line.split(',').map((cell) => cell.replace(/^"|"$/g, '').trim()).filter(Boolean).join(' '))
         .filter(Boolean);
       const filtered = filterOutWinners(names);
       showDedupeNotice(names.length - filtered.length);
