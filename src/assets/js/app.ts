@@ -109,7 +109,10 @@ initStars();
     const baseItems = Math.round(log * 25); // 10 people→25, 100→50, 1000→75, 10000→100
     const items = Math.max(Math.round(baseItems / Math.max(remainingSlots, 1)), 15);
     const msPerItem = Math.max(Math.round(200 - log * 40), 60); // 10p→160ms, 100p→120ms, 1000+→60ms
-    return { items, msPerItem };
+    // Enforce minimum total spin duration of 20 seconds
+    const minDurationMs = 20000;
+    const adjustedMsPerItem = Math.max(msPerItem, Math.ceil(minDurationMs / items));
+    return { items, msPerItem: adjustedMsPerItem };
   };
 
   let currentSpinDurationMs = MAX_REEL_ITEMS * 150;
