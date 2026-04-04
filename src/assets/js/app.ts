@@ -444,8 +444,8 @@ initStars();
   };
 
   // Prize config in settings
-  // eslint-disable-next-line max-len
-  const makePrizeRow = (id: string, name: string, count: number, drawTime: string): HTMLDivElement => {
+
+  const makePrizeRow = (id: string, name: string, count: number, drawTime: string, description = ''): HTMLDivElement => {
     const row = document.createElement('div');
     row.className = 'prize-config-row';
     row.dataset.id = id;
@@ -455,6 +455,7 @@ initStars();
       <input class="input-field pc-drawtime" type="text" pattern="[0-2][0-9]:[0-5][0-9]"
         placeholder="HH:MM" value="${drawTime}" style="text-align:center;cursor:pointer" readonly>
       <button class="solid-button solid-button--danger pc-del" style="padding:0.4rem 0.8rem;font-size:0.875rem">✕</button>
+      <input class="input-field pc-desc" type="text" placeholder="Prize item description (optional)" value="${description}">
     `;
     row.querySelector('.pc-del')!.addEventListener('click', () => row.remove());
     (row.querySelector('.pc-name') as HTMLInputElement).addEventListener('input', syncCountdownSelectFromRows);
@@ -499,7 +500,7 @@ initStars();
   const renderPrizeConfig = () => {
     prizeConfigList.innerHTML = '';
     prizeManager.allPrizes.forEach((prize) => {
-      prizeConfigList.appendChild(makePrizeRow(prize.id, prize.name, prize.count, prize.drawTime ?? ''));
+      prizeConfigList.appendChild(makePrizeRow(prize.id, prize.name, prize.count, prize.drawTime ?? '', prize.description ?? ''));
     });
   };
 
@@ -730,11 +731,13 @@ initStars();
     const rows = Array.from(prizeConfigList.querySelectorAll('.prize-config-row'));
     const newPrizes = rows.map((row) => {
       const dt = (row.querySelector('.pc-drawtime') as HTMLInputElement).value.trim();
+      const desc = (row.querySelector('.pc-desc') as HTMLInputElement).value.trim();
       return {
         id: (row as HTMLElement).dataset.id ?? String(Date.now()),
         name: (row.querySelector('.pc-name') as HTMLInputElement).value.trim() || 'Prize',
         count: Math.max(1, parseInt((row.querySelector('.pc-count') as HTMLInputElement).value, 10) || 1),
-        ...(dt ? { drawTime: dt } : {})
+        ...(dt ? { drawTime: dt } : {}),
+        ...(desc ? { description: desc } : {})
       };
     });
     prizeManager.setPrizes(newPrizes);

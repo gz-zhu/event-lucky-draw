@@ -16,9 +16,9 @@
       height: 100vh;
       overflow: hidden;
       -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
     }
 
     /* ── Canvas lights ── */
@@ -86,7 +86,7 @@
       align-items: center;
       gap: 0.4rem;
       font-size: 0.78rem;
-      color: rgba(29, 24, 46, 0.88);
+      color: rgba(255,255,255,0.85);
     }
 
     .ticker-item__prize {
@@ -97,275 +97,224 @@
 
     .ticker-item__sep { color: rgba(255,255,255,0.25); }
 
-    /* ── Main layout ── */
+    /* ── Main layout: 2 columns ── */
     .display {
       position: relative;
       z-index: 1;
       height: 100vh;
+      padding-top: 2.4rem; /* offset ticker */
+      display: flex;
+    }
+
+    /* ── Left info panel ── */
+    .info-panel {
+      width: 320px;
+      flex-shrink: 0;
       display: flex;
       flex-direction: column;
-    }
-
-    .layout {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 1fr 1.3fr 1fr;
-      gap: 0.85rem;
-      padding: 0.85rem;
+      padding: 2rem 1.75rem 1.5rem;
+      gap: 0.15rem;
+      background: transparent;
+      border-right: 1px solid rgba(255,255,255,0.06);
       overflow: hidden;
-      min-height: 0;
     }
 
-    /* ── Glass card ── */
-    .glass, .center-col {
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  border: none;
-  border-radius: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  padding: 1.5rem 1.25rem;
-  justify-content: center;   /* ← 新增這行 */
-}
-
-    .center-col {
-      align-items: center;
-      justify-content: center;
-      gap: 0.9rem;
-    }
-
-    .card-title {
-      font-size: 0.62rem;
+    .info-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 3rem;
       font-weight: 700;
-      color: rgba(255,215,0,0.7);
+      background: linear-gradient(135deg, #ffffff 0%, #ffe066 40%, #ffd700 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 0.05em;
+      line-height: 1.15;
+      margin-bottom: 0.6rem;
+      animation: title-glow 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes title-glow {
+      from { filter: drop-shadow(0 0 8px rgba(255,215,0,0.3)); }
+      to   { filter: drop-shadow(0 0 20px rgba(255,215,0,0.7)); }
+    }
+
+    .info-clock {
+      font-family: 'Playfair Display', serif;
+      font-size: 4.5rem;
+      font-weight: 700;
+      color: #fffafa;
+      letter-spacing: 0.06em;
+      text-shadow: 0 0 20px rgba(255,255,255,0.15);
+      line-height: 1;
+    }
+
+    .info-date {
+      font-size: 1rem;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.08em;
+      margin-top: 0.25rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .info-divider {
+      width: 100%;
+      height: 1px;
+      background: rgba(255,255,255,0.08);
+      margin: 0.6rem 0;
+      flex-shrink: 0;
+    }
+
+    /* Countdown in info panel */
+    .info-countdown {
+      display: none;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .info-countdown.visible { display: flex; }
+
+    .info-cd-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #ffd700;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      letter-spacing: 0.14em;
-      padding-bottom: 0.6rem;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .info-cd-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 3rem;
+      font-weight: 700;
+      color: #ffd700;
+      letter-spacing: 0.04em;
+      text-shadow: 0 0 16px rgba(255,215,0,0.4);
+      line-height: 1;
+    }
+
+    /* Stats block */
+    .info-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      margin-top: auto;
+      padding-top: 0.5rem;
+    }
+
+    .info-stat {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+
+    .info-stat__label {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.55);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .info-stat__num {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #ffd700;
+      line-height: 1;
+    }
+
+    .info-seed {
+      font-family: monospace;
+      font-size: 0.58rem;
+      color: rgba(255,215,0,0.3);
+      letter-spacing: 0.08em;
+      margin-top: 0.5rem;
+      word-break: break-all;
+    }
+
+    /* ── Right prizes panel ── */
+    .prizes-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 1rem 1rem 1rem 1rem;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    .prizes-panel__title {
+      font-size: 0.58rem;
+      font-weight: 700;
+      color: rgba(255,215,0,0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
       margin-bottom: 0.75rem;
       flex-shrink: 0;
     }
 
-    .scroll-body {
+    .prizes-grid {
       flex: 1;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
       gap: 0.75rem;
+      overflow-y: auto;
+      align-content: start;
     }
 
     ::-webkit-scrollbar { width: 3px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
 
-    /* ── Winners ── */
-    .prize-block__name {
-      font-size: 1rem;
-      font-weight: 700;
-      color: #948532;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 0.35rem;
-    }
-
-    .prize-block__list {
+    /* ── Prize card ── */
+    .prize-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 0.7rem;
+      padding: 0.85rem 1rem;
       display: flex;
       flex-direction: column;
-      gap: 0.25rem;
-      margin-bottom: 0.35rem;
+      gap: 0.5rem;
+      transition: border-color 0.2s;
     }
 
-    .winner-chip {
-      background: rgba(255,255,255,0.07);
-      border-left: 2px solid rgba(52, 48, 27, 0.55);
-      border-radius: 0.35rem;
-      padding: 0.28rem 0.65rem;
-      font-size: 0.82rem;
-      color: rgba(42, 61, 100, 0.9);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    .prize-card--done {
+      border-color: rgba(76,175,80,0.25);
+      background: rgba(76,175,80,0.04);
     }
 
-    .prize-block__pending {
-      font-size: 0.7rem;
-      color: rgba(255,255,255,0.28);
-      font-style: italic;
-    }
-
-    /* ── Center ── */
-    .center-col {
+    .prize-card__header {
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding-top: 6vh;
-      gap: 0.9rem;
-      background: transparent;
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.5rem;
     }
 
-    .center-time {
-      font-family: 'Playfair Display', serif;
-      font-size: 5rem;
-      font-weight: 700;
-      color: #fffafa;
-      letter-spacing: 0.08em;
-      text-shadow: 0 0 30px rgba(255,255,255,0.2);
-      line-height: 1;
-    }
-
-    .center-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 4rem;
-      font-weight: 700;
-      background: linear-gradient(135deg, #ffffff 0%, #ffe066 35%, #ffffff89 65%, #ffd700 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      letter-spacing: 0.08em;
-      animation: title-glow 4s ease-in-out infinite alternate;
-    }
-
-    @keyframes title-glow {
-      from {
-        filter: drop-shadow(0 1px 0 rgba(255,255,255,0.8))
-                drop-shadow(0 0 15px rgba(255,255,255,0.4))
-                drop-shadow(0 4px 12px rgba(0,0,0,0.5));
-      }
-      to {
-        filter: drop-shadow(0 1px 0 rgba(255,255,255,1))
-                drop-shadow(0 0 35px rgba(255,255,255,0.75))
-                drop-shadow(0 4px 16px rgba(0,0,0,0.6));
-      }
-    }
-
-    .center-stats {
-      display: flex;
-      gap: 2.5rem;
-    }
-
-    .stat { text-align: center; }
-
-    .stat__num {
-      font-size: 2.2rem;
-      font-weight: 700;
-      color: #ffd700;
-      line-height: 1;
-    }
-
-    .stat__label {
-      font-size: 0.8rem;
-      color: rgb(255, 255, 255);
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
-      margin-top: 0.2rem;
-    }
-
-    .winner-ts {
-      font-size: 0.85rem;
-      color: rgba(36, 25, 71, 0.65);
-      float: right;
-      margin-left: 0.4rem;
-    }
-
-    .center-seed {
-      font-family: monospace;
-      font-size: 0.68rem;
-      color: rgba(255,215,0,0.45);
-      letter-spacing: 0.1em;
-      text-align: center;
-    }
-
-    .divider {
-      width: 100%;
-      height: 1px;
-      background: rgba(255,255,255,0.08);
-      margin: 0.25rem 0;
-    }
-
-    /* ── Countdown ── */
-    .countdown-num {
-      font-family: 'Playfair Display', serif;
-      font-size: 3rem;
+    .prize-card__name {
+      font-size: 1.05rem;
       font-weight: 700;
       color: #ffd700;
       letter-spacing: 0.04em;
-      text-shadow: 0 0 20px rgba(255,215,0,0.35);
+      line-height: 1.2;
     }
 
-    .countdown-ctrl {
+    .prize-card__desc {
+      font-size: 0.72rem;
+      color: rgba(255,215,0,0.6);
+      margin-top: 0.18rem;
+      line-height: 1.3;
+    }
+
+    .prize-card__badges {
       display: flex;
-      gap: 0.5rem;
-      align-items: center;
-    }
-
-    .ctrl-input {
-      width: 56px;
-      padding: 0.35rem 0.5rem;
-      border: 1px solid rgba(255,255,255,0.18);
-      border-radius: 0.4rem;
-      background: rgba(255,255,255,0.08);
-      color: #010000b6;
-      font-size: 0.85rem;
-      text-align: center;
-      font-family: 'Nunito Sans', sans-serif;
-    }
-
-    .ctrl-label {
-      font-size: 0.75rem;
-      color: rgba(255,255,255,0.35);
-    }
-
-    .ctrl-btn {
-      padding: 0.35rem 0.9rem;
-      border: 1px solid rgba(255,255,255,0.18);
-      border-radius: 0.4rem;
-      background: rgba(255,255,255,0.08);
-      color: #ffffff;
-      cursor: pointer;
-      font-size: 0.78rem;
-      font-family: 'Nunito Sans', sans-serif;
-      transition: background 0.15s;
-    }
-
-    .ctrl-btn:hover { background: rgba(255,255,255,0.16); }
-
-    .ctrl-btn.gold {
-      background: rgba(255,215,0,0.18);
-      border-color: rgba(255,215,0,0.5);
-      color: #ffd700;
-    }
-
-    /* ── Upcoming ── */
-    .upcoming-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: rgba(255,255,255,0.05);
-      border-radius: 0.2rem;
-      padding: 0.55rem 0.75rem;
-    }
-
-    .upcoming-row__name {
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: #fff;
-    }
-
-    .upcoming-row__sub {
-      font-size: 0.68rem;
-      color: rgba(255,255,255,0.35);
-      margin-top: 0.1rem;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.25rem;
+      flex-shrink: 0;
     }
 
     .badge {
-      padding: 0.22rem 0.7rem;
+      padding: 0.2rem 0.6rem;
       border-radius: 2rem;
-      font-size: 0.65rem;
+      font-size: 0.6rem;
       font-weight: 700;
       white-space: nowrap;
     }
@@ -382,39 +331,96 @@
       border: 1px solid rgba(255,215,0,0.3);
     }
 
-    .center-date {
-      font-size: 1rem;
-      color: rgba(255,255,255,0.6);
-      letter-spacing: 0.1em;
-      margin-top: 0.4rem;
+    .prize-card__time {
+      font-size: 0.62rem;
+      color: rgba(255,215,0,0.6);
+      white-space: nowrap;
     }
-@media (max-width: 768px) {
-      .layout {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto;
-        overflow-y: auto;
-      }
 
-      .glass, .center-col, .right-col {
-        min-height: auto;
-        padding: 1rem;
-      }
+    /* Remaining slots row */
+    .prize-card__slots {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
 
-      .center-time {
-        font-size: 3rem;
-      }
+    .prize-card__rem {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1;
+    }
 
-      .center-title {
-        font-size: 2.5rem;
-      }
+    .prize-card--done .prize-card__rem { color: rgba(76,175,80,0.7); }
 
-      .center-date {
-        font-size: 0.8rem;
-      }
+    .prize-card__rem-label {
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.4);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      line-height: 1.3;
+    }
 
-      .stat__num {
-        font-size: 1.6rem;
-      }
+    /* Progress bar */
+    .prize-card__progress {
+      width: 100%;
+      height: 3px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .prize-card__progress-fill {
+      height: 100%;
+      background: #ffd700;
+      border-radius: 2px;
+      transition: width 0.4s;
+    }
+
+    .prize-card--done .prize-card__progress-fill { background: #4caf50; }
+
+    /* Winners list */
+    .prize-card__winners {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .winner-chip {
+      background: rgba(255,255,255,0.06);
+      border-left: 2px solid rgba(255,215,0,0.3);
+      border-radius: 0.3rem;
+      padding: 0.22rem 0.55rem;
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.8);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .prize-card--done .winner-chip {
+      border-left-color: rgba(76,175,80,0.4);
+    }
+
+    .winner-ts {
+      font-size: 0.6rem;
+      color: rgba(255,255,255,0.28);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .prize-card__pending {
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.22);
+      font-style: italic;
+    }
+
+    @media (max-width: 768px) {
+      .display { flex-direction: column; overflow-y: auto; }
+      .info-panel { width: 100%; border-right: none; border-bottom: 1px solid rgba(255,215,0,0.1); padding: 1rem; }
+      .info-clock { font-size: 2rem; }
+      .prizes-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -423,48 +429,56 @@
 <canvas id="lights"></canvas>
 <div id="fb-status" style="position:fixed;bottom:0.5rem;right:0.75rem;font-size:0.65rem;color:rgba(255,255,255,0.3);z-index:50;pointer-events:none">⚪ sync</div>
 
+<!-- Winners ticker -->
+<div class="ticker">
+  <div class="ticker__label">WINNERS</div>
+  <div class="ticker__track">
+    <div class="ticker__content" id="ticker-content"></div>
+  </div>
+</div>
+
 <div class="display">
 
-  <!-- Three-column layout -->
-  <div class="layout">
+  <!-- Left: Info panel (clock, countdown, stats) -->
+  <div class="info-panel">
+    <div class="info-title">Lucky<br>Draw</div>
+    <div class="info-clock" id="clock">00:00:00</div>
+    <div class="info-date" id="date-display"></div>
 
-    <!-- Left: Winners -->
-    <div class="glass">
-      <div class="card-title">Winners</div>
-      <div class="scroll-body" id="winners-body"></div>
+    <!-- Countdown (hidden until active) -->
+    <div class="info-divider" id="countdown-divider" style="display:none"></div>
+    <div class="info-countdown" id="countdown-wrap">
+      <div class="info-cd-label" id="countdown-label"></div>
+      <div class="info-cd-num" id="countdown-display">--:--</div>
     </div>
 
-    <!-- Center -->
-    <div class="glass center-col">
-      <div class="center-title">Lucky Draw</div>
-      <div class="center-time" id="clock">00:00:00</div>
-      <div class="center-date" id="date-display"></div>
-      <div class="divider" id="countdown-divider" style="display:none"></div>
-      <div class="countdown-label" id="countdown-label" style="display:none;font-size:1.05rem;font-weight:700;color:#ffd700;letter-spacing:0.1em;text-transform:uppercase;text-align:center;text-shadow:0 0 16px rgba(255,215,0,0.5)"></div>
-      <div class="countdown-num" id="countdown-display" style="display:none">--:--</div>
-      <div class="center-stats">
-        <div class="stat">
-          <div class="stat__num" id="stat-participants">—</div>
-          <div class="stat__label">Participants</div>
-        </div>
-        <div class="stat">
-          <div class="stat__num" id="stat-winners">0</div>
-          <div class="stat__label">Winners so far</div>
-        </div>
-        <div class="stat">
-          <div class="stat__num" id="stat-remaining">0</div>
-          <div class="stat__label">Prizes remaining</div>
-        </div>
+    <div class="info-divider"></div>
+
+    <!-- Stats -->
+    <div class="info-stats">
+      <div class="info-stat">
+        <span class="info-stat__label">Participants</span>
+        <span class="info-stat__num" id="stat-participants">—</span>
       </div>
-      <div id="seed-display" class="center-seed" style="display:none"></div>
+      <div class="info-stat">
+        <span class="info-stat__label">Winners</span>
+        <span class="info-stat__num" id="stat-winners">0</span>
+      </div>
+      <div class="info-stat">
+        <span class="info-stat__label">Remaining</span>
+        <span class="info-stat__num" id="stat-remaining">0</span>
+      </div>
     </div>
 
-    <!-- Right: Upcoming -->
-    <div class="glass">
-      <div class="card-title">Upcoming Prizes</div>
-      <div class="scroll-body" id="upcoming-body"></div>
-    </div>
+    <div class="info-seed" id="seed-display" style="display:none"></div>
   </div>
+
+  <!-- Right: Prize cards -->
+  <div class="prizes-panel">
+    <div class="prizes-panel__title">Prizes</div>
+    <div class="prizes-grid" id="prizes-body"></div>
+  </div>
+
 </div>
 
 <script>
@@ -519,66 +533,88 @@
     return name.split(/(\s+|—|-)/).map(p => {
       if (/^\s+$/.test(p) || p === '—' || p === '-') return p;
       if (p.length <= 2) return p;
-      return p.slice(0, Math.ceil(p.length / 3)) + '***';
+      const keep = Math.ceil(p.length / 3);
+      return p.slice(0, keep) + '***';
     }).join('');
   }
 
   // ── Load data ──────────────────────────────────────────────
- function load() {
+  function load() {
     try { return JSON.parse(localStorage.getItem('prize-manager-data') || '[]'); }
     catch(e) { return []; }
   }
 
-  // ── Render winners ─────────────────────────────────────────
-  function renderWinners(prizes) {
-    const body = document.getElementById('winners-body');
+  // ── Render prize cards (combined winners + upcoming) ───────
+  function renderPrizes(prizes) {
+    const body = document.getElementById('prizes-body');
     body.innerHTML = '';
+
     prizes.forEach(p => {
-      const block = document.createElement('div');
-      block.className = 'prize-block';
-      const nameEl = document.createElement('div');
-      nameEl.className = 'prize-block__name';
-      nameEl.textContent = p.name + ' · ' + p.winners.length + '/' + p.count;
-      block.appendChild(nameEl);
+      const done = p.winners.length >= p.count;
+      const rem = Math.max(0, p.count - p.winners.length);
+      const filled = p.count > 0 ? (p.winners.length / p.count) : 0;
+
+      const card = document.createElement('div');
+      card.className = 'prize-card' + (done ? ' prize-card--done' : '');
+
+      // Header: name + badges
+      const badgeHtml = '<div class="badge ' + (done ? 'badge--done' : 'badge--pending') + '">'
+        + (done ? '✓ Done' : 'Upcoming') + '</div>'
+        + (p.drawTime ? '<div class="prize-card__time">⏰ ' + p.drawTime + '</div>' : '');
+
+      const descHtml = p.description
+        ? '<div class="prize-card__desc">' + p.description + '</div>' : '';
+
+      card.innerHTML = '<div class="prize-card__header">'
+        + '<div><div class="prize-card__name">' + p.name + '</div>' + descHtml + '</div>'
+        + '<div class="prize-card__badges">' + badgeHtml + '</div>'
+        + '</div>'
+        // Remaining slots
+        + '<div class="prize-card__slots">'
+        + '<div class="prize-card__rem">' + rem + '</div>'
+        + '<div class="prize-card__rem-label">spot' + (rem !== 1 ? 's' : '') + '<br>remaining</div>'
+        + '</div>'
+        // Progress bar
+        + '<div class="prize-card__progress"><div class="prize-card__progress-fill" style="width:' + Math.round(filled * 100) + '%"></div></div>';
+
+      // Winners list
       if (p.winners.length) {
-        const list = document.createElement('div');
-        list.className = 'prize-block__list';
+        const wrapEl = document.createElement('div');
+        wrapEl.className = 'prize-card__winners';
         p.winners.forEach((w, i) => {
           const chip = document.createElement('div');
           chip.className = 'winner-chip';
           const ts = p.winnerTimestamps && p.winnerTimestamps[i] ? p.winnerTimestamps[i] : '';
-          chip.innerHTML = mask(w) + (ts ? '<span class="winner-ts">' + ts + '</span>' : '');
-          list.appendChild(chip);
+          chip.innerHTML = '<span>' + mask(w) + '</span>'
+            + (ts ? '<span class="winner-ts">' + ts + '</span>' : '');
+          wrapEl.appendChild(chip);
         });
-        block.appendChild(list);
+        card.appendChild(wrapEl);
+      } else if (!done) {
+        const pend = document.createElement('div');
+        pend.className = 'prize-card__pending';
+        pend.textContent = 'No winners yet';
+        card.appendChild(pend);
       }
-      const rem = p.count - p.winners.length;
-      if (rem > 0) {
-        const pending = document.createElement('div');
-        pending.className = 'prize-block__pending';
-        pending.textContent = rem + ' spot' + (rem > 1 ? 's' : '') + ' remaining';
-        block.appendChild(pending);
-      }
-      body.appendChild(block);
+
+      body.appendChild(card);
     });
   }
 
-  // ── Render upcoming ────────────────────────────────────────
-  function renderUpcoming(prizes) {
-    const body = document.getElementById('upcoming-body');
-    body.innerHTML = '';
-    prizes.forEach(p => {
-      const done = p.winners.length >= p.count;
-      const rem = p.count - p.winners.length;
-      const row = document.createElement('div');
-      row.className = 'upcoming-row';
-      const timeBadge = p.drawTime ? '<span style="font-size:0.7rem;color:#ffd700;margin-left:0.4rem;opacity:0.85">⏰ ' + p.drawTime + '</span>' : '';
-      row.innerHTML = '<div><div class="upcoming-row__name">' + p.name + timeBadge + '</div>'
-        + '<div class="upcoming-row__sub">' + (done ? 'Completed' : rem + ' spot' + (rem > 1 ? 's' : '') + ' left') + '</div></div>'
-        + '<div class="badge ' + (done ? 'badge--done' : 'badge--pending') + '">'
-        + (done ? '✓ Done' : 'Upcoming') + '</div>';
-      body.appendChild(row);
-    });
+  // ── Render ticker ──────────────────────────────────────────
+  function renderTicker(prizes) {
+    const content = document.getElementById('ticker-content');
+    const items = prizes.flatMap(p =>
+      p.winners.map(w => ({ prize: p.name, winner: w }))
+    );
+    if (!items.length) { content.innerHTML = '<span style="color:rgba(255,255,255,0.3);font-size:0.75rem">No winners yet</span>'; return; }
+    content.innerHTML = items.map(it =>
+      '<span class="ticker-item">'
+      + '<span class="ticker-item__prize">' + it.prize + '</span>'
+      + '<span class="ticker-item__sep">·</span>'
+      + mask(it.winner)
+      + '</span>'
+    ).join('');
   }
 
   // ── Render stats ───────────────────────────────────────────
@@ -598,15 +634,15 @@
     }
   }
 
-  // ── Refresh all (only re-render when data actually changes) ───
+  // ── Refresh all ────────────────────────────────────────────
   let lastDataHash = '';
   function refresh() {
     const prizes = load();
     const hash = JSON.stringify(prizes);
     if (hash === lastDataHash) return;
     lastDataHash = hash;
-    renderWinners(prizes);
-    renderUpcoming(prizes);
+    renderPrizes(prizes);
+    renderTicker(prizes);
     renderStats(prizes);
   }
 
@@ -647,6 +683,10 @@
 
   refresh();
   setInterval(refresh, 2000);
+  // Instant sync when main app writes to localStorage on the same device
+  window.addEventListener('storage', function(e) {
+    if (e.key === 'prize-manager-data') refresh();
+  });
 
   // ── Countdown (read-only, driven by main app via Firebase) ───
   let cdTimer = null;
@@ -659,9 +699,11 @@
   const cdEl = document.getElementById('countdown-display');
   const cdDivider = document.getElementById('countdown-divider');
   const cdLabel = document.getElementById('countdown-label');
+  const cdWrap = document.getElementById('countdown-wrap');
 
   function showCountdown(show) {
-    [cdEl, cdDivider, cdLabel].forEach(function(el) { if (el) el.style.display = show ? 'block' : 'none'; });
+    if (cdDivider) cdDivider.style.display = show ? 'block' : 'none';
+    if (cdWrap) cdWrap.classList.toggle('visible', show);
   }
 
   function getPrizeName(prizeId) {
@@ -679,13 +721,11 @@
       cdLabel.style.color = '#FFEA60';
     }
     if (cdEl) { cdEl.textContent = '00:00'; cdEl.style.color = '#FFF260'; }
-    // Auto-hide after 10 seconds
     setTimeout(function() { showCountdown(false); if (cdLabel) cdLabel.style.color = '#ffd700'; }, 10000);
   }
 
   function applyCountdownState(state) {
     if (cdTimer) { clearInterval(cdTimer); cdTimer = null; }
-    // No active countdown → hide everything
     if (!state || !state.minutes) { showCountdown(false); return; }
     var prizeName = getPrizeName(state.prizeId);
     var namePrefix = prizeName ? prizeName + '  ·  ' : '';

@@ -736,6 +736,13 @@
   padding: 0.5rem 0.75rem;
 }
 
+.prize-config-row .pc-desc {
+  grid-column: 1 / -1;
+  font-size: 0.8rem;
+  padding: 0.35rem 0.75rem;
+  opacity: 0.8;
+}
+
 // ── Countdown Timer section (settings) ────────────────────────
 .countdown-cfg-header {
   display: flex;
