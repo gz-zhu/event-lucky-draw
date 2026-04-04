@@ -663,10 +663,20 @@
     [cdEl, cdDivider, cdLabel].forEach(el => { if (el) el.style.display = show ? 'block' : 'none'; });
   }
 
+  function getPrizeName(prizeId) {
+    try {
+      const prizes = load();
+      const p = prizes.find(function(x) { return x.id === prizeId; });
+      return p ? p.name : '';
+    } catch(e) { return ''; }
+  }
+
   function applyCountdownState(state) {
     if (cdTimer) { clearInterval(cdTimer); cdTimer = null; }
     if (!state || !state.minutes) { showCountdown(false); return; }
     showCountdown(true);
+    const prizeName = getPrizeName(state.prizeId);
+    const namePrefix = prizeName ? prizeName + '  ·  ' : '';
     if (state.running && state.startedAt) {
       const elapsed = Math.floor((Date.now() - state.startedAt) / 1000);
       cdSecs = Math.max(0, state.minutes * 60 - elapsed);
@@ -678,10 +688,10 @@
         }
         if (cdSecs <= 0) { clearInterval(cdTimer); cdTimer = null; }
       }, 1000);
-      if (cdLabel) cdLabel.textContent = '⏱ countdown';
+      if (cdLabel) cdLabel.textContent = namePrefix + '⏱ countdown';
     } else {
       cdSecs = state.pausedRemaining !== null ? state.pausedRemaining : state.minutes * 60;
-      if (cdLabel) cdLabel.textContent = state.pausedRemaining !== null ? '⏸ paused' : '⏱ ready';
+      if (cdLabel) cdLabel.textContent = namePrefix + (state.pausedRemaining !== null ? '⏸ paused' : '⏱ ready');
     }
     if (cdEl) {
       cdEl.textContent = fmtCd(cdSecs);
