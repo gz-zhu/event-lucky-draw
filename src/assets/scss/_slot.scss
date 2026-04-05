@@ -2,13 +2,14 @@
 
 .brand-tag {
   position: fixed;
-  top: 2.9rem;
+  top: 4rem;
   left: 1.2rem;
   font-family: 'Playfair Display', serif;
-  font-size: 1.9rem;
+  font-size: 2.6rem;
   font-weight: 700;
   letter-spacing: 0.07em;
-  /* Gold metallic gradient with orange accent */
+  line-height: 1;
+  /* Gold metallic fill */
   background: linear-gradient(
     160deg,
     #ff9a00 0%,
@@ -22,25 +23,27 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  filter: drop-shadow(0 1px 0 rgba(180, 80, 0, 0.55))
-    drop-shadow(0 0 18px rgba(255, 180, 0, 0.55))
-    drop-shadow(0 3px 10px rgba(0, 0, 0, 0.5));
+  /* Orange-red metallic stroke drawn behind the fill */
+  -webkit-text-stroke: 3px rgba(200, 55, 0, 0.55);
+  paint-order: stroke fill;
+  filter: drop-shadow(0 1px 0 rgba(180, 60, 0, 0.6))
+    drop-shadow(0 0 20px rgba(255, 170, 0, 0.55))
+    drop-shadow(0 4px 12px rgba(0, 0, 0, 0.55));
   animation: brand-shine 5s ease-in-out infinite alternate;
   pointer-events: none;
   z-index: 25;
-  line-height: 1;
 }
 
 @keyframes brand-shine {
   0% {
-    filter: drop-shadow(0 1px 0 rgba(180, 80, 0, 0.55))
-      drop-shadow(0 0 12px rgba(255, 160, 0, 0.4))
-      drop-shadow(0 3px 10px rgba(0, 0, 0, 0.5));
+    filter: drop-shadow(0 1px 0 rgba(180, 60, 0, 0.55))
+      drop-shadow(0 0 12px rgba(255, 150, 0, 0.4))
+      drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
   }
   100% {
-    filter: drop-shadow(0 1px 0 rgba(200, 100, 0, 0.7))
-      drop-shadow(0 0 28px rgba(255, 210, 0, 0.75))
-      drop-shadow(0 3px 14px rgba(0, 0, 0, 0.55));
+    filter: drop-shadow(0 2px 0 rgba(220, 80, 0, 0.75))
+      drop-shadow(0 0 32px rgba(255, 200, 0, 0.8))
+      drop-shadow(0 4px 16px rgba(0, 0, 0, 0.6));
   }
 }
 
