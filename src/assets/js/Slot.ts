@@ -186,17 +186,16 @@ export default class Slot {
       return false;
     }
 
-    // Determine winner (first element of initial shuffle)
-    const firstShuffle = Slot.shuffleNames<string>(this.nameList);
-    const winner = firstShuffle[0];
-
-    // Fill intermediate slots with fresh random shuffles so scrolling looks random
+    // Pick winner via shuffle; each intermediate slot is an independent random pick
+    // so the reel looks fully scrambled with no repeating pattern
+    const winner = Slot.shuffleNames<string>(this.nameList)[0];
     const needed = this.maxReelItems - Number(this.havePreviousWinner) - 1;
     const intermediates: string[] = [];
-    while (intermediates.length < needed) {
-      intermediates.push(...Slot.shuffleNames<string>(this.nameList));
+    for (let i = 0; i < needed; i += 1) {
+      // eslint-disable-next-line no-bitwise
+      intermediates.push(this.nameList[Math.random() * this.nameList.length | 0]);
     }
-    const randomNames = [...intermediates.slice(0, needed), winner];
+    const randomNames = [...intermediates, winner];
 
     const fragment = document.createDocumentFragment();
 
