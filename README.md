@@ -9,21 +9,40 @@ A beautiful lucky draw app for events — prize tiers, winner records, CSV impor
 ## ✨ Features / 機能
 
 - 🏆 Multiple prize tiers (1st, 2nd, 3rd …) with configurable winner count
-- 📂 Import participant list via CSV
+- 📂 Import participant list via CSV or paste directly
 - 📋 Winner records with timestamp and draw seed — exportable as CSV
 - 🎊 Confetti + star + festive lights animations
-- 🔥 Firebase real-time sync — winners update across all devices instantly
 - 📺 Separate display page for projector / big screen (`/display.html`)
 - 🔢 Draw seed shown per draw for full auditability
 - 🔒 Automatic winner name masking after draw (privacy protection)
 - 🚫 Auto-deduplication — past winners removed from participant pool automatically
 - ⚡ Interruption recovery — restores the pool if browser closes mid-draw
 - 🕐 Live clock and date display
+- ⏱ Per-prize countdown timer with auto-draw option
 - 🖥️ Fullscreen mode
-- 💾 Auto-saves all settings in browser
-- 🖼️ Custom background image support
+- 💾 All settings auto-saved in your browser
 - 🔊 Sound effects (spinning + win fanfare)
-- 🚦 Buttons locked during spin to prevent draw errors
+- 👁 Name list privacy tools — mask, shuffle, merge duplicates
+
+---
+
+## 📦 How Data is Stored
+
+> **All data is saved in your browser's `localStorage` on the machine running the draw.**
+
+- No account or cloud setup required
+- Settings, name list, prize records — everything lives in the browser on your computer
+- Clearing browser data will erase all records (export CSV first if needed)
+
+### Display page sync
+
+`/display.html` reads from the same `localStorage` and refreshes automatically every 2 seconds.
+
+**This means:**
+- ✅ Open both pages in the **same browser on the same machine** → display syncs live
+- ❌ Open display on a **different device or browser** → it will not receive updates (no data is shared across machines in the base configuration)
+
+> **Tip for events:** Run the main draw page on the operator's laptop. Open `/display.html` in a second window or browser tab on the same laptop, then extend that display to a projector or secondary screen.
 
 ---
 
@@ -38,48 +57,28 @@ yarn build
 
 # Install dependencies / 依存関係インストール
 yarn install
-
-# Force reinstall (when things break) / 再インストール
-rmdir /s /q node_modules && yarn install   # Windows
-rm -rf node_modules && yarn install        # Mac
 ```
-
-**Upload changes to GitHub / GitHub に更新をアップロード:**
-```bash
-git add .
-git commit --no-verify -m "describe what changed"
-git push
-```
-
-**Common commit message prefixes:**
-
-| Prefix | Use for |
-|--------|---------|
-| `feat:` | New feature |
-| `fix:` | Bug fix |
-| `style:` | Visual changes |
-| `docs:` | README / documentation |
-| `chore:` | Maintenance |
 
 > 🌐 Local preview runs at: **http://localhost:8888**
+
+**Upload changes to GitHub:**
+```bash
+git add .
+git commit -m "describe what changed"
+git push
+```
 
 ---
 
 ## 🚀 Deployment Guide / デプロイガイド
 
-For full deployment instructions (Vercel + Firebase + custom domain), see the guide for your language:
+For full deployment instructions (local / Vercel / custom domain), see the guide for your language:
 
 | Language | File |
 |----------|------|
 | 中文 | [DEPLOY_GUIDE_ZH.md](./DEPLOY_GUIDE_ZH.md) |
 | English | [DEPLOY_GUIDE_EN.md](./DEPLOY_GUIDE_EN.md) |
 | 日本語 | [DEPLOY_GUIDE_JA.md](./DEPLOY_GUIDE_JA.md) |
-
-**Quick local preview:**
-```bash
-yarn start
-```
-Open: **http://localhost:8888**
 
 ---
 
@@ -93,66 +92,48 @@ Paste names one per line, or click **Upload CSV** to import a `.csv` file.
 
 > Any name that has already won a prize is automatically removed from the pool on import.
 
+Use the toolbar buttons to **shuffle**, **merge duplicates**, **mask names**, or **clear** the list.
+
 Click **Save**.
 
 ### 2. Set up prizes / 賞を設定
 In Settings → **Prize Settings**: set name and winner count per prize. Click **Save**.
 
-### 3. (Optional) Open the display page on a projector / 大画面表示
-Click the **📺 Display** link (top of the page) to open `display.html` in a new tab.
-Put this tab on a projector or secondary screen — it shows live winners, upcoming prizes, participant stats, and a clock, all synced in real time via Firebase.
+### 3. Open the display page on a projector
+Click the **📺 Display** link (bottom right of the page) to open `display.html` in a new tab **on the same computer**.
+
+Extend or mirror that tab to your projector or secondary screen. The display page shows live winners, upcoming prizes, participant stats, and a clock — synced automatically as long as it runs in the same browser.
 
 ### 4. Draw / 抽選
 Click a prize button to select it → Click **Draw** → Winner appears 🎊
 
-The winner's name is partially masked immediately after the draw (privacy).
-A **draw seed** is shown for auditability.
+### 5. Auto Draw (Countdown)
+In Settings → **Countdown Timer**: assign a duration to a prize.
+When the countdown bar appears, enable **Auto** — the draw will trigger automatically when time runs out.
 
-### 5. Records / 記録
+### 6. Records / 記録
 Click ✅ icon (top right) → view all winners with timestamps → **Export CSV** to download.
 
 ---
 
 ## 🖼️ Change Background / 背景を変更
 
-Replace `src/assets/images/Cover.jpg` with your own image (same filename), then:
+Replace `src/assets/images/Cover.jpg` with your own image (same filename), then rebuild:
 ```bash
 yarn build
 ```
 
 ---
 
-## ❓ Troubleshooting / よくある問題と解決策
+## ❓ Troubleshooting / よくある問題
 
----
+### ❌ `node -v` shows v20 / v22 (wrong version)
+Reinstall Node.js **v18.x** from:
+- Windows: `https://nodejs.org/download/release/v18.20.4/node-v18.20.4-x64.msi`
+- Mac (Intel): `https://nodejs.org/download/release/v18.20.4/node-v18.20.4.pkg`
+- Mac (M1/M2): `https://nodejs.org/download/release/v18.20.4/node-v18.20.4-arm64.pkg`
 
-### ❌ `node -v` shows v20 / v22 / v24 (wrong version)
-
-**Option A — Uninstall and reinstall:**
-- Windows: Control Panel → Uninstall Node.js → reinstall v18 from link above
-- Mac: `sudo rm -rf /usr/local/{bin/{node,npm},lib/node_modules/npm,lib/node}` then reinstall
-
-**Option B — Use nvm:**
-```bash
-nvm install 18
-nvm use 18
-node -v  # should show v18.x.x
-```
-
----
-
-### ❌ `yarn install` fails with `node-sass` error
-
-```
-error /node_modules/node-sass: Command failed
-```
-
-Check Node version first:
-```bash
-node -v  # must be v18.x.x
-```
-
-Then try:
+### ❌ `yarn install` fails
 ```bash
 # Windows:
 rmdir /s /q node_modules
@@ -163,59 +144,20 @@ rm -rf node_modules
 yarn install
 ```
 
----
-
 ### ❌ `yarn` is not recognized
-
 ```bash
 npm install -g yarn
 ```
 Close and reopen terminal.
 
----
-
-### ❌ `webpack` is not recognized after `yarn install`
-
-```bash
-# Windows:
-rmdir /s /q node_modules
-yarn install
-yarn build
-
-# Mac:
-rm -rf node_modules
-yarn install
-yarn build
-```
-
----
-
-### ❌ `git` is not recognized
-
-- Windows: Download from https://git-scm.com/download/win and reinstall
-- Close and reopen terminal after install
-
----
-
 ### ❌ Page is blank after deployment
+Run `yarn build` first, then upload the `/dist` folder.
 
-Make sure you uploaded the `/dist` folder (not the root project folder).
-Run `yarn build` first if `/dist` doesn't exist.
+### ❌ Display page not updating
+Make sure both the main page and display page are open in the **same browser on the same computer**.
 
----
-
-### ❌ CSV file not loading names correctly
-
-- Open your CSV in Excel
-- Make sure names are in **Column A** (first column)
-- Save as `.csv` format and try again
-
----
-
-### ❌ Settings not saving after refresh
-
-- Try Chrome browser
-- Make sure you are not in private/incognito mode
+### ❌ Settings lost after closing browser
+Do not use private/incognito mode. Export your winner records as CSV before closing.
 
 ---
 

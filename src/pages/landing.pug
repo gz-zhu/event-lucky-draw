@@ -40,8 +40,9 @@ include ../mixins/icons
       .countdown-bar__time#countdown-bar-time 00:00
       .countdown-bar__controls
         button#countdown-toggle.solid-button.countdown-bar__btn Start
-        button#countdown-reset.solid-button.countdown-bar__btn.solid-button--secondary Reset
+        button#countdown-reset.solid-button.countdown-bar__btn.countdown-bar__btn--reset Reset
         button#countdown-cancel.solid-button.countdown-bar__btn.countdown-bar__btn--cancel Cancel
+        button#countdown-auto.solid-button.countdown-bar__btn.countdown-bar__btn--auto(title="Auto draw when countdown ends") Auto
 
     .main-clock-wrap
       #main-clock-time.main-clock-time 00:00:00
@@ -90,6 +91,11 @@ include ../mixins/icons
             label.upload-csv-btn
               input#csv-upload(type="file" accept=".csv" style="display:none")
               | Upload CSV
+          .name-list-toolbar
+            button#namelist-mask-btn.namelist-tool-btn(title="Hide personal info") 👁
+            button#namelist-shuffle-btn.namelist-tool-btn(title="Random sort") 🔀
+            button#namelist-merge-btn.namelist-tool-btn(title="Merge duplicates") 🔗
+            button#namelist-clear-btn.namelist-tool-btn.namelist-tool-btn--danger(title="Clear list") 🗑
           textarea.input-field.input-field--textarea(rows="8" placeholder="Separate each name by line break" id="name-list")
           #dedupe-notice.dedupe-notice
 

@@ -126,6 +126,10 @@ initStars();
   const countdownResetBtn = document.getElementById('countdown-reset') as HTMLButtonElement | null;
   const countdownCfgPrize = document.getElementById('countdown-cfg-prize') as HTMLSelectElement | null;
   const countdownCfgMins = document.getElementById('countdown-cfg-mins') as HTMLInputElement | null;
+  const countdownAutoBtn = document.getElementById('countdown-auto') as HTMLButtonElement | null;
+
+  let autoDrawEnabled = false;
+  let autoDrawFired = false;
 
   interface CountdownConfig { prizeId: string; minutes: number; }
 
@@ -186,6 +190,31 @@ initStars();
       countdownBarTimeEl.classList.toggle('urgent', secs <= 60 && secs > 0);
     }
     if (countdownToggleBtn) countdownToggleBtn.textContent = isCountdownRunning(cfg) ? 'Pause' : 'Start';
+
+    // Auto draw: trigger when countdown finishes naturally
+    if (secs === 0 && isCountdownRunning(cfg) && autoDrawEnabled && !autoDrawFired) {
+      autoDrawFired = true;
+      autoDrawEnabled = false;
+      countdownAutoBtn?.classList.remove('active');
+      setTimeout(() => {
+        const ap = prizeManager.currentPrize;
+        if (!ap || prizeManager.isCurrentPrizeFull()) {
+          // eslint-disable-next-line no-use-before-define
+          showToast('⚠ Auto draw: prize is full or not selected');
+          return;
+        }
+        if (!slot || !slot.names.length) {
+          // eslint-disable-next-line no-use-before-define
+          showToast('⚠ Auto draw: no participants in pool');
+          return;
+        }
+        const sp = calcSpinParams(slot.names.length);
+        currentSpinDurationMs = sp.items * sp.msPerItem;
+        slot.updateSpinParams(sp.items, sp.msPerItem);
+        slot.spin();
+      }, 600);
+    }
+    if (secs > 0) autoDrawFired = false;
   };
 
   setInterval(updateCountdownBar, 1000);
@@ -220,9 +249,21 @@ initStars();
   countdownCancelBtn?.addEventListener('click', () => {
     saveCountdownConfig(null);
     prizeManager.clearCountdown();
+    autoDrawEnabled = false;
+    autoDrawFired = false;
+    countdownAutoBtn?.classList.remove('active');
     // eslint-disable-next-line no-use-before-define
     renderPrizeButtons();
     updateCountdownBar();
+  });
+
+  countdownAutoBtn?.addEventListener('click', () => {
+    autoDrawEnabled = !autoDrawEnabled;
+    autoDrawFired = false;
+    countdownAutoBtn.classList.toggle('active', autoDrawEnabled);
+    countdownAutoBtn.title = autoDrawEnabled
+      ? 'Auto draw ON — will draw when countdown ends'
+      : 'Auto draw when countdown ends';
   });
 
   const customConfetti = confetti.create(confettiCanvas, {
@@ -838,6 +879,61 @@ initStars();
   };
   document.addEventListener('firebase-sync-error', () => {
     showToast('⚠ Firebase sync failed — data saved locally only');
+  });
+
+  // ── Name list toolbar ────────────────────────────────────────
+  const namelistMaskBtn = document.getElementById('namelist-mask-btn') as HTMLButtonElement | null;
+  const namelistShuffleBtn = document.getElementById('namelist-shuffle-btn') as HTMLButtonElement | null;
+  const namelistMergeBtn = document.getElementById('namelist-merge-btn') as HTMLButtonElement | null;
+  const namelistClearBtn = document.getElementById('namelist-clear-btn') as HTMLButtonElement | null;
+
+  // Toggle blur mask on textarea to hide personal info visually
+  namelistMaskBtn?.addEventListener('click', () => {
+    const masked = nameListTextArea.classList.toggle('name-list--masked');
+    namelistMaskBtn.classList.toggle('active', masked);
+    namelistMaskBtn.title = masked ? 'Show personal info' : 'Hide personal info';
+  });
+
+  // Shuffle names randomly
+  namelistShuffleBtn?.addEventListener('click', () => {
+    const names = nameListTextArea.value.split('\n').filter((n) => n.trim());
+    for (let i = names.length - 1; i > 0; i -= 1) {
+      // eslint-disable-next-line no-bitwise
+      const j = Math.random() * (i + 1) | 0;
+      [names[i], names[j]] = [names[j], names[i]];
+    }
+    nameListTextArea.value = names.join('\n');
+  });
+
+  // Merge duplicates — keep one entry per unique name
+  namelistMergeBtn?.addEventListener('click', () => {
+    const names = nameListTextArea.value.split('\n').filter((n) => n.trim());
+    const seen = new Set<string>();
+    const merged: string[] = [];
+    names.forEach((n) => {
+      const key = n.trim().toLowerCase();
+      if (!seen.has(key)) { seen.add(key); merged.push(n.trim()); }
+    });
+    const removed = names.length - merged.length;
+    nameListTextArea.value = merged.join('\n');
+    if (dedupeNoticeEl) {
+      if (removed > 0) {
+        dedupeNoticeEl.textContent = `✓ Merged: ${removed} duplicate${removed > 1 ? 's' : ''} removed`;
+        dedupeNoticeEl.classList.add('visible');
+      } else {
+        dedupeNoticeEl.textContent = '✓ No duplicates found';
+        dedupeNoticeEl.classList.add('visible');
+      }
+    }
+  });
+
+  // Clear entire name list
+  namelistClearBtn?.addEventListener('click', () => {
+    if (!nameListTextArea.value.trim()) return;
+    // eslint-disable-next-line no-alert
+    if (!window.confirm('Clear the entire name list?')) return;
+    nameListTextArea.value = '';
+    if (dedupeNoticeEl) { dedupeNoticeEl.textContent = ''; dedupeNoticeEl.classList.remove('visible'); }
   });
 
   // Warn before closing/refreshing

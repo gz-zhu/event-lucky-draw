@@ -6,13 +6,32 @@ This guide walks you through deploying your own lucky draw system from scratch.
 - 🏆 Multiple prize tiers with configurable names and winner counts
 - 📂 Bulk import participants via CSV
 - 📋 Winner records with timestamps and draw seeds — exportable as CSV
-- 🔥 Firebase real-time sync — all devices update instantly
-- 📺 Display page (`/display.html`) for projector / big screen — live winners, stats, and countdown
+- 📺 Display page (`/display.html`) for projector / big screen — live winners and stats
 - 🔢 Draw seed shown per draw for full auditability
 - 🔒 Automatic winner name masking (privacy protection)
 - 🚫 Auto-deduplication — past winners removed from the pool automatically
 - ⚡ Interruption recovery — restores the pool if browser closes mid-draw
 - 🎊 Confetti + star + festive lights animations
+
+---
+
+## 📦 How Data is Stored (Important)
+
+> **All data is saved in your browser's `localStorage` on the machine running the draw.**
+
+- No account or cloud setup required
+- Settings, name list, prize records — everything lives in the browser on your computer
+- Clearing browser data will erase all records (export CSV first if needed)
+
+### Display page sync
+
+`/display.html` reads from the same `localStorage` and refreshes automatically every 2 seconds.
+
+**This means:**
+- ✅ Open both pages in the **same browser on the same machine** → display syncs live
+- ❌ Open display on a **different device or browser** → it will not receive updates (no data is shared across machines)
+
+> **Tip for events:** Run the main draw page on the operator's laptop. Open `/display.html` in a second window or browser tab on the same laptop, then extend that display to a projector or secondary screen.
 
 ---
 
@@ -54,6 +73,14 @@ yarn build
 
 When you see `Done`, the build is successful.
 
+### Local preview
+
+```bash
+yarn start
+```
+
+Open your browser and go to `http://localhost:8888` to use the app locally with full functionality.
+
 ---
 
 ## Step 3: Upload to Your Own GitHub
@@ -89,30 +116,11 @@ After successful deployment, you will get a URL like:
 https://my-lucky-draw.vercel.app
 ```
 
----
-
-## Step 5: Set Up Your Own Firebase (Required for Cross-Device Sync)
-
-> ⚠️ You must create your own Firebase project. Otherwise, data will be shared with others.
-
-1. Go to https://console.firebase.google.com
-2. **Add project** → Enter a name → Disable Google Analytics → **Create project**
-3. Left sidebar: **Realtime Database** → **Create database** → **Start in test mode** → **Enable**
-4. Left sidebar: Gear icon → **Project settings** → Scroll down to **Your apps** → Click `</>` → Enter app name → **Register app**
-5. Copy the `firebaseConfig` object
-
-Open `src/assets/js/PrizeManager.ts`, find:
-```typescript
-const firebaseConfig = {
-  apiKey: 'AIzaSy...',
-  ...
-};
-```
-Replace with your own `firebaseConfig`.
+> **Note for Vercel deployments:** Each user's browser stores its own `localStorage`. Always open both the main draw page and the display page in the **same browser on the same computer** to ensure sync works correctly.
 
 ---
 
-## Step 6: Customize Content
+## Step 5: Customize Content
 
 ### Change Background Image
 Replace this file (keep the same filename):
@@ -140,13 +148,13 @@ Change to your own prizes.
 
 ---
 
-## Step 7: Rebuild and Push
+## Step 6: Rebuild and Push
 
 Run after every change:
 ```bash
 yarn build
 git add .
-git commit --no-verify -m "feat: customize for my event"
+git commit -m "feat: customize for my event"
 git push
 ```
 
@@ -154,9 +162,9 @@ Vercel will automatically redeploy.
 
 ---
 
-## Step 8: Set Up Custom Domain
+## Step 7: Set Up Custom Domain
 
-### 8-1. Transfer DNS to Cloudflare (Recommended)
+### 7-1. Transfer DNS to Cloudflare (Recommended)
 
 1. Sign up at https://cloudflare.com (free)
 2. **Add a Site** → Enter your domain → Select **Free**
@@ -169,7 +177,7 @@ Vercel will automatically redeploy.
 5. Go to your domain registrar (Hostinger etc.) → **Nameservers** → Replace with Cloudflare's NS
 6. Wait 24–48 hours for propagation
 
-### 8-2. Add DNS Record in Cloudflare
+### 7-2. Add DNS Record in Cloudflare
 
 Cloudflare → **DNS** → **Add record**:
 ```
@@ -180,7 +188,7 @@ Proxy:  OFF (gray cloud, not orange)
 TTL:    Auto
 ```
 
-### 8-3. Bind Domain in Vercel
+### 7-3. Bind Domain in Vercel
 
 1. Vercel → Project → **Settings** → **Domains**
 2. Enter `draw.yourdomain.com` → **Add**
@@ -203,7 +211,7 @@ https://draw.yourdomain.com/display.html ← Display screen
 ```bash
 yarn build
 git add .
-git commit --no-verify -m "describe changes"
+git commit -m "describe changes"
 git push
 # Vercel redeploys automatically
 ```
@@ -224,9 +232,10 @@ Click **Save**.
 ### 2. Set up prizes
 Settings → **Prize Settings**: enter prize name and winner count per prize → **Save**.
 
-### 3. (Optional) Open the display page on a projector
-Click the **📺 Display** link at the top of the page to open `display.html` in a new tab.
-Put this tab on a projector or secondary screen — it shows live winners, upcoming prizes, participant stats, and a clock, synced in real time via Firebase.
+### 3. Open the display page on a projector
+Click the **📺 Display** link (bottom right of the page) to open `display.html` in a new tab.
+
+**Must be on the same computer:** Put this tab on a projector or secondary screen — it shows live winners, upcoming prizes, participant stats, and a clock, synced automatically.
 
 ### 4. Draw
 Click a prize button to select it → Click **Draw** → Winner appears 🎊
@@ -245,5 +254,12 @@ Click the ✅ icon (top right) → view all winners with timestamps → **Export
 | `node -v` shows v20+ | Reinstall Node.js 18.x |
 | `yarn install` fails | Run `rmdir /s /q node_modules` then reinstall |
 | Vercel deploy fails | Set Node.js Version to 20.x in settings |
-| Display page not syncing | Ensure you are using your own Firebase config |
+| Display page not syncing | Make sure both pages are open in the **same browser on the same computer** |
 | Domain not working | DNS propagation can take up to 48 hours |
+| Settings lost after closing browser | Do not use private/incognito mode; export CSV before closing |
+
+---
+
+## Advanced: Cross-Device Sync (Self-Directed)
+
+If you need the display page to sync across different devices, you can explore integrating Firebase Realtime Database or another real-time data store. The codebase includes a Firebase interface that is not enabled by default — feel free to extend it for your use case.

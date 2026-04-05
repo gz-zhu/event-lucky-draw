@@ -6,13 +6,32 @@
 - 🏆 多獎項設定，可自訂獎項名稱與人數
 - 📂 CSV 批次匯入參加者名單
 - 📋 得獎紀錄含時間戳記與抽獎種子，可匯出 CSV
-- 🔥 Firebase 即時同步 — 所有裝置同步更新得獎名單
-- 📺 大屏展示頁 (`/display.html`) — 投影機專用，顯示即時得獎資訊與倒數計時
+- 📺 大屏展示頁 (`/display.html`) — 投影機專用，顯示即時得獎資訊
 - 🔢 每次抽獎顯示抽獎種子，供事後稽核
 - 🔒 得獎者姓名自動遮蔽（隱私保護）
 - 🚫 自動排重 — 已得獎者不會再次出現在名單中
 - ⚡ 中斷復原 — 瀏覽器意外關閉後可還原名單
 - 🎊 彩帶 + 星星 + 彩燈動畫
+
+---
+
+## 📦 資料儲存說明（重要）
+
+> **所有資料儲存在執行抽獎的那台電腦的瀏覽器 `localStorage` 中。**
+
+- 不需要帳號或雲端服務
+- 設定、名單、得獎紀錄 — 全部存在該電腦的瀏覽器裡
+- 清除瀏覽器資料會清除所有紀錄（請先匯出 CSV 備份）
+
+### 大屏展示頁同步說明
+
+`/display.html` 每 2 秒讀取同一份 `localStorage`，**自動同步更新**。
+
+**這代表：**
+- ✅ 在**同一台電腦的同一個瀏覽器**開啟主頁和展示頁 → 展示頁即時同步
+- ❌ 在**另一台裝置或另一個瀏覽器**開啟展示頁 → 無法同步（`localStorage` 不跨裝置共享）
+
+> **活動建議：** 在操作者的筆電上開啟主頁抽獎，在同一筆電的另一個視窗或分頁開啟 `/display.html`，再將該視窗延伸投影到大螢幕或投影機。
 
 ---
 
@@ -54,6 +73,14 @@ yarn build
 
 看到 `Done` 代表建置成功。
 
+### 本地預覽
+
+```bash
+yarn start
+```
+
+開啟瀏覽器前往 `http://localhost:8888`，即可在本地端使用完整功能。
+
 ---
 
 ## 第三步：上傳到自己的 GitHub
@@ -89,30 +116,11 @@ git push -u origin main
 https://my-lucky-draw.vercel.app
 ```
 
----
-
-## 第五步：設定自己的 Firebase（跨裝置同步必須）
-
-> ⚠️ 必須建立自己的 Firebase 專案，否則資料會與他人共享。
-
-1. 前往 https://console.firebase.google.com
-2. **Add project** → 輸入名稱 → 關閉 Google Analytics → **Create project**
-3. 左側選單：**Realtime Database** → **Create database** → **以測試模式啟動** → **啟用**
-4. 左側齒輪 → **專案設定** → 往下找 **Your apps** → 點 `</>` → 輸入應用程式名稱 → **Register app**
-5. 複製 `firebaseConfig` 物件
-
-開啟 `src/assets/js/PrizeManager.ts`，找到：
-```typescript
-const firebaseConfig = {
-  apiKey: 'AIzaSy...',
-  ...
-};
-```
-替換成自己的 `firebaseConfig`。
+> **Vercel 使用注意：** 部署到 Vercel 後，每個使用者的瀏覽器各自儲存自己的 `localStorage`。因此請在**同一台電腦**上開啟主頁和展示頁，確保同步正常運作。
 
 ---
 
-## 第六步：客製化內容
+## 第五步：客製化內容
 
 ### 更換背景圖片
 替換以下檔案（保持相同檔名）：
@@ -140,13 +148,13 @@ this.prizes = [
 
 ---
 
-## 第七步：重新建置並上傳
+## 第六步：重新建置並上傳
 
 每次修改完執行：
 ```bash
 yarn build
 git add .
-git commit --no-verify -m "feat: 客製化活動內容"
+git commit -m "feat: 客製化活動內容"
 git push
 ```
 
@@ -154,9 +162,9 @@ Vercel 會自動重新部署。
 
 ---
 
-## 第八步：設定自訂網域
+## 第七步：設定自訂網域
 
-### 8-1. 將 DNS 轉移到 Cloudflare（推薦）
+### 7-1. 將 DNS 轉移到 Cloudflare（推薦）
 
 1. 前往 https://cloudflare.com 註冊免費帳號
 2. **Add a Site** → 輸入網域 → 選擇 **Free**
@@ -169,7 +177,7 @@ Vercel 會自動重新部署。
 5. 前往域名商（Hostinger 等）→ **Nameservers** → 改為 Cloudflare 的兩個 NS
 6. 等待 24～48 小時生效
 
-### 8-2. 在 Cloudflare 新增 DNS 記錄
+### 7-2. 在 Cloudflare 新增 DNS 記錄
 
 Cloudflare → **DNS** → **Add record**：
 ```
@@ -180,7 +188,7 @@ Proxy:  關閉（灰色雲朵，不是橘色）
 TTL:    Auto
 ```
 
-### 8-3. 在 Vercel 綁定網域
+### 7-3. 在 Vercel 綁定網域
 
 1. Vercel → 專案 → **Settings** → **Domains**
 2. 輸入 `draw.你的網域.com` → **Add**
@@ -203,7 +211,7 @@ https://draw.你的網域.com/display.html ← 大屏展示頁
 ```bash
 yarn build
 git add .
-git commit --no-verify -m "說明改了什麼"
+git commit -m "說明改了什麼"
 git push
 # Vercel 自動重新部署
 ```
@@ -224,9 +232,10 @@ git push
 ### 2. 設定獎項
 Settings → **Prize Settings**：輸入獎項名稱與人數 → **Save**。
 
-### 3. （選用）投影機展示
-點擊頁面上方的 **📺 Display** 連結，在新分頁開啟大屏展示頁。
-將此分頁投影到大螢幕，即時顯示：得獎名單、即將開獎的獎項、參加人數統計、時鐘。
+### 3. 開啟展示頁投影到大螢幕
+點擊頁面右下角的 **📺 Display** 連結，在新分頁開啟大屏展示頁。
+
+**必須在同一台電腦上操作：** 將此分頁投影到大螢幕，即時顯示得獎名單、即將開獎的獎項、參加人數統計、時鐘。
 
 ### 4. 抽獎
 點擊獎項按鈕選擇獎項 → 點擊 **Draw** → 得獎者出現 🎊
@@ -245,5 +254,12 @@ Settings → **Prize Settings**：輸入獎項名稱與人數 → **Save**。
 | `node -v` 顯示 v20 以上 | 重新安裝 Node.js 18.x |
 | `yarn install` 失敗 | 執行 `rmdir /s /q node_modules` 再重新安裝 |
 | Vercel 部署失敗 | 在設定中將 Node.js Version 改為 20.x |
-| 展示頁資料不同步 | 確認使用了自己的 Firebase 設定 |
+| 展示頁資料不同步 | 確認主頁和展示頁在**同一台電腦的同一個瀏覽器**開啟 |
 | 網域未生效 | DNS 最長需要 48 小時才能生效 |
+| 關閉瀏覽器後設定消失 | 不要使用無痕模式；關閉前請先匯出 CSV |
+
+---
+
+## 進階擴展：跨裝置同步（自行研究）
+
+若需要讓展示頁在另一台裝置上同步，可研究整合 Firebase Realtime Database 或其他即時資料庫。本版本的程式碼中保留了 Firebase 的介面，但預設未啟用，請自行探索。
