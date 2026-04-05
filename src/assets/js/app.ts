@@ -676,8 +676,12 @@ initStars();
   const drawTitleDisplay = document.getElementById('draw-title-display') as HTMLElement | null;
   const drawTitleInput = document.getElementById('draw-title-input') as HTMLInputElement | null;
   const applyDrawTitle = (t: string) => {
-    const text = t.trim() || 'Lucky Draw';
-    if (drawTitleDisplay) drawTitleDisplay.textContent = text;
+    const text = t.trim();
+    if (drawTitleDisplay) {
+      drawTitleDisplay.textContent = text;
+      // Hide center title when no custom title set; brand-tag always shows top-left
+      drawTitleDisplay.style.display = text ? '' : 'none';
+    }
   };
   applyDrawTitle(localStorage.getItem('draw-title') ?? '');
 
