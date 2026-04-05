@@ -497,12 +497,19 @@ initStars();
 
   document.getElementById('reset-prizes')?.addEventListener('click', () => {
     // eslint-disable-next-line no-alert
-    if (!window.confirm('Reset to default? All prize settings and records will be lost.')) return;
+    if (!window.confirm('Reset prize settings to default? All prize settings and records will be lost.')) return;
     prizeManager.setPrizes([
       { id: '1', name: '1st Prize', count: 1 },
       { id: '2', name: '2nd Prize', count: 2 },
       { id: '3', name: '3rd Prize', count: 5 }
     ]);
+    window.location.reload();
+  });
+
+  document.getElementById('reset-all-defaults')?.addEventListener('click', () => {
+    // eslint-disable-next-line no-alert
+    if (!window.confirm('Reset ALL settings to default? This will clear the draw title, name list, prize settings, records, and all saved data.')) return;
+    localStorage.clear();
     window.location.reload();
   });
 

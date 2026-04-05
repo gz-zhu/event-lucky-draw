@@ -76,8 +76,10 @@ include ../mixins/icons
       div.settings__panel__group
         .settings__title-row
           h1.settings__title Settings
-          button#settings-close-x.icon-button.icon-button--small
-            +svg-icon.red.big(svg-icon-name='close')
+          .settings__title-actions
+            button#reset-all-defaults.reset-all-btn Reset All
+            button#settings-close-x.icon-button.icon-button--small
+              +svg-icon.red.big(svg-icon-name='close')
         div.input-group
           label.input-label(for="draw-title-input") Draw Title
           input#draw-title-input.input-field(type="text" placeholder="Lucky Draw" maxlength="60")
@@ -106,7 +108,7 @@ include ../mixins/icons
         div.input-group
           .prize-settings-title-row
             span.input-label Prize Settings
-            button#reset-prizes.prize-reset-btn Reset to default
+            button#reset-prizes.prize-reset-btn Reset Prize Settings
           .prize-config-header
             span Name
             span Count

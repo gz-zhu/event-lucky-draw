@@ -2,19 +2,20 @@
 
 .brand-tag {
   position: fixed;
-  top: 0.9rem;
-  left: 1.1rem;
+  top: 2.9rem;
+  left: 1.2rem;
   font-family: 'Playfair Display', serif;
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   background: linear-gradient(135deg, #ffd700 0%, #fff5b0 50%, #ffb800 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  opacity: 0.7;
+  opacity: 0.85;
   pointer-events: none;
-  z-index: 10;
+  z-index: 25;
+  line-height: 1;
 }
 
 #lucky-draw {
@@ -823,6 +824,29 @@
 
   .settings__title {
     margin: 0;
+  }
+
+  .settings__title-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+.reset-all-btn {
+  background: #c0392b;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.75rem;
+  border: none;
+  border-radius: 0.4rem;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+
+  &:hover {
+    background: #e74c3c;
   }
 }
 .recovery-banner {
