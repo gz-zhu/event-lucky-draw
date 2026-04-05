@@ -246,8 +246,7 @@ export default class Slot {
       .slice(0, reelContainer.children.length - 1)
       .forEach((element) => element.remove());
 
-    // Reveal winner name (was masked during spin)
-    const winner = randomNames[randomNames.length - 1];
+    // Reveal winner name (was masked during spin); `winner` is declared at top of spin()
     const winnerEl = reelContainer.lastElementChild as HTMLElement | null;
     if (winnerEl) winnerEl.innerHTML = winner;
 
