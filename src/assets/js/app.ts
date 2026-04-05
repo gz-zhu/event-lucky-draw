@@ -18,7 +18,7 @@ const initStars = () => {
   const stars: Star[] = Array.from({ length: 130 }, () => ({
     x: Math.random() * window.innerWidth,
     y: Math.random() * window.innerHeight,
-    r: Math.random() * 1.2 + 0.8,
+    r: Math.random() * 3.5 + 0.5,
     color: COLORS[Math.floor(Math.random() * COLORS.length)],
     speed: Math.random() * 0.012 + 0.004,
     phase: Math.random() * Math.PI * 2,
