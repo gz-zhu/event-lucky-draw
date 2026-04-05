@@ -256,15 +256,41 @@
       font-family: 'Playfair Display', serif;
       font-size: 2rem;
       font-weight: 700;
-      background: linear-gradient(135deg, #ffd700 0%, #fff5b0 45%, #ffb800 100%);
+      /* Platinum / white-gold texture */
+      background: linear-gradient(
+        160deg,
+        #e8e0d0 0%,
+        #fffef8 22%,
+        #d4c8a8 38%,
+        #ffffff 52%,
+        #e0d8c4 65%,
+        #faf8f0 80%,
+        #c8bea0 100%
+      );
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      filter: drop-shadow(0 2px 0 rgba(180,120,0,0.4)) drop-shadow(0 0 20px rgba(255,215,0,0.3));
-      letter-spacing: 0.06em;
+      filter: drop-shadow(0 1px 0 rgba(120,100,60,0.35))
+        drop-shadow(0 0 22px rgba(255,255,220,0.3))
+        drop-shadow(0 3px 12px rgba(0,0,0,0.5));
+      animation: title-platinum 6s ease-in-out infinite alternate;
+      letter-spacing: 0.1em;
       line-height: 1.2;
       margin-bottom: 0.5rem;
       flex-shrink: 0;
+    }
+
+    @keyframes title-platinum {
+      from {
+        filter: drop-shadow(0 1px 0 rgba(120,100,60,0.3))
+          drop-shadow(0 0 14px rgba(255,255,220,0.2))
+          drop-shadow(0 3px 10px rgba(0,0,0,0.45));
+      }
+      to {
+        filter: drop-shadow(0 1px 0 rgba(160,140,80,0.45))
+          drop-shadow(0 0 30px rgba(255,255,230,0.45))
+          drop-shadow(0 3px 14px rgba(0,0,0,0.55));
+      }
     }
 
     .prizes-grid {
