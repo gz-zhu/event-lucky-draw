@@ -123,19 +123,39 @@
       font-family: 'Playfair Display', serif;
       font-size: 3rem;
       font-weight: 700;
-      background: linear-gradient(135deg, #ffdc15 0%, #eb4d4d 40%, #f5903d 100%);
+      background: linear-gradient(
+        160deg,
+        #ff9a00 0%,
+        #ffd000 18%,
+        #fffbe0 38%,
+        #ffd700 52%,
+        #ffb300 68%,
+        #fff0a0 82%,
+        #e67e00 100%
+      );
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
       letter-spacing: 0.05em;
       line-height: 1.15;
       margin-bottom: 0.6rem;
-      animation: title-glow 4s ease-in-out infinite alternate;
+      filter: drop-shadow(0 1px 0 rgba(180, 60, 0, 0.6))
+        drop-shadow(0 0 20px rgba(255, 170, 0, 0.55))
+        drop-shadow(0 4px 12px rgba(0, 0, 0, 0.55));
+      animation: brand-shine 5s ease-in-out infinite alternate;
     }
 
-    @keyframes title-glow {
-      from { filter: drop-shadow(0 0 8px rgba(255,215,0,0.3)); }
-      to   { filter: drop-shadow(0 0 20px rgba(255,215,0,0.7)); }
+    @keyframes brand-shine {
+      0% {
+        filter: drop-shadow(0 1px 0 rgba(180, 60, 0, 0.55))
+          drop-shadow(0 0 12px rgba(255, 150, 0, 0.4))
+          drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+      }
+      100% {
+        filter: drop-shadow(0 2px 0 rgba(220, 80, 0, 0.75))
+          drop-shadow(0 0 32px rgba(255, 200, 0, 0.8))
+          drop-shadow(0 4px 16px rgba(0, 0, 0, 0.6));
+      }
     }
 
     .info-clock {
