@@ -186,14 +186,17 @@ export default class Slot {
       return false;
     }
 
-    // Shuffle names and create reel items
-    let randomNames = Slot.shuffleNames<string>(this.nameList);
+    // Determine winner (first element of initial shuffle)
+    const firstShuffle = Slot.shuffleNames<string>(this.nameList);
+    const winner = firstShuffle[0];
 
-    while (randomNames.length && randomNames.length < this.maxReelItems) {
-      randomNames = [...randomNames, ...randomNames];
+    // Fill intermediate slots with fresh random shuffles so scrolling looks random
+    const needed = this.maxReelItems - Number(this.havePreviousWinner) - 1;
+    const intermediates: string[] = [];
+    while (intermediates.length < needed) {
+      intermediates.push(...Slot.shuffleNames<string>(this.nameList));
     }
-
-    randomNames = randomNames.slice(0, this.maxReelItems - Number(this.havePreviousWinner));
+    const randomNames = [...intermediates.slice(0, needed), winner];
 
     const fragment = document.createDocumentFragment();
 
@@ -221,7 +224,6 @@ export default class Slot {
 
     // Remove winner from name list if necessary (all instances, to handle duplicates)
     if (shouldRemoveWinner) {
-      const winner = randomNames[randomNames.length - 1];
       this.nameList = this.nameList.filter((name) => name !== winner);
     }
 

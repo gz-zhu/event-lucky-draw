@@ -529,16 +529,6 @@
   }
   setInterval(tick, 1000); tick();
 
-  // ── Mask name ──────────────────────────────────────────────
-  function mask(name) {
-    return name.split(/(\s+|—|-)/).map(p => {
-      if (/^\s+$/.test(p) || p === '—' || p === '-') return p;
-      if (p.length <= 2) return p;
-      const keep = Math.ceil(p.length / 3);
-      return p.slice(0, keep) + '***';
-    }).join('');
-  }
-
   // ── Load data ──────────────────────────────────────────────
   function load() {
     try { return JSON.parse(localStorage.getItem('prize-manager-data') || '[]'); }
@@ -586,7 +576,7 @@
           const chip = document.createElement('div');
           chip.className = 'winner-chip';
           const ts = p.winnerTimestamps && p.winnerTimestamps[i] ? p.winnerTimestamps[i] : '';
-          chip.innerHTML = '<span>' + mask(w) + '</span>'
+          chip.innerHTML = '<span>' + w + '</span>'
             + (ts ? '<span class="winner-ts">' + ts + '</span>' : '');
           wrapEl.appendChild(chip);
         });
@@ -613,7 +603,7 @@
       '<span class="ticker-item">'
       + '<span class="ticker-item__prize">' + it.prize + '</span>'
       + '<span class="ticker-item__sep">·</span>'
-      + mask(it.winner)
+      + it.winner
       + '</span>'
     ).join('');
   }

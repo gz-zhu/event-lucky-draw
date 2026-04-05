@@ -251,16 +251,6 @@ initStars();
     sunburstSvg.style.display = 'none';
   };
 
-  const maskName = (name: string) => {
-    const parts = name.split(/(\s+|—|-)/);
-    return parts.map((part) => {
-      if (/^\s+$/.test(part) || part === '—' || part === '-') return part;
-      if (part.length <= 2) return part;
-      const keep = Math.ceil(part.length / 3);
-      return `${part.slice(0, keep)}***`;
-    }).join('');
-  };
-
   const updateCurrentPrizeLabel = () => {
     const p = prizeManager.currentPrize;
     currentPrizeLabel.textContent = p
@@ -551,9 +541,7 @@ initStars();
     const rawName = winnerEl?.textContent ?? '';
     if (winnerEl && rawName) {
       prizeManager.addWinner(rawName);
-      setTimeout(() => {
-        winnerEl.textContent = maskName(rawName);
-      }, 100);
+      // Winner name is already revealed by Slot.ts — no re-masking here
     }
 
     const prizeName = prizeManager.currentPrize?.name ?? '';
@@ -563,7 +551,7 @@ initStars();
       entry.className = 'winner-entry';
       entry.innerHTML = `
         <div class="winner-entry__prize">${prizeName}</div>
-        <div class="winner-entry__name">${maskName(rawName)}</div>
+        <div class="winner-entry__name">${rawName}</div>
       `;
       feedList.insertBefore(entry, feedList.firstChild);
       while (feedList.children.length > 8) {
@@ -577,7 +565,7 @@ initStars();
       }
     }
 
-    // Update ticker
+    // Update ticker — show real winner names
     const tickerContent = document.getElementById('winners-ticker__content');
     if (tickerContent) {
       tickerContent.innerHTML = '';
@@ -587,7 +575,7 @@ initStars();
           item.className = 'ticker-item';
           item.innerHTML = `<span class="ticker-item__prize">${prize.name}</span>`
             + '<span class="ticker-item__sep">·</span>'
-            + `<span>${maskName(w)}</span>`;
+            + `<span>${w}</span>`;
           tickerContent.appendChild(item);
         });
       });
@@ -800,7 +788,7 @@ initStars();
         item.innerHTML = `
           <span class="ticker-item__prize">${prize.name}</span>
           <span class="ticker-item__sep">·</span>
-          <span>${maskName(w)}</span>
+          <span>${w}</span>
         `;
         tickerContent.appendChild(item);
       });
