@@ -550,10 +550,10 @@
   window.addEventListener('resize', resizeCv);
 
   const COLS = ['#ff4444','#ff8800','#ffdd00','#44ff44','#44aaff','#aa44ff','#ff44aa','#ffffff'];
-  const pts = Array.from({length: 75}, () => ({
+  const pts = Array.from({length: 130}, () => ({
     x: Math.random() * window.innerWidth,
     y: Math.random() * window.innerHeight,
-    r: Math.random() * 3 + 1.5,
+    r: Math.random() * 4 + 2,
     c: COLS[Math.floor(Math.random() * COLS.length)],
     a: Math.random(),
     s: Math.random() * 0.012 + 0.005,

@@ -15,10 +15,10 @@ const initStars = () => {
   // eslint-disable-next-line max-len
   type Star = { x: number; y: number; r: number; color: string; speed: number; phase: number; alpha: number };
 
-  const stars: Star[] = Array.from({ length: 75 }, () => ({
+  const stars: Star[] = Array.from({ length: 130 }, () => ({
     x: Math.random() * window.innerWidth,
     y: Math.random() * window.innerHeight,
-    r: Math.random() * 2 + 0.8,
+    r: Math.random() * 3.2 + 1.2,
     color: COLORS[Math.floor(Math.random() * COLORS.length)],
     speed: Math.random() * 0.012 + 0.004,
     phase: Math.random() * Math.PI * 2,
