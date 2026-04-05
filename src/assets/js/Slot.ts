@@ -212,7 +212,7 @@ export default class Slot {
     randomNames.forEach((name) => {
       const newReelItem = document.createElement('div');
       // All items masked during spin; winner element is revealed after animation ends
-      newReelItem.innerHTML = maskName(name);
+      newReelItem.textContent = maskName(name);
       fragment.appendChild(newReelItem);
     });
 
@@ -247,7 +247,7 @@ export default class Slot {
 
     // Reveal winner name (was masked during spin); `winner` is declared at top of spin()
     const winnerEl = reelContainer.lastElementChild as HTMLElement | null;
-    if (winnerEl) winnerEl.innerHTML = winner;
+    if (winnerEl) winnerEl.textContent = winner;
 
     this.havePreviousWinner = true;
 

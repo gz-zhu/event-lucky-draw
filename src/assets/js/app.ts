@@ -176,6 +176,42 @@ initStars();
     } catch { return false; }
   };
 
+  // Toast helper — must be declared before updateCountdownBar which references it
+  const showToast = (msg: string, color = 'rgba(220,60,60,0.92)') => {
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position:fixed;bottom:1.25rem;left:50%;transform:translateX(-50%);'
+      + `background:${color};color:#fff;padding:0.5rem 1.2rem;border-radius:0.5rem;`
+      + 'font-size:0.85rem;z-index:9999;pointer-events:none;white-space:nowrap';
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+  };
+
+  // Ticker helper — must be declared before onSpinEnd and restore section reference it
+  const refreshTicker = () => {
+    const tc = document.getElementById('winners-ticker__content');
+    if (!tc) return;
+    tc.innerHTML = '';
+    prizeManager.allPrizes.forEach((prize) => {
+      prize.winners.forEach((w) => {
+        const item = document.createElement('span');
+        item.className = 'ticker-item';
+        const prizeSpan = document.createElement('span');
+        prizeSpan.className = 'ticker-item__prize';
+        prizeSpan.textContent = prize.name;
+        const sepSpan = document.createElement('span');
+        sepSpan.className = 'ticker-item__sep';
+        sepSpan.textContent = '·';
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = w;
+        item.appendChild(prizeSpan);
+        item.appendChild(sepSpan);
+        item.appendChild(nameSpan);
+        tc.appendChild(item);
+      });
+    });
+  };
+
   const updateCountdownBar = () => {
     const cfg = getCountdownConfig();
     const p = prizeManager.currentPrize;
@@ -199,12 +235,10 @@ initStars();
       setTimeout(() => {
         const ap = prizeManager.currentPrize;
         if (!ap || prizeManager.isCurrentPrizeFull()) {
-          // eslint-disable-next-line no-use-before-define
           showToast('⚠ Auto draw: prize is full or not selected');
           return;
         }
         if (!slot || !slot.names.length) {
-          // eslint-disable-next-line no-use-before-define
           showToast('⚠ Auto draw: no participants in pool');
           return;
         }
@@ -343,8 +377,14 @@ initStars();
       const isActive = prizeManager.currentPrize?.id === prize.id;
       const hasCountdown = cfg?.prizeId === prize.id;
       btn.className = `prize-select-btn${isActive ? ' active' : ''}${isFull ? ' full' : ''}`;
-      btn.innerHTML = `<span class="prize-btn-name">${prize.name}${hasCountdown ? ' ⏱' : ''}</span>`
-        + `<span class="prize-btn-meta">${prize.winners.length}/${prize.count} ppl</span>`;
+      const btnName = document.createElement('span');
+      btnName.className = 'prize-btn-name';
+      btnName.textContent = `${prize.name}${hasCountdown ? ' ⏱' : ''}`;
+      const btnMeta = document.createElement('span');
+      btnMeta.className = 'prize-btn-meta';
+      btnMeta.textContent = `${prize.winners.length}/${prize.count} ppl`;
+      btn.appendChild(btnName);
+      btn.appendChild(btnMeta);
       btn.disabled = isFull;
       btn.addEventListener('click', () => {
         prizeManager.selectPrize(prize.id);
@@ -371,15 +411,28 @@ initStars();
       if (!prize.winners.length) return;
       const group = document.createElement('div');
       group.className = 'records-group';
-      group.innerHTML = `<div class="records-group-title">${prize.name} `
-        + `<span>${prize.winners.length}/${prize.count} winners</span></div>`;
+      const groupTitle = document.createElement('div');
+      groupTitle.className = 'records-group-title';
+      groupTitle.textContent = `${prize.name} `;
+      const groupCount = document.createElement('span');
+      groupCount.textContent = `${prize.winners.length}/${prize.count} winners`;
+      groupTitle.appendChild(groupCount);
+      group.appendChild(groupTitle);
       const list = document.createElement('div');
       list.className = 'records-list';
       prize.winners.forEach((w, i) => {
         const item = document.createElement('div');
         item.className = 'records-item';
         const ts = prize.winnerTimestamps?.[i] ?? '';
-        item.innerHTML = `<span>${i + 1}. ${w}</span>${ts ? `<span class="records-item__ts">${ts}</span>` : ''}`;
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = `${i + 1}. ${w}`;
+        item.appendChild(nameSpan);
+        if (ts) {
+          const tsSpan = document.createElement('span');
+          tsSpan.className = 'records-item__ts';
+          tsSpan.textContent = ts;
+          item.appendChild(tsSpan);
+        }
         list.appendChild(item);
       });
       group.appendChild(list);
@@ -404,6 +457,7 @@ initStars();
     a.href = url;
     a.download = 'lucky-draw-records.csv';
     a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 100);
   });
 
   clearRecordsButton.addEventListener('click', () => {
@@ -486,13 +540,14 @@ initStars();
       <button class="solid-button solid-button--danger pc-del" style="padding:0.4rem 0.8rem;font-size:0.875rem">✕</button>
       <input class="input-field pc-desc" type="text" placeholder="Prize item description (optional)" value="${description}">
     `;
-    row.querySelector('.pc-del')!.addEventListener('click', () => row.remove());
     (row.querySelector('.pc-name') as HTMLInputElement).addEventListener('input', syncCountdownSelectFromRows);
 
     const dtText = row.querySelector('.pc-drawtime') as HTMLInputElement;
     const {
       popup, hourSel, minSel, okBtn
     } = buildTimePicker();
+    // pc-del handler placed after buildTimePicker so `popup` is already in scope
+    row.querySelector('.pc-del')!.addEventListener('click', () => { popup.remove(); row.remove(); });
     const closePopup = () => { popup.style.display = 'none'; };
 
     popup.addEventListener('click', (e) => e.stopPropagation());
@@ -527,6 +582,8 @@ initStars();
   };
 
   const renderPrizeConfig = () => {
+    // Remove any previously appended time-picker popups to avoid DOM accumulation
+    document.querySelectorAll('.drawtime-picker-popup').forEach((el) => el.remove());
     prizeConfigList.innerHTML = '';
     prizeManager.allPrizes.forEach((prize) => {
       prizeConfigList.appendChild(makePrizeRow(prize.id, prize.name, prize.count, prize.drawTime ?? '', prize.description ?? ''));
@@ -597,10 +654,14 @@ initStars();
     if (feedList && rawName) {
       const entry = document.createElement('div');
       entry.className = 'winner-entry';
-      entry.innerHTML = `
-        <div class="winner-entry__prize">${prizeName}</div>
-        <div class="winner-entry__name">${rawName}</div>
-      `;
+      const entryPrize = document.createElement('div');
+      entryPrize.className = 'winner-entry__prize';
+      entryPrize.textContent = prizeName;
+      const entryName = document.createElement('div');
+      entryName.className = 'winner-entry__name';
+      entryName.textContent = rawName;
+      entry.appendChild(entryPrize);
+      entry.appendChild(entryName);
       feedList.insertBefore(entry, feedList.firstChild);
       while (feedList.children.length > 8) {
         feedList.removeChild(feedList.lastChild!);
@@ -614,20 +675,7 @@ initStars();
     }
 
     // Update ticker — show real winner names
-    const tickerContent = document.getElementById('winners-ticker__content');
-    if (tickerContent) {
-      tickerContent.innerHTML = '';
-      prizeManager.allPrizes.forEach((prize) => {
-        prize.winners.forEach((w) => {
-          const item = document.createElement('span');
-          item.className = 'ticker-item';
-          item.innerHTML = `<span class="ticker-item__prize">${prize.name}</span>`
-            + '<span class="ticker-item__sep">·</span>'
-            + `<span>${w}</span>`;
-          tickerContent.appendChild(item);
-        });
-      });
-    }
+    refreshTicker();
 
     renderPrizeButtons();
     updateCurrentPrizeLabel();
@@ -737,6 +785,8 @@ initStars();
   };
 
   const onSettingsClose = () => {
+    // Close any open time-picker popup before hiding settings
+    if (activePickerClose) { activePickerClose(); activePickerClose = null; }
     settingsContent.scrollTop = 0;
     settingsWrapper.style.display = 'none';
   };
@@ -846,21 +896,7 @@ initStars();
   drawButton.disabled = true;
 
   // Restore ticker from storage
-  const tickerContent = document.getElementById('winners-ticker__content');
-  if (tickerContent) {
-    prizeManager.allPrizes.forEach((prize) => {
-      prize.winners.forEach((w) => {
-        const item = document.createElement('span');
-        item.className = 'ticker-item';
-        item.innerHTML = `
-          <span class="ticker-item__prize">${prize.name}</span>
-          <span class="ticker-item__sep">·</span>
-          <span>${w}</span>
-        `;
-        tickerContent.appendChild(item);
-      });
-    });
-  }
+  refreshTicker();
 
   // Close time picker popup when clicking outside
   let skipPickerClose = false;
@@ -869,14 +905,6 @@ initStars();
     if (activePickerClose) { activePickerClose(); activePickerClose = null; }
   });
 
-  // Firebase sync error toast
-  const showToast = (msg: string, color = 'rgba(220,60,60,0.92)') => {
-    const toast = document.createElement('div');
-    toast.style.cssText = `position:fixed;bottom:1.25rem;left:50%;transform:translateX(-50%);background:${color};color:#fff;padding:0.5rem 1.2rem;border-radius:0.5rem;font-size:0.85rem;z-index:9999;pointer-events:none;white-space:nowrap`;
-    toast.textContent = msg;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 4000);
-  };
   document.addEventListener('firebase-sync-error', () => {
     showToast('⚠ Firebase sync failed — data saved locally only');
   });
