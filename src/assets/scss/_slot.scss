@@ -23,9 +23,6 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  /* Orange-red metallic stroke drawn behind the fill */
-  -webkit-text-stroke: 3px rgba(200, 55, 0, 0.55);
-  paint-order: stroke fill;
   filter: drop-shadow(0 1px 0 rgba(180, 60, 0, 0.6))
     drop-shadow(0 0 20px rgba(255, 170, 0, 0.55))
     drop-shadow(0 4px 12px rgba(0, 0, 0, 0.55));
