@@ -98,24 +98,19 @@ initStars();
   }
 
   const soundEffects = new SoundEffects();
-  const MAX_REEL_ITEMS = 60;
+  const MAX_REEL_ITEMS = 300;
+  // Fixed fast scroll speed per item; total duration scales with participant count.
+  const MS_PER_ITEM = 80;
+  const MIN_SPIN_MS = 20000; // minimum 20 seconds total
 
-  // Calculate dynamic spin params based on participant count and remaining prize slots.
-  // More participants = more items scroll + faster speed.
-  // More remaining slots = fewer items per spin (total time stays proportional).
-  // eslint-disable-next-line max-len
-  const calcSpinParams = (participantCount: number, remainingSlots: number): { items: number; msPerItem: number } => {
-    const log = Math.log10(Math.max(participantCount, 10));
-    const baseItems = Math.round(log * 25); // 10 people→25, 100→50, 1000→75, 10000→100
-    const items = Math.max(Math.round(baseItems / Math.max(remainingSlots, 1)), 15);
-    const msPerItem = Math.max(Math.round(200 - log * 40), 60); // 10p→160ms, 100p→120ms, 1000+→60ms
-    // Enforce minimum total spin duration of 20 seconds
-    const minDurationMs = 20000;
-    const adjustedMsPerItem = Math.max(msPerItem, Math.ceil(minDurationMs / items));
-    return { items, msPerItem: adjustedMsPerItem };
+  // Speed is fixed fast (MS_PER_ITEM). Item count = participant count, floored to fill MIN_SPIN_MS.
+  const calcSpinParams = (participantCount: number): { items: number; msPerItem: number } => {
+    const minItems = Math.ceil(MIN_SPIN_MS / MS_PER_ITEM); // 250 items → 20s
+    const items = Math.min(Math.max(participantCount, minItems), MAX_REEL_ITEMS);
+    return { items, msPerItem: MS_PER_ITEM };
   };
 
-  let currentSpinDurationMs = MAX_REEL_ITEMS * 150;
+  let currentSpinDurationMs = MAX_REEL_ITEMS * MS_PER_ITEM;
   const CONFETTI_COLORS = [
     '#26ccff', '#a25afd', '#ff5e7e', '#88ff5a',
     '#fcff42', '#ffa62d', '#ff36ff'
@@ -700,8 +695,7 @@ initStars();
     if (!slot.names.length) { onSettingsOpen(); return; }
     const { currentPrize } = prizeManager;
     if (!currentPrize) return;
-    const remaining = Math.max(currentPrize.count - (currentPrize.winners?.length ?? 0), 1);
-    const { items, msPerItem } = calcSpinParams(slot.names.length, remaining);
+    const { items, msPerItem } = calcSpinParams(slot.names.length);
     currentSpinDurationMs = items * msPerItem;
     slot.updateSpinParams(items, msPerItem);
     slot.spin();

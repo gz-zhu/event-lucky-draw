@@ -81,7 +81,7 @@ export default class Slot {
         { transform: `translateY(-${(this.maxReelItems - 1) * (7.5 * 16)}px)`, filter: 'blur(0)' }
       ],
       {
-        duration: this.maxReelItems * 150, // 150ms for 1 item
+        duration: this.maxReelItems * 80, // 80ms per item
         easing: 'ease-in-out',
         iterations: 1
       }
