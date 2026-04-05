@@ -197,21 +197,20 @@ export default class Slot {
 
     const fragment = document.createDocumentFragment();
 
-    randomNames.forEach((name, index) => {
+    const maskName = (name: string): string => {
+      const parts = name.split(/(\s+|—|-)/);
+      return parts.map((part) => {
+        if (/^\s+$/.test(part) || part === '—' || part === '-') return part;
+        if (part.length <= 2) return part;
+        const keep = Math.ceil(part.length / 3);
+        return `${part.slice(0, keep)}***`;
+      }).join('');
+    };
+
+    randomNames.forEach((name) => {
       const newReelItem = document.createElement('div');
-      const isLast = index === randomNames.length - 1;
-      if (isLast) {
-        newReelItem.innerHTML = name;
-      } else {
-        const parts = name.split(/(\s+|—|-)/);
-        const masked = parts.map((part) => {
-          if (/^\s+$/.test(part) || part === '—' || part === '-') return part;
-          if (part.length <= 2) return part;
-          const keep = Math.ceil(part.length / 3);
-          return `${part.slice(0, keep)}***`;
-        }).join('');
-        newReelItem.innerHTML = masked;
-      }
+      // All items masked during spin; winner element is revealed after animation ends
+      newReelItem.innerHTML = maskName(name);
       fragment.appendChild(newReelItem);
     });
 
@@ -244,6 +243,11 @@ export default class Slot {
     Array.from(reelContainer.children)
       .slice(0, reelContainer.children.length - 1)
       .forEach((element) => element.remove());
+
+    // Reveal winner name (was masked during spin)
+    const winner = randomNames[randomNames.length - 1];
+    const winnerEl = reelContainer.lastElementChild as HTMLElement | null;
+    if (winnerEl) winnerEl.innerHTML = winner;
 
     this.havePreviousWinner = true;
 
