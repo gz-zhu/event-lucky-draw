@@ -5,17 +5,43 @@
   top: 2.9rem;
   left: 1.2rem;
   font-family: 'Playfair Display', serif;
-  font-size: 1.1rem;
+  font-size: 1.9rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  background: linear-gradient(135deg, #ffd700 0%, #fff5b0 50%, #ffb800 100%);
+  letter-spacing: 0.07em;
+  /* Gold metallic gradient with orange accent */
+  background: linear-gradient(
+    160deg,
+    #ff9a00 0%,
+    #ffd000 18%,
+    #fffbe0 38%,
+    #ffd700 52%,
+    #ffb300 68%,
+    #fff0a0 82%,
+    #e67e00 100%
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  opacity: 0.85;
+  filter: drop-shadow(0 1px 0 rgba(180, 80, 0, 0.55))
+    drop-shadow(0 0 18px rgba(255, 180, 0, 0.55))
+    drop-shadow(0 3px 10px rgba(0, 0, 0, 0.5));
+  animation: brand-shine 5s ease-in-out infinite alternate;
   pointer-events: none;
   z-index: 25;
   line-height: 1;
+}
+
+@keyframes brand-shine {
+  0% {
+    filter: drop-shadow(0 1px 0 rgba(180, 80, 0, 0.55))
+      drop-shadow(0 0 12px rgba(255, 160, 0, 0.4))
+      drop-shadow(0 3px 10px rgba(0, 0, 0, 0.5));
+  }
+  100% {
+    filter: drop-shadow(0 1px 0 rgba(200, 100, 0, 0.7))
+      drop-shadow(0 0 28px rgba(255, 210, 0, 0.75))
+      drop-shadow(0 3px 14px rgba(0, 0, 0, 0.55));
+  }
 }
 
 #lucky-draw {
@@ -31,18 +57,28 @@
 
   .title-text {
     font-family: 'Playfair Display', serif;
-    font-size: 3.58rem;
+    font-size: 2.4rem;
     font-weight: 700;
     margin: 0;
-    letter-spacing: 0.08em;
-    background: linear-gradient(135deg, #ffd700 0%, #fff5b0 45%, #ffb800 100%);
+    letter-spacing: 0.12em;
+    /* Platinum / white-gold texture: cool silver-white with warm highlights */
+    background: linear-gradient(
+      160deg,
+      #e8e0d0 0%,
+      #fffef8 22%,
+      #d4c8a8 38%,
+      #ffffff 52%,
+      #e0d8c4 65%,
+      #faf8f0 80%,
+      #c8bea0 100%
+    );
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    filter: drop-shadow(0 2px 0 rgba(180, 120, 0, 0.5))
-      drop-shadow(0 0 30px rgba(255, 215, 0, 0.4))
-      drop-shadow(0 4px 16px rgba(0, 0, 0, 0.6));
-    animation: title-glow 4s ease-in-out infinite alternate;
+    filter: drop-shadow(0 1px 0 rgba(120, 100, 60, 0.35))
+      drop-shadow(0 0 22px rgba(255, 255, 220, 0.3))
+      drop-shadow(0 3px 12px rgba(0, 0, 0, 0.5));
+    animation: title-platinum 6s ease-in-out infinite alternate;
 
     @media #{$mobile} {
       font-size: 3.5rem;
