@@ -26,9 +26,11 @@ include ../mixins/icons
       button#recovery-restore.solid-button Restore
       button#recovery-dismiss.recovery-dismiss Dismiss
 
+  .brand-tag Lucky Draw
+
   #lucky-draw
     .title
-      h1.title-text Lucky Draw
+      h1#draw-title-display.title-text
 
     #prize-buttons.prize-buttons
 
@@ -76,6 +78,10 @@ include ../mixins/icons
           h1.settings__title Settings
           button#settings-close-x.icon-button.icon-button--small
             +svg-icon.red.big(svg-icon-name='close')
+        div.input-group
+          label.input-label(for="draw-title-input") Draw Title
+          input#draw-title-input.input-field(type="text" placeholder="Lucky Draw" maxlength="60")
+
         div.input-group
           .name-list-header
             label.input-label(for="name-list") Name List

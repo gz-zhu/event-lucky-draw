@@ -1,5 +1,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap');
 
+.brand-tag {
+  position: fixed;
+  top: 0.9rem;
+  left: 1.1rem;
+  font-family: 'Playfair Display', serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  background: linear-gradient(135deg, #ffd700 0%, #fff5b0 50%, #ffb800 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  opacity: 0.7;
+  pointer-events: none;
+  z-index: 10;
+}
+
 #lucky-draw {
   width: 100%;
   text-align: center;

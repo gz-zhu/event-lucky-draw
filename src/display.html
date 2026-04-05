@@ -252,6 +252,21 @@
       flex-shrink: 0;
     }
 
+    .draw-event-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #ffd700 0%, #fff5b0 45%, #ffb800 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 2px 0 rgba(180,120,0,0.4)) drop-shadow(0 0 20px rgba(255,215,0,0.3));
+      letter-spacing: 0.06em;
+      line-height: 1.2;
+      margin-bottom: 0.5rem;
+      flex-shrink: 0;
+    }
+
     .prizes-grid {
       flex: 1;
       display: grid;
@@ -488,6 +503,7 @@
 
   <!-- Right: Prize cards -->
   <div class="prizes-panel">
+    <div class="draw-event-title" id="draw-event-title"></div>
     <div class="prizes-panel__title">Prizes</div>
     <div class="prizes-grid" id="prizes-body"></div>
   </div>
@@ -686,9 +702,21 @@
 
   refresh();
   setInterval(refresh, 2000);
+
+  // Draw title
+  const drawEventTitleEl = document.getElementById('draw-event-title');
+  function applyDrawTitle() {
+    if (drawEventTitleEl) {
+      drawEventTitleEl.textContent = localStorage.getItem('draw-title') || '';
+      drawEventTitleEl.style.display = drawEventTitleEl.textContent ? 'block' : 'none';
+    }
+  }
+  applyDrawTitle();
+
   // Instant sync when main app writes to localStorage on the same device
   window.addEventListener('storage', function(e) {
     if (e.key === 'prize-manager-data') refresh();
+    if (e.key === 'draw-title') applyDrawTitle();
   });
 
   // ── Countdown (read-only, driven by main app via Firebase) ───

@@ -665,10 +665,20 @@ initStars();
     if (countdownCfgMins) countdownCfgMins.value = cfg ? String(cfg.minutes) : '';
   };
 
+  // Draw title helpers (declared before onSettingsOpen to avoid no-use-before-define)
+  const drawTitleDisplay = document.getElementById('draw-title-display') as HTMLElement | null;
+  const drawTitleInput = document.getElementById('draw-title-input') as HTMLInputElement | null;
+  const applyDrawTitle = (t: string) => {
+    const text = t.trim() || 'Lucky Draw';
+    if (drawTitleDisplay) drawTitleDisplay.textContent = text;
+  };
+  applyDrawTitle(localStorage.getItem('draw-title') ?? '');
+
   const onSettingsOpen = () => {
     nameListTextArea.value = slot.names.join('\n');
     removeNameFromListCheckbox.checked = slot.shouldRemoveWinnerFromNameList;
     enableSoundCheckbox.checked = !soundEffects.mute;
+    if (drawTitleInput) drawTitleInput.value = localStorage.getItem('draw-title') ?? '';
     renderPrizeConfig();
     refreshCountdownCfgSelect();
     settingsWrapper.style.display = 'block';
@@ -737,6 +747,11 @@ initStars();
       saveCountdownConfig(null);
       prizeManager.clearCountdown();
     }
+
+    // Save draw title
+    const titleVal = drawTitleInput?.value ?? '';
+    try { localStorage.setItem('draw-title', titleVal); } catch (e) { /* ignore */ }
+    applyDrawTitle(titleVal);
 
     renderPrizeButtons();
     updateCurrentPrizeLabel();
