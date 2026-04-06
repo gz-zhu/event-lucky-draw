@@ -1,68 +1,55 @@
 # 🚀 Event Lucky Draw — 完全デプロイガイド
 
-このガイドでは、ゼロから自分だけの抽選システムを構築・デプロイする手順を説明します。
-
-**このシステムでできること：**
-- 🏆 複数の賞を設定し、名前と当選人数を自由にカスタマイズ
-- 📂 CSV で参加者を一括インポート
-- 📋 当選記録（タイムスタンプ・抽選シード付き）を CSV でエクスポート
-- 📺 大画面表示ページ (`/display.html`) — プロジェクター向け、当選者をリアルタイム表示
-- 🔢 毎回の抽選で抽選シードを表示（監査対応）
-- 🔒 当選者の名前を自動マスキング（プライバシー保護）
-- 🚫 自動重複排除 — すでに当選した参加者は名簿から自動的に除外
-- ⚡ 中断復旧 — ブラウザが途中で閉じた場合も名簿を復元可能
-- 🎊 紙吹雪 + 星 + 彩燈アニメーション
+このガイドでは、イベント用の抽選システムをゼロから構築する手順を説明します — ローカル使用・クラウドデプロイ・カスタムドメイン設定まで。
 
 ---
 
-## 📦 データの保存方法（重要）
+## 📦 データの保存方法（最初にお読みください）
 
-> **すべてのデータは、抽選を実行しているコンピュータのブラウザの `localStorage` に保存されます。**
+> **すべてのデータは抽選を実行しているマシンのブラウザ `localStorage` に保存されます。アカウントやクラウド設定は不要です。**
 
-- アカウントやクラウドサービスは不要
-- 設定・名簿・当選記録 — すべてそのコンピュータのブラウザ内に保存
-- ブラウザデータを削除するとすべての記録が消えます（事前に CSV でエクスポートしてください）
+- 設定・名前リスト・賞設定・当選記録はすべてそのコンピューターのブラウザに保存されます。
+- ブラウザデータを消去するとすべての記録が失われます — **消去前にCSVをエクスポートしてください**。
 
-### 大画面表示ページの同期について
+### 表示ページの同期
 
-`/display.html` は 2 秒ごとに同じ `localStorage` を読み取り、自動的に更新されます。
+`/display.html` は同じ `localStorage` から2秒ごとに読み込みます。
 
-**これが意味すること：**
-- ✅ **同じコンピュータの同じブラウザ**でメインページと表示ページを開く → リアルタイム同期
-- ❌ **別のデバイスや別のブラウザ**で表示ページを開く → 同期されない（`localStorage` はデバイス間で共有されません）
+- ✅ **同じマシンの同じブラウザ**でメインページと表示ページを開く → リアルタイム同期
+- ❌ **別のデバイスまたは別のブラウザ**で表示ページを開く → 同期不可（`localStorage` は端末間で共有されません）
 
-> **イベントでの推奨設定：** 操作者のノートパソコンでメインの抽選ページを開き、同じノートパソコンの別のウィンドウまたはタブで `/display.html` を開いてから、そのウィンドウをプロジェクターやサブスクリーンに拡張表示します。
+> **イベントのヒント：** オペレーターのノートPCでメインページを操作し、同じPCの別タブで `/display.html` を開いて、そのウィンドウをプロジェクターや外部モニターに拡張してください。
 
 ---
 
-## ステップ 1：必要なツールのインストール
+## ステップ1：必要なツールをインストール
 
-### Node.js 18.x（必ずバージョン 18 を使用）
+### Node.js 18.x（バージョン18が必須）
 
 | OS | ダウンロード |
-|------|----------|
+|----|-------------|
 | Windows 64-bit | https://nodejs.org/download/release/v18.20.4/node-v18.20.4-x64.msi |
 | Mac (Intel) | https://nodejs.org/download/release/v18.20.4/node-v18.20.4.pkg |
 | Mac (M1/M2) | https://nodejs.org/download/release/v18.20.4/node-v18.20.4-arm64.pkg |
 
 インストール後に確認：
 ```bash
-node -v   # v18.x.x が表示されること
+node -v   # v18.x.x と表示される必要があります
 ```
 
 ### Git
-- Windows：https://git-scm.com/download/win
-- Mac：ターミナルで `xcode-select --install` を実行
+- Windows: https://git-scm.com/download/win
+- Mac: ターミナルで `xcode-select --install` を実行
 
 ### Yarn
 ```bash
 npm install -g yarn
-yarn -v   # 1.x.x が表示されること
+yarn -v   # 1.x.x と表示されれば成功
 ```
 
 ---
 
-## ステップ 2：コードの取得とビルド
+## ステップ2：コードを取得してビルド
 
 ```bash
 git clone https://github.com/gz-zhu/event-lucky-draw.git
@@ -71,7 +58,7 @@ yarn install
 yarn build
 ```
 
-`Done` が表示されればビルド成功です。
+`Done` が表示されればビルド成功です。`/dist` フォルダがデプロイ可能なファイルです。
 
 ### ローカルプレビュー
 
@@ -79,64 +66,64 @@ yarn build
 yarn start
 ```
 
-ブラウザで `http://localhost:8888` を開くと、ローカル環境で全機能を使用できます。
+ブラウザで `http://localhost:8888` を開くと、すべての機能をローカルで使用できます。
 
 ---
 
-## ステップ 3：自分の GitHub にアップロード
+## ステップ3：自分のGitHubにアップロード
 
 1. https://github.com でアカウントを作成
-2. 右上の **+** → **New repository**
-3. 名前を入力（例：`my-lucky-draw`）→ **Create repository**（初期化オプションはチェックしない）
+2. **+**（右上）→ **New repository**
+3. 名前を入力（例: `my-lucky-draw`）→ **Create repository**（初期化オプションはチェックしない）
 4. 以下を実行：
 
 ```bash
 git remote remove origin
-git remote add origin https://github.com/ユーザー名/my-lucky-draw.git
+git remote add origin https://github.com/あなたのユーザー名/my-lucky-draw.git
 git branch -M main
 git push -u origin main
 ```
 
 ---
 
-## ステップ 4：Vercel へのデプロイ
+## ステップ4：Vercelにデプロイ
 
-1. https://vercel.com へアクセス → GitHub でログイン
+1. https://vercel.com にアクセス → GitHubアカウントでサインイン
 2. **Add New Project** → `my-lucky-draw` を選択
 3. 以下を設定：
-   - **Framework Preset**：Other
-   - **Build Command**：`yarn build`
-   - **Output Directory**：`dist`
+   - **Framework Preset**: Other
+   - **Build Command**: `yarn build`
+   - **Output Directory**: `dist`
 4. **Deploy** をクリック
-5. デプロイ完了後 → **Settings** → **General** → **Node.js Version** → **20.x** に変更 → **Save**
+5. デプロイ後 → **Settings** → **General** → **Node.js Version** → **20.x** に変更 → **Save**
 6. **Deployments** → 最新の項目の `...` → **Redeploy**
 
-デプロイ成功後、以下のような URL が発行されます：
+デプロイ成功後、以下のようなURLが発行されます：
 ```
 https://my-lucky-draw.vercel.app
 ```
 
-> **Vercel 利用時の注意：** デプロイ後、各ユーザーのブラウザにはそれぞれの `localStorage` が存在します。同期を正しく機能させるには、メインページと表示ページを必ず**同じコンピュータの同じブラウザ**で開いてください。
+> **注意：** 各ユーザーのブラウザはそれぞれの `localStorage` を持ちます。メインページと表示ページは必ず**同じコンピューターの同じブラウザ**で開いてください。
 
 ---
 
-## ステップ 5：カスタマイズ
+## ステップ5：コンテンツをカスタマイズ
 
-### 背景画像の変更
-以下のファイルを同名で置き換える：
+### 背景画像を変更
+以下のファイルを差し替えます（ファイル名は変更しない）：
 ```
 src/assets/images/Cover.jpg
 ```
 
-### イベントタイトルの変更
-`src/pages/landing.pug` を開き、以下を探す：
+### イベントタイトルを変更
+`src/pages/landing.pug` を開いて以下を見つけます：
 ```pug
 h1.title-text Lucky Draw
 ```
-自分のイベント名に変更する。
+自分のイベント名に変更してください。Settings → **Draw Title** でリアルタイムに変更することもできます。
 
-### デフォルト賞の変更
-`src/assets/js/PrizeManager.ts` を開き、以下を探す：
+### デフォルト賞を変更
+`src/assets/js/PrizeManager.ts` を開いて以下を見つけます：
 ```typescript
 this.prizes = [
   { id: '1', name: '1st Prize', count: 1, winners: [] },
@@ -144,65 +131,100 @@ this.prizes = [
   { id: '3', name: '3rd Prize', count: 5, winners: [] },
 ];
 ```
-自分の賞に変更する。
+自分の賞名と当選人数に変更してください。Settings → **Prize Settings** でリアルタイムに追加・編集することもできます。
 
 ---
 
-## ステップ 6：再ビルドとプッシュ
+## ステップ6：リビルドしてプッシュ
 
-変更のたびに実行：
+コードを変更するたびに実行します：
 ```bash
 yarn build
 git add .
-git commit -m "feat: customize for my event"
+git commit -m "feat: イベント用にカスタマイズ"
 git push
 ```
 
-Vercel が自動的に再デプロイします。
+Vercelが自動的に再デプロイします。
 
 ---
 
-## ステップ 7：カスタムドメインの設定
+## ステップ7：カスタムドメインを設定
 
-### 7-1. DNS を Cloudflare に移管（推奨）
+### 7-1. DNSをCloudflareに移管（推奨）
 
 1. https://cloudflare.com で無料アカウントを作成
 2. **Add a Site** → ドメインを入力 → **Free** を選択
-3. DNS スキャン完了後 **Continue** をクリック
-4. Cloudflare が提供する 2 つの Nameserver を控える：
+3. CloudflareがDNSをスキャン後、**Continue** をクリック
+4. Cloudflareが提供する2つのネームサーバーを控えます（例）：
    ```
    nina.ns.cloudflare.com
    rick.ns.cloudflare.com
    ```
-5. ドメイン管理会社（Hostinger 等）→ **Nameservers** → Cloudflare の NS に変更
-6. 24〜48 時間待つ
+5. ドメイン登録業者（Hostinger、GoDaddy等）→ **Nameservers** → Cloudflareのものに変更
+6. 反映まで24〜48時間待ちます
 
-### 7-2. Cloudflare に DNS レコードを追加
+### 7-2. CloudflareでDNSレコードを追加
 
 Cloudflare → **DNS** → **Add record**：
 ```
 Type:   CNAME
 Name:   draw
 Target: cname.vercel-dns.com
-Proxy:  OFF（灰色の雲マーク、オレンジではない）
+Proxy:  OFF（オレンジではなくグレーの雲マーク）
 TTL:    Auto
 ```
 
-### 7-3. Vercel にドメインを紐付け
+### 7-3. VercelでドメインをバインドNumber
 
 1. Vercel → プロジェクト → **Settings** → **Domains**
 2. `draw.あなたのドメイン.com` を入力 → **Add**
 3. **Valid Configuration** が表示されるまで待つ
-4. SSL は自動で設定される
+4. SSL証明書は自動で設定されます
 
 ---
 
-## 設定完了後のアクセス
+## 設定完了後のアクセスURL
 
 ```
-https://draw.あなたのドメイン.com              ← 抽選メインページ
-https://draw.あなたのドメイン.com/display.html ← 大画面表示ページ
+https://draw.あなたのドメイン.com              ← メイン抽選ページ
+https://draw.あなたのドメイン.com/display.html ← プロジェクター用表示ページ
 ```
+
+---
+
+## アプリの使い方
+
+### 1. 参加者を追加
+右上の ⚙️ **Settings** → **Name List** → 1行1名で貼り付けるか **Upload CSV** でインポート。
+
+CSVは複数列に対応 — 各行のすべての列が1つの名前として結合されます。
+
+ツールバーで**シャッフル**・**全名前をマスキング**・**重複統合**・**クリア**が可能。**Save** をクリック。
+
+過去の当選者は自動的にリストから除外されます。
+
+### 2. 賞を設定
+Settings → **Prize Settings** → 賞の名前と当選人数を入力。
+予定抽選時間と賞品説明（表示ページに反映）はオプションで設定可能。**Save** をクリック。
+
+### 3. カウントダウンを設定（任意）
+Settings → **Countdown Timer** → 任意の賞に時間を割り当て。
+カウントダウンバーの **Auto** をオンにすると、タイムアップ時に自動抽選。
+
+### 4. 表示ページを開く
+右下の **📺 Display** リンクをクリック → 新しいタブで開く（**同じコンピューターで必須**）。
+そのウィンドウをプロジェクターや外部スクリーンに拡張。
+
+表示ページには：リアルタイム当選名、賞リスト（予定時刻付き）、参加人数統計、リアルタイム時計が表示されます。
+
+### 5. 抽選
+賞ボタンをクリックして選択 → **Draw** をクリック → 当選者が登場 🎊
+
+当選者の名前は抽選後にマスキングされます（プライバシー保護）。ドローシードが表示されます。
+
+### 6. 記録を確認・エクスポート
+右上の ✅ アイコン → タイムスタンプとシード付きで全当選者を確認 → **Export CSV**。
 
 ---
 
@@ -213,53 +235,26 @@ yarn build
 git add .
 git commit -m "変更内容を説明"
 git push
-# Vercel が自動再デプロイ
+# Vercelが自動的に再デプロイ
 ```
 
 ---
 
-## アプリの使い方
-
-### 1. 参加者を追加
-右上の ⚙️ **Settings** → **Name List** を開く
-
-名前を 1 行ずつ貼り付けるか、**Upload CSV** で `.csv` ファイルをインポート（1 列目が名前として使用されます）。
-
-> すでに当選した参加者はインポート時に自動的に除外されます。
-
-**Save** をクリック。
-
-### 2. 賞を設定
-Settings → **Prize Settings**：賞の名前と当選人数を入力 → **Save**。
-
-### 3. プロジェクターに大画面表示を映す
-ページ右下の **📺 Display** リンクをクリックして `display.html` を新しいタブで開く。
-
-**同じコンピュータで操作する必要があります：** このタブをプロジェクターやサブスクリーンに映すと、当選者一覧・次の賞・参加者統計・時計がリアルタイムで表示されます。
-
-### 4. 抽選
-賞ボタンをクリックして選択 → **Draw** をクリック → 当選者が登場 🎊
-
-抽選後は当選者の名前が自動的にマスキングされます（プライバシー保護）。抽選シードも表示されます。
-
-### 5. 記録とエクスポート
-右上の ✅ アイコンをクリック → 全当選者（タイムスタンプ付き）を確認 → **Export CSV** でダウンロード。
-
----
-
-## よくある問題
+## トラブルシューティング
 
 | 問題 | 解決方法 |
 |------|----------|
-| `node -v` が v20 以上を表示 | Node.js 18.x を再インストール |
-| `yarn install` が失敗 | `rmdir /s /q node_modules` 後に再インストール |
-| Vercel デプロイが失敗 | 設定で Node.js Version を 20.x に変更 |
-| display ページが同期しない | メインページと表示ページが**同じコンピュータの同じブラウザ**で開かれているか確認 |
-| ドメインが反映されない | DNS の反映に最大 48 時間かかる |
-| ブラウザを閉じると設定が消える | プライベート/シークレットモードは使用しない。閉じる前に CSV でエクスポートする |
+| `node -v` がv20以上を表示 | 上記リンクからNode.js 18.xを再インストール |
+| `yarn install` が失敗 | `node_modules` フォルダを削除して `yarn install` を再実行 |
+| `yarn` コマンドが認識されない | `npm install -g yarn` を実行後、ターミナルを再起動 |
+| Vercelデプロイが失敗 | VercelプロジェクトのNode.jsバージョンを **20.x** に変更 |
+| 表示ページが同期しない | メインページと表示ページを**同じコンピューターの同じブラウザ**で開く |
+| ドメインが有効にならない | DNS反映に最大48時間かかる場合があります |
+| ブラウザを閉じると設定が消える | プライベートモードを使用しない；閉じる前にCSVをエクスポート |
+| デプロイ後にページが空白 | 先に `yarn build` を実行してからプッシュ — Vercelは `/dist` からデプロイ |
 
 ---
 
-## 上級者向け：クロスデバイス同期（自己研究）
+## 上級者向け：クロスデバイス同期
 
-別のデバイスで表示ページを同期させたい場合は、Firebase Realtime Database などのリアルタイムデータベースの統合を検討してください。コードベースには Firebase インターフェースが含まれていますが、デフォルトでは無効化されています。ご自身のユースケースに合わせて拡張してください。
+別のデバイスで表示ページを同期させる必要がある場合、このシステムにはFirebase Realtime Databaseの統合インターフェースが内蔵されています。デフォルトでは強制されません — `src/assets/js/PrizeManager.ts` に自分のFirebaseプロジェクトの認証情報を入力することで有効化できます。

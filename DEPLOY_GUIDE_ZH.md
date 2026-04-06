@@ -1,37 +1,24 @@
 # 🚀 Event Lucky Draw — 完整部署指南
 
-這份指南將帶你從零開始，完整部署一個屬於自己的活動抽獎系統。
-
-**系統功能一覽：**
-- 🏆 多獎項設定，可自訂獎項名稱與人數
-- 📂 CSV 批次匯入參加者名單
-- 📋 得獎紀錄含時間戳記與抽獎種子，可匯出 CSV
-- 📺 大屏展示頁 (`/display.html`) — 投影機專用，顯示即時得獎資訊
-- 🔢 每次抽獎顯示抽獎種子，供事後稽核
-- 🔒 得獎者姓名自動遮蔽（隱私保護）
-- 🚫 自動排重 — 已得獎者不會再次出現在名單中
-- ⚡ 中斷復原 — 瀏覽器意外關閉後可還原名單
-- 🎊 彩帶 + 星星 + 彩燈動畫
+這份指南帶你從零開始，完整部署屬於自己的活動抽獎系統 — 本地使用、雲端部署、自訂網域。
 
 ---
 
-## 📦 資料儲存說明（重要）
+## 📦 資料儲存說明（請先閱讀）
 
-> **所有資料儲存在執行抽獎的那台電腦的瀏覽器 `localStorage` 中。**
+> **所有資料儲存在執行抽獎的電腦瀏覽器的 `localStorage` 中，無需帳號或雲端服務。**
 
-- 不需要帳號或雲端服務
-- 設定、名單、得獎紀錄 — 全部存在該電腦的瀏覽器裡
-- 清除瀏覽器資料會清除所有紀錄（請先匯出 CSV 備份）
+- 設定、名單、獎項設定、得獎紀錄均存於本機瀏覽器。
+- 清除瀏覽器資料會清除所有紀錄 — **清除前請先匯出 CSV 備份**。
 
 ### 大屏展示頁同步說明
 
-`/display.html` 每 2 秒讀取同一份 `localStorage`，**自動同步更新**。
+`/display.html` 每 2 秒讀取同一份 `localStorage`。
 
-**這代表：**
 - ✅ 在**同一台電腦的同一個瀏覽器**開啟主頁和展示頁 → 展示頁即時同步
 - ❌ 在**另一台裝置或另一個瀏覽器**開啟展示頁 → 無法同步（`localStorage` 不跨裝置共享）
 
-> **活動建議：** 在操作者的筆電上開啟主頁抽獎，在同一筆電的另一個視窗或分頁開啟 `/display.html`，再將該視窗延伸投影到大螢幕或投影機。
+> **活動建議：** 在操作者的筆電上開啟主頁，在同一筆電的另一分頁開啟 `/display.html`，再將該視窗延伸至投影機或第二螢幕。
 
 ---
 
@@ -40,7 +27,7 @@
 ### Node.js 18.x（必須是版本 18）
 
 | 作業系統 | 下載連結 |
-|------|----------|
+|---------|----------|
 | Windows 64-bit | https://nodejs.org/download/release/v18.20.4/node-v18.20.4-x64.msi |
 | Mac (Intel) | https://nodejs.org/download/release/v18.20.4/node-v18.20.4.pkg |
 | Mac (M1/M2) | https://nodejs.org/download/release/v18.20.4/node-v18.20.4-arm64.pkg |
@@ -52,7 +39,7 @@ node -v   # 必須顯示 v18.x.x
 
 ### Git
 - Windows：https://git-scm.com/download/win
-- Mac：終端機執行 `xcode-select --install`
+- Mac：在終端機執行 `xcode-select --install`
 
 ### Yarn
 ```bash
@@ -71,7 +58,7 @@ yarn install
 yarn build
 ```
 
-看到 `Done` 代表建置成功。
+看到 `Done` 代表建置成功，`/dist` 資料夾即為可部署的檔案。
 
 ### 本地預覽
 
@@ -116,7 +103,7 @@ git push -u origin main
 https://my-lucky-draw.vercel.app
 ```
 
-> **Vercel 使用注意：** 部署到 Vercel 後，每個使用者的瀏覽器各自儲存自己的 `localStorage`。因此請在**同一台電腦**上開啟主頁和展示頁，確保同步正常運作。
+> **Vercel 使用注意：** 每個使用者的瀏覽器各自儲存自己的 `localStorage`。請在**同一台電腦**上開啟主頁和展示頁，確保同步正常運作。
 
 ---
 
@@ -133,7 +120,7 @@ src/assets/images/Cover.jpg
 ```pug
 h1.title-text Lucky Draw
 ```
-改為自己的活動名稱。
+改為自己的活動名稱。也可以在 Settings → **Draw Title** 即時修改。
 
 ### 更改預設獎項
 開啟 `src/assets/js/PrizeManager.ts`，找到：
@@ -144,13 +131,13 @@ this.prizes = [
   { id: '3', name: '3rd Prize', count: 5, winners: [] },
 ];
 ```
-改為自己的獎項設定。
+改為自己的獎項名稱與人數。也可以在 Settings → **Prize Settings** 即時新增或修改。
 
 ---
 
 ## 第六步：重新建置並上傳
 
-每次修改完執行：
+每次修改程式碼後執行：
 ```bash
 yarn build
 git add .
@@ -169,12 +156,12 @@ Vercel 會自動重新部署。
 1. 前往 https://cloudflare.com 註冊免費帳號
 2. **Add a Site** → 輸入網域 → 選擇 **Free**
 3. Cloudflare 掃描完 DNS 後點 **Continue**
-4. 記下 Cloudflare 給的兩個 Nameserver，例如：
+4. 記下 Cloudflare 提供的兩個 Nameserver，例如：
    ```
    nina.ns.cloudflare.com
    rick.ns.cloudflare.com
    ```
-5. 前往域名商（Hostinger 等）→ **Nameservers** → 改為 Cloudflare 的兩個 NS
+5. 前往域名商（Hostinger、GoDaddy 等）→ **Nameservers** → 改為 Cloudflare 的兩個 NS
 6. 等待 24～48 小時生效
 
 ### 7-2. 在 Cloudflare 新增 DNS 記錄
@@ -201,8 +188,43 @@ TTL:    Auto
 
 ```
 https://draw.你的網域.com              ← 抽獎主頁
-https://draw.你的網域.com/display.html ← 大屏展示頁
+https://draw.你的網域.com/display.html ← 大屏展示頁（投影機）
 ```
+
+---
+
+## 使用方式
+
+### 1. 新增參加者
+點擊右上角 ⚙️ **Settings** → **Name List** → 逐行貼上名字，或點擊 **Upload CSV** 匯入。
+
+CSV 支援多欄位，每列所有欄位會合併為一筆名字。
+
+使用工具列進行**洗牌**、**遮蔽所有名字**、**合併重複**、**清除**。點擊 **Save**。
+
+已得獎者在匯入時自動從名單中移除。
+
+### 2. 設定獎項
+Settings → **Prize Settings** → 輸入獎項名稱與得獎人數。
+可選填預定開獎時間與獎品說明（顯示於大屏展示頁）。點擊 **Save**。
+
+### 3. 設定倒數計時（選填）
+Settings → **Countdown Timer** → 為指定獎項設定倒數時長。
+在倒數進度條上開啟 **Auto**，時間到時自動執行抽獎。
+
+### 4. 開啟大屏展示頁
+點擊右下角 **📺 Display** 連結，在新分頁開啟（**必須在同一台電腦**）。
+將該視窗延伸至投影機或大螢幕。
+
+展示頁顯示：即時得獎名單、獎項列表（含預定開獎時間）、參加人數統計、即時時鐘。
+
+### 5. 抽獎
+點擊獎項按鈕選擇獎項 → 點擊 **Draw** → 得獎者出現 🎊
+
+抽獎後姓名自動遮蔽（隱私保護），並顯示抽獎種子供事後稽核。
+
+### 6. 查看及匯出紀錄
+點擊右上角 ✅ 圖示 → 查看所有得獎者（含時間戳記與抽獎種子）→ **Export CSV**。
 
 ---
 
@@ -218,48 +240,21 @@ git push
 
 ---
 
-## 部署完成後的使用方式
-
-### 1. 新增參加者
-點擊右上角 ⚙️ **Settings** → **Name List**
-
-逐行貼上名字，或點擊 **Upload CSV** 匯入 `.csv` 檔案（第一欄為名字）。
-
-> 已得獎者會在匯入時自動從名單中移除。
-
-點擊 **Save**。
-
-### 2. 設定獎項
-Settings → **Prize Settings**：輸入獎項名稱與人數 → **Save**。
-
-### 3. 開啟展示頁投影到大螢幕
-點擊頁面右下角的 **📺 Display** 連結，在新分頁開啟大屏展示頁。
-
-**必須在同一台電腦上操作：** 將此分頁投影到大螢幕，即時顯示得獎名單、即將開獎的獎項、參加人數統計、時鐘。
-
-### 4. 抽獎
-點擊獎項按鈕選擇獎項 → 點擊 **Draw** → 得獎者出現 🎊
-
-抽獎後姓名自動遮蔽（隱私保護），並顯示抽獎種子供稽核。
-
-### 5. 紀錄與匯出
-點擊右上角 ✅ 圖示 → 查看所有得獎者（含時間戳記）→ **Export CSV** 下載。
-
----
-
 ## 常見問題
 
 | 問題 | 解決方法 |
 |------|----------|
-| `node -v` 顯示 v20 以上 | 重新安裝 Node.js 18.x |
-| `yarn install` 失敗 | 執行 `rmdir /s /q node_modules` 再重新安裝 |
-| Vercel 部署失敗 | 在設定中將 Node.js Version 改為 20.x |
+| `node -v` 顯示 v20 以上 | 重新安裝上方提供的 Node.js 18.x |
+| `yarn install` 失敗 | 刪除 `node_modules` 資料夾，再重新執行 `yarn install` |
+| `yarn` 指令無法識別 | 執行 `npm install -g yarn`，重新開啟終端機 |
+| Vercel 部署失敗 | 在 Vercel 專案設定中將 Node.js Version 改為 **20.x** |
 | 展示頁資料不同步 | 確認主頁和展示頁在**同一台電腦的同一個瀏覽器**開啟 |
 | 網域未生效 | DNS 最長需要 48 小時才能生效 |
 | 關閉瀏覽器後設定消失 | 不要使用無痕模式；關閉前請先匯出 CSV |
+| 部署後頁面空白 | 先執行 `yarn build`，再 push — Vercel 從 `/dist` 資料夾部署 |
 
 ---
 
-## 進階擴展：跨裝置同步（自行研究）
+## 進階：跨裝置同步
 
-若需要讓展示頁在另一台裝置上同步，可研究整合 Firebase Realtime Database 或其他即時資料庫。本版本的程式碼中保留了 Firebase 的介面，但預設未啟用，請自行探索。
+若需要讓展示頁在另一台裝置上同步，本系統已內建 Firebase Realtime Database 介面。預設不強制啟用，可在 `src/assets/js/PrizeManager.ts` 中填入自己的 Firebase 專案憑證來啟用。
