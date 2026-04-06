@@ -35,6 +35,7 @@ A stylish lucky draw app for live events — animated slot reel, prize tiers, wi
 - 🔒 Winner name masking after draw (privacy protection)
 
 **UI & Extras**
+- 🌐 Built-in language switcher — English / 繁體中文 / 日本語 (persisted across sessions)
 - 🎊 Confetti + twinkling stars + festive light animations
 - 🔊 Sound effects (spinning reel + win fanfare)
 - 🖥 Fullscreen mode
@@ -174,6 +175,8 @@ Based on [random-name-picker](https://github.com/icelam/random-name-picker) by [
 
 **介面與其他**
 - 🎊 彩帶 + 星空閃爍 + 彩燈動畫
+- 🌐 內建語言切換 — English / 繁體中文 / 日本語（設定自動記憶）
+- 🎊 彩帶 + 星空閃爍 + 彩燈動畫
 - 🔊 音效（轉輪聲 + 得獎提示音）
 - 🖥 全螢幕模式
 - ✏️ 可編輯活動標題，同步顯示於主頁與展示頁
@@ -311,6 +314,8 @@ TypeScript · Pug · SCSS · Webpack 5 · Web Animations API · AudioContext API
 - 🔒 抽選後に当選者名を自動マスキング（プライバシー保護）
 
 **UIとその他**
+- 🎊 紙吹雪 + 星空キラキラ + イルミネーションアニメーション
+- 🌐 言語切り替え内蔵 — English / 繁體中文 / 日本語（設定は自動保存）
 - 🎊 紙吹雪 + 星空キラキラ + イルミネーションアニメーション
 - 🔊 効果音（スロット音 + 当選ファンファーレ）
 - 🖥 フルスクリーンモード

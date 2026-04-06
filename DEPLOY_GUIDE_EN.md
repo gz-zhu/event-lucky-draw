@@ -109,6 +109,11 @@ https://my-lucky-draw.vercel.app
 
 ## Step 5: Customize Content
 
+### Switch language
+The app has a built-in language switcher (🌐 globe icon, bottom-left corner of the main page). Click it to select **English**, **繁體中文**, or **日本語**. The selection is saved automatically and the display page (`/display.html`) follows the same language.
+
+No code changes are needed to use a different language.
+
 ### Change the background image
 Replace this file (keep the same filename):
 ```
