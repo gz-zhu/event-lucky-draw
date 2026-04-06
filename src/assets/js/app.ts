@@ -3,6 +3,9 @@ import confetti from 'canvas-confetti';
 import Slot from '@js/Slot';
 import SoundEffects from '@js/SoundEffects';
 import PrizeManager from '@js/PrizeManager';
+import {
+  t, setLang, applyLang, getLocale, type Lang
+} from '@js/i18n';
 
 const initStars = () => {
   const canvas = document.createElement('canvas');
@@ -30,11 +33,11 @@ const initStars = () => {
     canvas.height = window.innerHeight;
   };
 
-  const draw = (t: number) => {
+  const draw = (ts: number) => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     stars.forEach((s) => {
       // eslint-disable-next-line no-param-reassign
-      s.alpha = 0.15 + 0.85 * Math.abs(Math.sin(t * s.speed + s.phase));
+      s.alpha = 0.15 + 0.85 * Math.abs(Math.sin(ts * s.speed + s.phase));
       ctx.save();
       ctx.globalAlpha = s.alpha * 0.9;
       ctx.shadowBlur = 6;
@@ -96,6 +99,9 @@ initStars();
     console.error('One or more Element ID is invalid.');
     return;
   }
+
+  // Apply saved language to all data-i18n elements immediately
+  applyLang();
 
   const soundEffects = new SoundEffects();
   const MAX_REEL_ITEMS = 300;
@@ -225,7 +231,7 @@ initStars();
       countdownBarTimeEl.textContent = fmtSecs(secs);
       countdownBarTimeEl.classList.toggle('urgent', secs <= 60 && secs > 0);
     }
-    if (countdownToggleBtn) countdownToggleBtn.textContent = isCountdownRunning(cfg) ? 'Pause' : 'Start';
+    if (countdownToggleBtn) countdownToggleBtn.textContent = isCountdownRunning(cfg) ? t('countdownPauseBtn') : t('countdownStartBtn');
 
     // Auto draw: trigger when countdown finishes naturally
     if (secs === 0 && isCountdownRunning(cfg) && autoDrawEnabled && !autoDrawFired) {
@@ -235,11 +241,11 @@ initStars();
       setTimeout(() => {
         const ap = prizeManager.currentPrize;
         if (!ap || prizeManager.isCurrentPrizeFull()) {
-          showToast('⚠ Auto draw: prize is full or not selected');
+          showToast(t('autoDrawWarnFull'));
           return;
         }
         if (!slot || !slot.names.length) {
-          showToast('⚠ Auto draw: no participants in pool');
+          showToast(t('autoDrawWarnEmpty'));
           return;
         }
         const sp = calcSpinParams(slot.names.length);
@@ -296,8 +302,8 @@ initStars();
     autoDrawFired = false;
     countdownAutoBtn.classList.toggle('active', autoDrawEnabled);
     countdownAutoBtn.title = autoDrawEnabled
-      ? 'Auto draw ON — will draw when countdown ends'
-      : 'Auto draw when countdown ends';
+      ? t('autoDrawOnTitle')
+      : t('autoTitle');
   });
 
   const customConfetti = confetti.create(confettiCanvas, {
@@ -329,23 +335,23 @@ initStars();
   const updateCurrentPrizeLabel = () => {
     const p = prizeManager.currentPrize;
     currentPrizeLabel.textContent = p
-      ? `Drawing: ${p.name} (${prizeManager.remainingCount()} remaining)`
-      : 'Please select a prize';
+      ? t('drawingLabel', { name: p.name, count: prizeManager.remainingCount() })
+      : t('pleaseSelectPrize');
   };
 
   const updateDrawButton = () => {
     const p = prizeManager.currentPrize;
     const hasNames = slot ? slot.names.length > 0 : false;
     drawButton.disabled = !p || prizeManager.isCurrentPrizeFull() || !hasNames;
-    if (!p) drawButton.title = 'Please select a prize first';
-    else if (prizeManager.isCurrentPrizeFull()) drawButton.title = 'All winners for this prize have been drawn';
-    else if (!hasNames) drawButton.title = 'Add participants in Settings first';
+    if (!p) drawButton.title = t('pleaseSelectPrizeFirst');
+    else if (prizeManager.isCurrentPrizeFull()) drawButton.title = t('allWinnersDrawn');
+    else if (!hasNames) drawButton.title = t('addParticipantsFirst');
     else drawButton.title = '';
   };
 
   const updateParticipantCount = () => {
     const count = slot ? slot.names.length : 0;
-    if (participantCountEl) participantCountEl.textContent = `${count} participants in pool`;
+    if (participantCountEl) participantCountEl.textContent = t('participantCount', { count });
     try { localStorage.setItem('draw-participant-count', String(count)); } catch (e) { /* ignore */ }
   };
 
@@ -359,7 +365,7 @@ initStars();
   const showDedupeNotice = (removed: number) => {
     if (!dedupeNoticeEl) return;
     if (removed > 0) {
-      dedupeNoticeEl.textContent = `⚠ ${removed} duplicate winner${removed > 1 ? 's' : ''} removed from list`;
+      dedupeNoticeEl.textContent = t('dedupeRemoved', { count: removed });
       dedupeNoticeEl.classList.add('visible');
     } else {
       dedupeNoticeEl.textContent = '';
@@ -382,7 +388,7 @@ initStars();
       btnName.textContent = `${prize.name}${hasCountdown ? ' ⏱' : ''}`;
       const btnMeta = document.createElement('span');
       btnMeta.className = 'prize-btn-meta';
-      btnMeta.textContent = `${prize.winners.length}/${prize.count} ppl`;
+      btnMeta.textContent = t('prizeMeta', { drawn: prize.winners.length, total: prize.count });
       btn.appendChild(btnName);
       btn.appendChild(btnMeta);
       btn.disabled = isFull;
@@ -404,7 +410,10 @@ initStars();
     const prizes = prizeManager.allPrizes;
     const hasAny = prizes.some((p) => p.winners.length > 0);
     if (!hasAny) {
-      recordsBody.innerHTML = '<p class="records-empty">No records yet</p>';
+      const emptyP = document.createElement('p');
+      emptyP.className = 'records-empty';
+      emptyP.textContent = t('noRecordsYet');
+      recordsBody.appendChild(emptyP);
       return;
     }
     prizes.forEach((prize) => {
@@ -415,7 +424,7 @@ initStars();
       groupTitle.className = 'records-group-title';
       groupTitle.textContent = `${prize.name} `;
       const groupCount = document.createElement('span');
-      groupCount.textContent = `${prize.winners.length}/${prize.count} winners`;
+      groupCount.textContent = t('recordsGroupCount', { drawn: prize.winners.length, total: prize.count });
       groupTitle.appendChild(groupCount);
       group.appendChild(groupTitle);
       const list = document.createElement('div');
@@ -462,7 +471,7 @@ initStars();
 
   clearRecordsButton.addEventListener('click', () => {
     // eslint-disable-next-line no-alert
-    if (!window.confirm('Clear all records? This cannot be undone.')) return;
+    if (!window.confirm(t('clearRecordsConfirm'))) return;
     prizeManager.clearRecords();
     window.location.reload();
   });
@@ -495,7 +504,7 @@ initStars();
     }
     const okBtn = document.createElement('button');
     okBtn.className = 'drawtime-ok-btn';
-    okBtn.textContent = 'OK';
+    okBtn.textContent = 'OK'; // universal
     popup.appendChild(hourSel);
     popup.appendChild(colon);
     popup.appendChild(minSel);
@@ -512,7 +521,7 @@ initStars();
   const syncCountdownSelectFromRows = () => {
     if (!countdownCfgPrize) return;
     const previousValue = countdownCfgPrize.value;
-    countdownCfgPrize.innerHTML = '<option value="">— Select prize —</option>';
+    countdownCfgPrize.innerHTML = `<option value="">${t('selectPrize')}</option>`;
     prizeConfigList.querySelectorAll<HTMLElement>('.prize-config-row').forEach((row) => {
       const rowId = row.dataset.id ?? '';
       const nameInput = row.querySelector('.pc-name') as HTMLInputElement | null;
@@ -533,12 +542,12 @@ initStars();
     row.className = 'prize-config-row';
     row.dataset.id = id;
     row.innerHTML = `
-      <input class="input-field pc-name" type="text" placeholder="Prize name" value="${name}">
+      <input class="input-field pc-name" type="text" placeholder="${t('prizePlaceholder')}" value="${name}">
       <input class="input-field pc-count" type="number" min="1" value="${count}" style="text-align:center">
       <input class="input-field pc-drawtime" type="text" pattern="[0-2][0-9]:[0-5][0-9]"
         placeholder="HH:MM" value="${drawTime}" style="text-align:center;cursor:pointer" readonly>
       <button class="solid-button solid-button--danger pc-del" style="padding:0.4rem 0.8rem;font-size:0.875rem">✕</button>
-      <input class="input-field pc-desc" type="text" placeholder="Prize item description (optional)" value="${description}">
+      <input class="input-field pc-desc" type="text" placeholder="${t('prizeDescPlaceholder')}" value="${description}">
     `;
     (row.querySelector('.pc-name') as HTMLInputElement).addEventListener('input', syncCountdownSelectFromRows);
 
@@ -595,7 +604,7 @@ initStars();
 
   document.getElementById('reset-prizes')?.addEventListener('click', () => {
     // eslint-disable-next-line no-alert
-    if (!window.confirm('Reset prize settings to default? All prize settings and records will be lost.')) return;
+    if (!window.confirm(t('resetPrizesConfirm'))) return;
     prizeManager.setPrizes([
       { id: '1', name: '1st Prize', count: 1 },
       { id: '2', name: '2nd Prize', count: 2 },
@@ -606,7 +615,7 @@ initStars();
 
   document.getElementById('reset-all-defaults')?.addEventListener('click', () => {
     // eslint-disable-next-line no-alert
-    if (!window.confirm('Reset ALL settings to default? This will clear the draw title, name list, prize settings, records, and all saved data.')) return;
+    if (!window.confirm(t('resetAllConfirm'))) return;
     localStorage.clear();
     window.location.reload();
   });
@@ -626,7 +635,7 @@ initStars();
     });
     const seed = Date.now();
     if (drawSeedEl) {
-      drawSeedEl.textContent = `SEED · ${seed}`;
+      drawSeedEl.textContent = t('seedLabel', { seed: String(seed) });
       drawSeedEl.style.opacity = '1';
     }
     try {
@@ -701,9 +710,9 @@ initStars();
   const mainClockDate = document.getElementById('main-clock-date');
   const tickClock = () => {
     const now = new Date();
-    if (mainClockTime) mainClockTime.textContent = now.toLocaleTimeString('en-GB');
+    if (mainClockTime) mainClockTime.textContent = now.toLocaleTimeString(getLocale());
     if (mainClockDate) {
-      mainClockDate.textContent = now.toLocaleDateString('en-GB', {
+      mainClockDate.textContent = now.toLocaleDateString(getLocale(), {
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
       });
     }
@@ -729,7 +738,7 @@ initStars();
       if (Array.isArray(parsed)) saved = parsed.filter((n) => typeof n === 'string');
     } catch { /* corrupted data — skip recovery */ }
     if (saved.length && recoveryBanner && recoveryMessage) {
-      recoveryMessage.textContent = `⚠ Draw was interrupted. Restore ${saved.length} names to pool?`;
+      recoveryMessage.textContent = t('recoveryBanner', { count: saved.length });
       recoveryBanner.style.display = 'flex';
     }
     recoveryRestore?.addEventListener('click', () => {
@@ -750,7 +759,7 @@ initStars();
   const refreshCountdownCfgSelect = () => {
     if (!countdownCfgPrize) return;
     const cfg = getCountdownConfig();
-    countdownCfgPrize.innerHTML = '<option value="">— Select prize —</option>';
+    countdownCfgPrize.innerHTML = `<option value="">${t('selectPrize')}</option>`;
     prizeManager.allPrizes.forEach((p) => {
       const opt = document.createElement('option');
       opt.value = p.id;
@@ -764,8 +773,8 @@ initStars();
   // Draw title helpers (declared before onSettingsOpen to avoid no-use-before-define)
   const drawTitleDisplay = document.getElementById('draw-title-display') as HTMLElement | null;
   const drawTitleInput = document.getElementById('draw-title-input') as HTMLInputElement | null;
-  const applyDrawTitle = (t: string) => {
-    const text = t.trim();
+  const applyDrawTitle = (titleVal: string) => {
+    const text = titleVal.trim();
     if (drawTitleDisplay) {
       drawTitleDisplay.textContent = text;
       // Hide center title when no custom title set; brand-tag always shows top-left
@@ -831,7 +840,7 @@ initStars();
       const desc = (row.querySelector('.pc-desc') as HTMLInputElement).value.trim();
       return {
         id: (row as HTMLElement).dataset.id ?? String(Date.now()),
-        name: (row.querySelector('.pc-name') as HTMLInputElement).value.trim() || 'Prize',
+        name: (row.querySelector('.pc-name') as HTMLInputElement).value.trim() || t('prizeDefaultName'),
         count: Math.max(1, parseInt((row.querySelector('.pc-count') as HTMLInputElement).value, 10) || 1),
         ...(dt ? { drawTime: dt } : {}),
         ...(desc ? { description: desc } : {})
@@ -881,7 +890,7 @@ initStars();
       nameListTextArea.value = filtered.join('\n');
       if (dedupeNoticeEl && filtered.length > 0) {
         const base = dedupeNoticeEl.textContent || '';
-        dedupeNoticeEl.textContent = `✓ Loaded ${filtered.length} names from CSV${base ? `  ·  ${base}` : ''}`;
+        dedupeNoticeEl.textContent = `${t('csvLoaded', { count: filtered.length })}${base ? `  ·  ${base}` : ''}`;
         dedupeNoticeEl.classList.add('visible');
       }
     };
@@ -906,7 +915,7 @@ initStars();
   });
 
   document.addEventListener('firebase-sync-error', () => {
-    showToast('⚠ Firebase sync failed — data saved locally only');
+    showToast(t('firebaseError'));
   });
 
   // ── Name list toolbar ────────────────────────────────────────
@@ -919,7 +928,7 @@ initStars();
   namelistMaskBtn?.addEventListener('click', () => {
     const masked = nameListTextArea.classList.toggle('name-list--masked');
     namelistMaskBtn.classList.toggle('active', masked);
-    namelistMaskBtn.title = masked ? 'Show personal info' : 'Hide personal info';
+    namelistMaskBtn.title = masked ? t('showPersonalInfo') : t('hidePersonalInfo');
   });
 
   // Shuffle names randomly
@@ -946,10 +955,10 @@ initStars();
     nameListTextArea.value = merged.join('\n');
     if (dedupeNoticeEl) {
       if (removed > 0) {
-        dedupeNoticeEl.textContent = `✓ Merged: ${removed} duplicate${removed > 1 ? 's' : ''} removed`;
+        dedupeNoticeEl.textContent = t('mergedDuplicates', { count: removed });
         dedupeNoticeEl.classList.add('visible');
       } else {
-        dedupeNoticeEl.textContent = '✓ No duplicates found';
+        dedupeNoticeEl.textContent = t('noDuplicatesFound');
         dedupeNoticeEl.classList.add('visible');
       }
     }
@@ -959,10 +968,33 @@ initStars();
   namelistClearBtn?.addEventListener('click', () => {
     if (!nameListTextArea.value.trim()) return;
     // eslint-disable-next-line no-alert
-    if (!window.confirm('Clear the entire name list?')) return;
+    if (!window.confirm(t('clearListConfirm'))) return;
     nameListTextArea.value = '';
     if (dedupeNoticeEl) { dedupeNoticeEl.textContent = ''; dedupeNoticeEl.classList.remove('visible'); }
   });
+
+  // Language switcher
+  const langSelect = document.getElementById('lang-select') as HTMLSelectElement | null;
+  if (langSelect) {
+    langSelect.value = (localStorage.getItem('app-lang') as Lang | null) ?? 'en';
+    langSelect.addEventListener('change', () => {
+      const lang = langSelect.value as Lang;
+      setLang(lang);
+      applyLang();
+      // Re-render all dynamic content in new language
+      renderPrizeButtons();
+      updateCurrentPrizeLabel();
+      updateDrawButton();
+      updateParticipantCount();
+      updateCountdownBar();
+      refreshTicker();
+      if (recordsPanel.style.display !== 'none') renderRecords();
+      if (settingsWrapper.style.display !== 'none') {
+        renderPrizeConfig();
+        refreshCountdownCfgSelect();
+      }
+    });
+  }
 
   // Warn before closing/refreshing
   window.addEventListener('beforeunload', (e) => {

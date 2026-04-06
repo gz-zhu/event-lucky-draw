@@ -106,6 +106,60 @@
   }
 }
 
+.lang-switcher {
+  position: fixed;
+  bottom: 1.25rem;
+  left: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  z-index: 50;
+
+  &__globe {
+    font-size: 1rem;
+    line-height: 1;
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  &__select {
+    background: rgba(20, 10, 10, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.28rem 1.6rem 0.28rem 0.5rem;
+    border-radius: 0.4rem;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(255,255,255,0.4)'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.45rem center;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition:
+      border-color 0.15s,
+      color 0.15s;
+
+    &:hover {
+      border-color: rgba(255, 215, 0, 0.4);
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: rgba(255, 215, 0, 0.5);
+      color: #fff;
+    }
+
+    option {
+      background: #1a0a0a;
+      color: #fff;
+    }
+  }
+}
+
 .control-group {
   position: absolute;
   top: 1rem;

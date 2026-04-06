@@ -1,30 +1,37 @@
 include ../mixins/icons
 
 .main
+  .lang-switcher
+    span.lang-switcher__globe 🌐
+    select#lang-select.lang-switcher__select
+      option(value="en") English
+      option(value="zh") 繁體中文
+      option(value="ja") 日本語
+
   .control-group
     button#fullscreen-button.icon-button.icon-button--small
       +svg-icon.red.big(svg-icon-name='fullscreen')
-    button#records-toggle.icon-button.icon-button--small(title="Records")
+    button#records-toggle.icon-button.icon-button--small(title="Records" data-i18n-title="recordsTitle")
       svg(width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2")
         path(d="M9 11l3 3L22 4")
         path(d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11")
     button#settings-button.icon-button.icon-button--small
       +svg-icon.red.big(svg-icon-name='settings')
 
-  a.display-link(href="/display.html" target="_blank") 📺 Display
-  
+  a.display-link(href="/display.html" target="_blank" data-i18n="displayLink") 📺 Display
+
   canvas#confetti-canvas.confetti
   canvas#lights-canvas.lights-canvas
   #winners-ticker.winners-ticker
-    .winners-ticker__label 🏆 WINNERS
+    .winners-ticker__label(data-i18n="tickerLabel") 🏆 WINNERS
     .winners-ticker__track
       #winners-ticker__content.winners-ticker__content
 
   #recovery-banner.recovery-banner(style="display:none")
     span#recovery-message
     .recovery-banner__actions
-      button#recovery-restore.solid-button Restore
-      button#recovery-dismiss.recovery-dismiss Dismiss
+      button#recovery-restore.solid-button(data-i18n="restoreBtn") Restore
+      button#recovery-dismiss.recovery-dismiss(data-i18n="dismissBtn") Dismiss
 
   .brand-tag Lucky Draw
 
@@ -40,9 +47,9 @@ include ../mixins/icons
       .countdown-bar__time#countdown-bar-time 00:00
       .countdown-bar__controls
         button#countdown-toggle.solid-button.countdown-bar__btn Start
-        button#countdown-reset.solid-button.countdown-bar__btn.countdown-bar__btn--reset Reset
-        button#countdown-cancel.solid-button.countdown-bar__btn.countdown-bar__btn--cancel Cancel
-        button#countdown-auto.solid-button.countdown-bar__btn.countdown-bar__btn--auto(title="Auto draw when countdown ends") Auto
+        button#countdown-reset.solid-button.countdown-bar__btn.countdown-bar__btn--reset(data-i18n="countdownResetBtn") Reset
+        button#countdown-cancel.solid-button.countdown-bar__btn.countdown-bar__btn--cancel(data-i18n="countdownCancelBtn") Cancel
+        button#countdown-auto.solid-button.countdown-bar__btn.countdown-bar__btn--auto(title="Auto draw when countdown ends" data-i18n="autoBtn" data-i18n-title="autoTitle") Auto
 
     .main-clock-wrap
       #main-clock-time.main-clock-time 00:00:00
@@ -57,17 +64,17 @@ include ../mixins/icons
       #sunburst.sunburst
         img(src="~@images/sunburst.svg" alt="sunburst")
 
-    button#draw-button.solid-button(disabled) Draw
+    button#draw-button.solid-button(disabled data-i18n="drawBtn") Draw
     #participant-count.participant-count
     #draw-seed.draw-seed
 
   #records-panel.records-panel(style="display:none")
     .records-panel__inner
       .records-header
-        h2 Records
+        h2(data-i18n="recordsHeading") Records
         .records-actions
-          button#export-csv.solid-button(style="font-size:0.875rem;padding:0.5rem 1rem") Export CSV
-          button#clear-records.solid-button.solid-button--danger(style="font-size:0.875rem;padding:0.5rem 1rem") Clear
+          button#export-csv.solid-button(style="font-size:0.875rem;padding:0.5rem 1rem" data-i18n="exportCsvBtn") Export CSV
+          button#clear-records.solid-button.solid-button--danger(style="font-size:0.875rem;padding:0.5rem 1rem" data-i18n="clearRecordsBtn") Clear
           button#records-close.icon-button.icon-button--small
             +svg-icon.red.big(svg-icon-name='close')
       #records-body.records-body
@@ -76,66 +83,66 @@ include ../mixins/icons
     #settings-panel.settings__panel
       div.settings__panel__group
         .settings__title-row
-          h1.settings__title Settings
+          h1.settings__title(data-i18n="settingsTitle") Settings
           .settings__title-actions
-            button#reset-all-defaults.reset-all-btn Reset All
+            button#reset-all-defaults.reset-all-btn(data-i18n="resetAllBtn") Reset All
             button#settings-close-x.icon-button.icon-button--small
               +svg-icon.red.big(svg-icon-name='close')
         div.input-group
-          label.input-label(for="draw-title-input") Draw Title
-          input#draw-title-input.input-field(type="text" placeholder="e.g. Annual Dinner 2026" maxlength="60")
+          label.input-label(for="draw-title-input" data-i18n="drawTitleLabel") Draw Title
+          input#draw-title-input.input-field(type="text" placeholder="e.g. Annual Dinner 2026" maxlength="60" data-i18n-placeholder="drawTitlePlaceholder")
 
         div.input-group
           .name-list-header
-            label.input-label(for="name-list") Name List
+            label.input-label(for="name-list" data-i18n="nameListLabel") Name List
             label.upload-csv-btn
               input#csv-upload(type="file" accept=".csv" style="display:none")
-              | Upload CSV
+              span(data-i18n="uploadCsvBtn") Upload CSV
           .name-list-toolbar
-            button#namelist-mask-btn.namelist-tool-btn(title="Hide personal info") 👁
-            button#namelist-shuffle-btn.namelist-tool-btn(title="Random sort") 🔀
-            button#namelist-merge-btn.namelist-tool-btn(title="Merge duplicates") 🔗
-            button#namelist-clear-btn.namelist-tool-btn.namelist-tool-btn--danger(title="Clear list") 🗑
-          textarea.input-field.input-field--textarea(rows="8" placeholder="One name per line (supports 10,000+ participants).\nFor CSV: one row = one participant. If a row has multiple columns, they are merged into one name." id="name-list")
+            button#namelist-mask-btn.namelist-tool-btn(title="Hide personal info" data-i18n-title="maskBtnTitle") 👁
+            button#namelist-shuffle-btn.namelist-tool-btn(title="Random sort" data-i18n-title="shuffleBtnTitle") 🔀
+            button#namelist-merge-btn.namelist-tool-btn(title="Merge duplicates" data-i18n-title="mergeBtnTitle") 🔗
+            button#namelist-clear-btn.namelist-tool-btn.namelist-tool-btn--danger(title="Clear list" data-i18n-title="clearListBtnTitle") 🗑
+          textarea.input-field.input-field--textarea(rows="8" placeholder="One name per line (supports 10,000+ participants).\nFor CSV: one row = one participant. If a row has multiple columns, they are merged into one name." id="name-list" data-i18n-placeholder="nameListPlaceholder")
           #dedupe-notice.dedupe-notice
 
         div.input-group.input-group--2-column
-          span.input-label Remove winner from list
+          span.input-label(data-i18n="removeWinnerLabel") Remove winner from list
           label.input--switch
             input(type="checkbox" checked="true" id="remove-from-list")
             span.slider
 
         div.input-group.input-group--2-column
-          span.input-label Enable sound effect
+          span.input-label(data-i18n="enableSoundLabel") Enable sound effect
           label.input--switch
             input(type="checkbox" checked="true" id="enable-sound")
             span.slider
 
         div.input-group
           .prize-settings-title-row
-            span.input-label Prize Settings
-            button#reset-prizes.prize-reset-btn Reset Prize Settings
+            span.input-label(data-i18n="prizeSettingsLabel") Prize Settings
+            button#reset-prizes.prize-reset-btn(data-i18n="resetPrizesBtn") Reset Prize Settings
           .prize-config-header
-            span Name
-            span Count
-            span Draw Time
+            span(data-i18n="prizeHeaderName") Name
+            span(data-i18n="prizeHeaderCount") Count
+            span(data-i18n="prizeHeaderDrawTime") Draw Time
             span
           #prize-config-list.prize-config-list
-          button#add-prize-row.solid-button(style="margin-top:0.75rem;width:100%;font-size:0.875rem") + Add Prize
+          button#add-prize-row.solid-button(style="margin-top:0.75rem;width:100%;font-size:0.875rem" data-i18n="addPrizeBtn") + Add Prize
 
         div.input-group
           .countdown-cfg-header
-            label.input-label ⏱ Countdown Timer
-          p.countdown-cfg-hint
+            label.input-label(data-i18n="countdownLabel") ⏱ Countdown Timer
+          p.countdown-cfg-hint(data-i18n="countdownHint")
             | Select a prize and set a duration. Staff will see a Start / Pause / Reset bar on the main screen when that prize is active.
           .countdown-cfg-row
             select#countdown-cfg-prize.input-field.countdown-cfg-select
-              option(value="") — Select prize —
+              option(value="" data-i18n="selectPrize") — Select prize —
             .countdown-cfg-duration
-              input#countdown-cfg-mins.input-field(type="number" min="1" max="99" placeholder="min")
-              span.countdown-cfg-unit min
-          p.countdown-cfg-clear-hint Leave prize blank to disable the countdown.
+              input#countdown-cfg-mins.input-field(type="number" min="1" max="99" placeholder="min" data-i18n-placeholder="countdownUnit")
+              span.countdown-cfg-unit(data-i18n="countdownUnit") min
+          p.countdown-cfg-clear-hint(data-i18n="countdownClearHint") Leave prize blank to disable the countdown.
 
       div.settings__panel__group
-        button#settings-save.solid-button Save
-        button#settings-close.solid-button.solid-button--danger Discard and close
+        button#settings-save.solid-button(data-i18n="saveBtn") Save
+        button#settings-close.solid-button.solid-button--danger(data-i18n="discardBtn") Discard and close

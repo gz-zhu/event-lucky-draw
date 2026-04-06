@@ -198,18 +198,25 @@
     .info-cd-label {
       font-size: 0.8rem;
       font-weight: 700;
-      color: #ffd700;
+      background: linear-gradient(160deg, #e8e0d0 0%, #fffef8 30%, #ffffff 52%, #e0d8c4 75%, #faf8f0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
       letter-spacing: 0.12em;
       text-transform: uppercase;
+      filter: drop-shadow(0 0 8px rgba(255,255,240,0.4));
     }
 
     .info-cd-num {
       font-family: 'Playfair Display', serif;
       font-size: 2.2rem;
       font-weight: 700;
-      color: #ffd700;
+      background: linear-gradient(160deg, #e8e0d0 0%, #fffef8 25%, #ffffff 50%, #f0ece0 75%, #fffef8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
       letter-spacing: 0.04em;
-      text-shadow: 0 0 16px rgba(255,215,0,0.4);
+      filter: drop-shadow(0 0 18px rgba(255,255,240,0.55)) drop-shadow(0 2px 8px rgba(0,0,0,0.4));
       line-height: 1;
     }
 
@@ -520,7 +527,7 @@
 
 <!-- Winners ticker -->
 <div class="ticker">
-  <div class="ticker__label">WINNERS</div>
+  <div class="ticker__label" id="ticker-label">WINNERS</div>
   <div class="ticker__track">
     <div class="ticker__content" id="ticker-content"></div>
   </div>
@@ -546,15 +553,15 @@
     <!-- Stats -->
     <div class="info-stats">
       <div class="info-stat">
-        <span class="info-stat__label">Participants</span>
+        <span class="info-stat__label" id="stat-label-participants">Participants</span>
         <span class="info-stat__num" id="stat-participants">—</span>
       </div>
       <div class="info-stat">
-        <span class="info-stat__label">Winners</span>
+        <span class="info-stat__label" id="stat-label-winners">Winners</span>
         <span class="info-stat__num" id="stat-winners">0</span>
       </div>
       <div class="info-stat">
-        <span class="info-stat__label">Remaining</span>
+        <span class="info-stat__label" id="stat-label-remaining">Remaining</span>
         <span class="info-stat__num" id="stat-remaining">0</span>
       </div>
     </div>
@@ -565,13 +572,61 @@
   <!-- Right: Prize cards -->
   <div class="prizes-panel">
     <div class="draw-event-title" id="draw-event-title"></div>
-    <div class="prizes-panel__title">Prizes</div>
+    <div class="prizes-panel__title" id="prizes-panel-title">Prizes</div>
     <div class="prizes-grid" id="prizes-body"></div>
   </div>
 
 </div>
 
 <script>
+  // ── i18n (mirrors i18n.ts display strings) ─────────────────
+  var DISPLAY_I18N = {
+    en: {
+      participants: 'Participants', winners: 'Winners', remaining: 'Remaining',
+      prizes: 'Prizes', done: '✓ Done', upcoming: 'Upcoming',
+      spotsLine1: 'spots', spotsLine2: 'remaining',
+      noWinnersYet: 'No winners yet',
+      countdown: '⏱ COUNTDOWN', paused: '⏸ PAUSED', ready: '⏱ READY',
+      timesUp: '🎉 TIME\'S UP!', tickerLabel: '🏆 WINNERS', seedLabel: 'SEED',
+      locale: 'en-GB'
+    },
+    zh: {
+      participants: '參加者', winners: '得獎者', remaining: '剩餘',
+      prizes: '獎項', done: '✓ 已完成', upcoming: '即將開抽',
+      spotsLine1: '個名額', spotsLine2: '剩餘',
+      noWinnersYet: '尚未開抽',
+      countdown: '⏱ 倒數中', paused: '⏸ 已暫停', ready: '⏱ 準備就緒',
+      timesUp: '🎉 時間到！', tickerLabel: '🏆 得獎名單', seedLabel: '種子',
+      locale: 'zh-TW'
+    },
+    ja: {
+      participants: '参加者', winners: '当選者', remaining: '残り',
+      prizes: '賞一覧', done: '✓ 終了', upcoming: '抽選待ち',
+      spotsLine1: '名', spotsLine2: '残り',
+      noWinnersYet: 'まだ当選者はいません',
+      countdown: '⏱ カウントダウン', paused: '⏸ 一時停止', ready: '⏱ 準備完了',
+      timesUp: '🎉 時間終了！', tickerLabel: '🏆 当選者', seedLabel: 'シード',
+      locale: 'ja-JP'
+    }
+  };
+
+  var currentLang = 'en';
+  try {
+    var saved = localStorage.getItem('app-lang');
+    if (saved === 'zh' || saved === 'ja') currentLang = saved;
+  } catch(e) {}
+  var i18n = DISPLAY_I18N[currentLang];
+
+  function applyStaticText() {
+    i18n = DISPLAY_I18N[currentLang];
+    var el;
+    el = document.getElementById('ticker-label'); if (el) el.textContent = i18n.tickerLabel;
+    el = document.getElementById('stat-label-participants'); if (el) el.textContent = i18n.participants;
+    el = document.getElementById('stat-label-winners'); if (el) el.textContent = i18n.winners;
+    el = document.getElementById('stat-label-remaining'); if (el) el.textContent = i18n.remaining;
+    el = document.getElementById('prizes-panel-title'); if (el) el.textContent = i18n.prizes;
+  }
+
   // ── Background lights ──────────────────────────────────────
   const cv = document.getElementById('lights');
   const cx = cv.getContext('2d');
@@ -610,11 +665,11 @@
 
   // ── Clock ──────────────────────────────────────────────────
   function tick() {
-    const now = new Date();
-    document.getElementById('clock').textContent =
-      now.toLocaleTimeString('en-GB');
+    var now = new Date();
+    var locale = i18n.locale;
+    document.getElementById('clock').textContent = now.toLocaleTimeString(locale);
     document.getElementById('date-display').textContent =
-      now.toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      now.toLocaleDateString(locale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   }
   setInterval(tick, 1000); tick();
 
@@ -639,7 +694,7 @@
 
       // Header: name + badges
       const badgeHtml = '<div class="badge ' + (done ? 'badge--done' : 'badge--pending') + '">'
-        + (done ? '✓ Done' : 'Upcoming') + '</div>'
+        + (done ? i18n.done : i18n.upcoming) + '</div>'
         + (p.drawTime ? '<div class="prize-card__time">⏰ ' + p.drawTime + '</div>' : '');
 
       const descHtml = p.description
@@ -652,7 +707,7 @@
         // Remaining slots
         + '<div class="prize-card__slots">'
         + '<div class="prize-card__rem">' + rem + '</div>'
-        + '<div class="prize-card__rem-label">spot' + (rem !== 1 ? 's' : '') + '<br>remaining</div>'
+        + '<div class="prize-card__rem-label">' + i18n.spotsLine1 + '<br>' + i18n.spotsLine2 + '</div>'
         + '</div>'
         // Progress bar
         + '<div class="prize-card__progress"><div class="prize-card__progress-fill" style="width:' + Math.round(filled * 100) + '%"></div></div>';
@@ -673,7 +728,7 @@
       } else if (!done) {
         const pend = document.createElement('div');
         pend.className = 'prize-card__pending';
-        pend.textContent = 'No winners yet';
+        pend.textContent = i18n.noWinnersYet;
         card.appendChild(pend);
       }
 
@@ -687,7 +742,7 @@
     const items = prizes.flatMap(p =>
       p.winners.map(w => ({ prize: p.name, winner: w }))
     );
-    if (!items.length) { content.innerHTML = '<span style="color:rgba(255,255,255,0.3);font-size:0.75rem">No winners yet</span>'; return; }
+    if (!items.length) { content.innerHTML = '<span style="color:rgba(255,255,255,0.3);font-size:0.75rem">' + i18n.noWinnersYet + '</span>'; return; }
     content.innerHTML = items.map(it =>
       '<span class="ticker-item">'
       + '<span class="ticker-item__prize">' + it.prize + '</span>'
@@ -709,7 +764,7 @@
     const seed = localStorage.getItem('draw-last-seed');
     const seedEl = document.getElementById('seed-display');
     if (seedEl && seed) {
-      seedEl.textContent = 'SEED · ' + seed;
+      seedEl.textContent = i18n.seedLabel + ' · ' + seed;
       seedEl.style.display = 'block';
     }
   }
@@ -761,6 +816,7 @@
     if (fbStatus) { fbStatus.textContent = '🔴 offline'; fbStatus.style.color = 'rgba(255,100,100,0.6)'; }
   });
 
+  applyStaticText();
   refresh();
   setInterval(refresh, 2000);
 
@@ -778,6 +834,15 @@
   window.addEventListener('storage', function(e) {
     if (e.key === 'prize-manager-data') refresh();
     if (e.key === 'draw-title') applyDrawTitle();
+    if (e.key === 'app-lang') {
+      var newLang = e.newValue;
+      if (newLang === 'zh' || newLang === 'ja' || newLang === 'en') {
+        currentLang = newLang;
+        applyStaticText();
+        refresh();
+        tick();
+      }
+    }
   });
 
   // ── Countdown (read-only, driven by main app via Firebase) ───
@@ -809,11 +874,10 @@
   function showTimesUp(prizeName) {
     showCountdown(true);
     if (cdLabel) {
-      cdLabel.textContent = (prizeName ? prizeName + '  ·  ' : '') + '🎉 TIME\'S UP!';
-      cdLabel.style.color = '#FFEA60';
+      cdLabel.textContent = (prizeName ? prizeName + '  ·  ' : '') + i18n.timesUp;
     }
-    if (cdEl) { cdEl.textContent = '00:00'; cdEl.style.color = '#FFF260'; }
-    setTimeout(function() { showCountdown(false); if (cdLabel) cdLabel.style.color = '#ffd700'; }, 10000);
+    if (cdEl) { cdEl.textContent = '00:00'; }
+    setTimeout(function() { showCountdown(false); }, 10000);
   }
 
   function applyCountdownState(state) {
@@ -828,18 +892,15 @@
       if (cdSecs <= 0) { showTimesUp(prizeName); return; }
       cdTimer = setInterval(function() {
         cdSecs = Math.max(0, cdSecs - 1);
-        if (cdEl) {
-          cdEl.textContent = fmtCd(cdSecs);
-          cdEl.style.color = cdSecs <= 30 && cdSecs > 0 ? '#FFEC60' : '#ffd700';
-        }
+        if (cdEl) { cdEl.textContent = fmtCd(cdSecs); }
         if (cdSecs <= 0) { clearInterval(cdTimer); cdTimer = null; showTimesUp(prizeName); }
       }, 1000);
-      if (cdLabel) { cdLabel.textContent = namePrefix + '⏱ COUNTDOWN'; cdLabel.style.color = '#ffd700'; }
+      if (cdLabel) { cdLabel.textContent = namePrefix + i18n.countdown; }
     } else {
       cdSecs = state.pausedRemaining !== null ? state.pausedRemaining : state.minutes * 60;
-      if (cdLabel) { cdLabel.textContent = namePrefix + (state.pausedRemaining !== null ? '⏸ PAUSED' : '⏱ READY'); cdLabel.style.color = '#ffd700'; }
+      if (cdLabel) { cdLabel.textContent = namePrefix + (state.pausedRemaining !== null ? i18n.paused : i18n.ready); }
     }
-    if (cdEl) { cdEl.textContent = fmtCd(cdSecs); cdEl.style.color = '#ffd700'; }
+    if (cdEl) { cdEl.textContent = fmtCd(cdSecs); }
   }
 
   // Poll localStorage as same-device fallback
