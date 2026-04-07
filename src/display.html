@@ -196,16 +196,33 @@
     .info-countdown.visible { display: flex; }
 
     .info-cd-label {
-      font-size: 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      font-size: 1rem;
       font-weight: 700;
       background: linear-gradient(160deg, #ff9a00 0%, #ffd000 18%, #fffbe0 38%, #ffd700 52%, #ffb300 68%, #fff0a0 82%, #e67e00 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
+      letter-spacing: 0.09em;
       filter: drop-shadow(0 1px 0 rgba(180,60,0,0.6)) drop-shadow(0 0 12px rgba(255,170,0,0.55));
       animation: brand-shine 5s ease-in-out infinite alternate;
+      line-height: 1.05;
+    }
+
+    .info-cd-label__prize {
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .info-cd-label__state {
+      font-size: 1.08rem;
+      font-weight: 800;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
     }
 
     .info-cd-num {
@@ -927,7 +944,9 @@
   function showTimesUp(prizeName) {
     showCountdown(true);
     if (cdLabel) {
-      cdLabel.textContent = (prizeName ? prizeName + '  ·  ' : '') + i18n.timesUp;
+      cdLabel.innerHTML = ''
+        + (prizeName ? '<span class="info-cd-label__prize">' + prizeName + '</span>' : '')
+        + '<span class="info-cd-label__state">' + i18n.timesUp + '</span>';
     }
     if (cdEl) { cdEl.textContent = '00:00'; }
     setTimeout(function() { showCountdown(false); }, 10000);
@@ -937,7 +956,12 @@
     if (cdTimer) { clearInterval(cdTimer); cdTimer = null; }
     if (!state || !state.minutes) { showCountdown(false); return; }
     var prizeName = getPrizeName(state.prizeId);
-    var namePrefix = prizeName ? prizeName + '  ·  ' : '';
+    function setCountdownLabel(stateText) {
+      if (!cdLabel) return;
+      cdLabel.innerHTML = ''
+        + (prizeName ? '<span class="info-cd-label__prize">' + prizeName + '</span>' : '')
+        + '<span class="info-cd-label__state">' + stateText + '</span>';
+    }
     showCountdown(true);
     if (state.running && state.startedAt) {
       var elapsed = Math.floor((Date.now() - state.startedAt) / 1000);
@@ -948,10 +972,10 @@
         if (cdEl) { cdEl.textContent = fmtCd(cdSecs); }
         if (cdSecs <= 0) { clearInterval(cdTimer); cdTimer = null; showTimesUp(prizeName); }
       }, 1000);
-      if (cdLabel) { cdLabel.textContent = namePrefix + i18n.countdown; }
+      setCountdownLabel(i18n.countdown);
     } else {
       cdSecs = state.pausedRemaining !== null ? state.pausedRemaining : state.minutes * 60;
-      if (cdLabel) { cdLabel.textContent = namePrefix + (state.pausedRemaining !== null ? i18n.paused : i18n.ready); }
+      setCountdownLabel(state.pausedRemaining !== null ? i18n.paused : i18n.ready);
     }
     if (cdEl) { cdEl.textContent = fmtCd(cdSecs); }
   }

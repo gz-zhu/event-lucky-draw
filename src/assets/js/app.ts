@@ -85,6 +85,12 @@ initStars();
   const participantCountEl = document.getElementById('participant-count') as HTMLDivElement | null;
   const drawSeedEl = document.getElementById('draw-seed') as HTMLDivElement | null;
   const dedupeNoticeEl = document.getElementById('dedupe-notice') as HTMLDivElement | null;
+  const nameListRawCountEl = document.getElementById('name-list-raw-count') as HTMLSpanElement | null;
+  const nameListPoolCountEl = document.getElementById('name-list-pool-count') as HTMLSpanElement | null;
+  const nameListDuplicateCountEl = document.getElementById('name-list-duplicate-count') as HTMLSpanElement | null;
+  const nameListWinnerRemovedCountEl = document.getElementById('name-list-winner-removed-count') as HTMLSpanElement | null;
+  const spinDurationRange = document.getElementById('spin-duration-range') as HTMLInputElement | null;
+  const spinDurationValueEl = document.getElementById('spin-duration-value') as HTMLSpanElement | null;
 
   if (!(
     drawButton && fullscreenButton && settingsButton
@@ -95,6 +101,7 @@ initStars();
     && recordsPanel && recordsToggle && recordsClose && recordsBody
     && exportCsvButton && clearRecordsButton
     && prizeConfigList && addPrizeRowButton
+    && spinDurationRange && spinDurationValueEl
   )) {
     console.error('One or more Element ID is invalid.');
     return;
@@ -105,18 +112,52 @@ initStars();
 
   const soundEffects = new SoundEffects();
   const MAX_REEL_ITEMS = 300;
-  // Fixed fast scroll speed per item; total duration scales with participant count.
-  const MS_PER_ITEM = 80;
-  const MIN_SPIN_MS = 20000; // minimum 20 seconds total
+  const MIN_REEL_ITEMS = 40;
+  const DEFAULT_SPIN_DURATION_SEC = 20;
+  const SPIN_DURATION_STEP_SEC = 5;
+  const SPIN_DURATION_STORAGE_KEY = 'draw-spin-duration-sec';
 
-  // Speed is fixed fast (MS_PER_ITEM). Item count = participant count, floored to fill MIN_SPIN_MS.
-  const calcSpinParams = (participantCount: number): { items: number; msPerItem: number } => {
-    const minItems = Math.ceil(MIN_SPIN_MS / MS_PER_ITEM); // 250 items → 20s
-    const items = Math.min(Math.max(participantCount, minItems), MAX_REEL_ITEMS);
-    return { items, msPerItem: MS_PER_ITEM };
+  const normalizeSpinDurationSec = (value: number): number => {
+    const safeValue = Number.isFinite(value) ? value : DEFAULT_SPIN_DURATION_SEC;
+    return Math.min(
+      60,
+      Math.max(
+        SPIN_DURATION_STEP_SEC,
+        Math.round(safeValue / SPIN_DURATION_STEP_SEC) * SPIN_DURATION_STEP_SEC
+      )
+    );
   };
 
-  let currentSpinDurationMs = MAX_REEL_ITEMS * MS_PER_ITEM;
+  const getSpinDurationSec = (): number => {
+    try {
+      const raw = parseInt(localStorage.getItem(SPIN_DURATION_STORAGE_KEY) ?? '', 10);
+      if (!Number.isFinite(raw)) return DEFAULT_SPIN_DURATION_SEC;
+      return normalizeSpinDurationSec(raw);
+    } catch {
+      return DEFAULT_SPIN_DURATION_SEC;
+    }
+  };
+
+  const saveSpinDurationSec = (value: number): void => {
+    try {
+      localStorage.setItem(SPIN_DURATION_STORAGE_KEY, String(normalizeSpinDurationSec(value)));
+    } catch (e) { /* ignore */ }
+  };
+
+  const syncSpinDurationUi = (value: number): void => {
+    const normalized = normalizeSpinDurationSec(value);
+    spinDurationRange.value = String(normalized);
+    spinDurationValueEl.textContent = String(normalized);
+  };
+
+  // Duration is user-controlled. Item count scales with participants, while per-item speed adapts.
+  const calcSpinParams = (participantCount: number): { items: number; msPerItem: number } => {
+    const durationSec = getSpinDurationSec();
+    const items = Math.min(Math.max(participantCount, MIN_REEL_ITEMS), MAX_REEL_ITEMS);
+    return { items, msPerItem: (durationSec * 1000) / items };
+  };
+
+  let currentSpinDurationMs = getSpinDurationSec() * 1000;
   const CONFETTI_COLORS = [
     '#26ccff', '#a25afd', '#ff5e7e', '#88ff5a',
     '#fcff42', '#ffa62d', '#ff36ff'
@@ -136,6 +177,10 @@ initStars();
 
   let autoDrawEnabled = false;
   let autoDrawFired = false;
+  let autoCountdownCleanupPending = false;
+  let spinInProgress = false;
+  const NAME_LIST_STORAGE_KEY = 'draw-name-list';
+  const NAME_LIST_DRAFT_STORAGE_KEY = 'draw-name-list-draft';
 
   interface CountdownConfig { prizeId: string; minutes: number; }
 
@@ -182,6 +227,17 @@ initStars();
     } catch { return false; }
   };
 
+  const getRunningCountdownPrizeId = (): string | null => {
+    try {
+      const raw = localStorage.getItem('draw-countdown');
+      if (!raw) return null;
+      const state = JSON.parse(raw);
+      return state.running ? state.prizeId ?? null : null;
+    } catch {
+      return null;
+    }
+  };
+
   // Toast helper — must be declared before updateCountdownBar which references it
   const showToast = (msg: string, color = 'rgba(220,60,60,0.92)') => {
     const toast = document.createElement('div');
@@ -192,6 +248,68 @@ initStars();
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 4000);
   };
+
+  const loadStoredNames = (key: string): string[] => {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed.filter((n) => typeof n === 'string') : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const saveStoredNames = (key: string, names: string[]): void => {
+    try {
+      localStorage.setItem(key, JSON.stringify(names));
+    } catch (e) { /* ignore */ }
+  };
+
+  const saveNameDraft = (text: string): void => {
+    const names = text.split(/\n/).map((n) => n.trim()).filter(Boolean);
+    saveStoredNames(NAME_LIST_DRAFT_STORAGE_KEY, names);
+  };
+
+  function syncCountdownAutoUi(): void {
+    if (!countdownAutoBtn) return;
+    countdownAutoBtn.classList.toggle('active', autoDrawEnabled);
+    countdownAutoBtn.title = autoDrawEnabled
+      ? t('autoDrawOnTitle')
+      : t('autoTitle');
+  }
+
+  function disableCountdownFeature(clearInputs = false): void {
+    const cfg = getCountdownConfig();
+    saveCountdownConfig(null);
+    prizeManager.clearCountdown();
+    autoDrawEnabled = false;
+    autoDrawFired = false;
+    autoCountdownCleanupPending = false;
+    syncCountdownAutoUi();
+
+    if (clearInputs && cfg) {
+      if (countdownCfgPrize && countdownCfgPrize.value === cfg.prizeId) {
+        countdownCfgPrize.value = '';
+      }
+      if (countdownCfgMins && parseInt(countdownCfgMins.value ?? '', 10) === cfg.minutes) {
+        countdownCfgMins.value = '';
+      }
+    }
+  }
+
+  function syncControlLocks(): void {
+    const runningPrizeId = getRunningCountdownPrizeId();
+    const countdownLocked = Boolean(runningPrizeId);
+    settingsButton!.disabled = spinInProgress || countdownLocked;
+
+    prizeButtonsContainer!.querySelectorAll<HTMLButtonElement>('.prize-select-btn').forEach((btn) => {
+      const prizeId = btn.dataset.prizeId ?? '';
+      const shouldLockForCountdown = countdownLocked && prizeId !== runningPrizeId;
+      // eslint-disable-next-line no-param-reassign
+      btn.disabled = spinInProgress || shouldLockForCountdown || btn.classList.contains('full');
+    });
+  }
 
   // Ticker helper — must be declared before onSpinEnd and restore section reference it
   const refreshTicker = () => {
@@ -217,115 +335,7 @@ initStars();
       });
     });
   };
-
-  const updateCountdownBar = () => {
-    const cfg = getCountdownConfig();
-    const p = prizeManager.currentPrize;
-    if (!countdownBarEl || !cfg || !p || cfg.prizeId !== p.id) {
-      if (countdownBarEl) countdownBarEl.style.display = 'none';
-      return;
-    }
-    countdownBarEl.style.display = 'flex';
-    const secs = getCountdownSecsRemaining(cfg);
-    if (countdownBarTimeEl) {
-      countdownBarTimeEl.textContent = fmtSecs(secs);
-      countdownBarTimeEl.classList.toggle('urgent', secs <= 60 && secs > 0);
-    }
-    if (countdownToggleBtn) countdownToggleBtn.textContent = isCountdownRunning(cfg) ? t('countdownPauseBtn') : t('countdownStartBtn');
-
-    // Auto draw: trigger when countdown finishes naturally
-    if (secs === 0 && isCountdownRunning(cfg) && autoDrawEnabled && !autoDrawFired) {
-      autoDrawFired = true;
-      autoDrawEnabled = false;
-      countdownAutoBtn?.classList.remove('active');
-      setTimeout(() => {
-        const ap = prizeManager.currentPrize;
-        if (!ap || prizeManager.isCurrentPrizeFull()) {
-          showToast(t('autoDrawWarnFull'));
-          return;
-        }
-        if (!slot || !slot.names.length) {
-          showToast(t('autoDrawWarnEmpty'));
-          return;
-        }
-        const sp = calcSpinParams(slot.names.length);
-        currentSpinDurationMs = sp.items * sp.msPerItem;
-        slot.updateSpinParams(sp.items, sp.msPerItem);
-        slot.spin();
-      }, 600);
-    }
-    if (secs > 0) autoDrawFired = false;
-  };
-
-  setInterval(updateCountdownBar, 1000);
-
-  countdownToggleBtn?.addEventListener('click', () => {
-    const cfg = getCountdownConfig();
-    if (!cfg) return;
-    if (isCountdownRunning(cfg)) {
-      prizeManager.pauseCountdown(getCountdownSecsRemaining(cfg));
-    } else {
-      try {
-        const raw = localStorage.getItem('draw-countdown');
-        const state = raw ? JSON.parse(raw) : null;
-        const resumeFrom = (state?.prizeId === cfg.prizeId && state?.pausedRemaining !== null)
-          ? state.pausedRemaining as number : undefined;
-        prizeManager.startCountdown(cfg.prizeId, cfg.minutes, resumeFrom);
-      } catch {
-        prizeManager.startCountdown(cfg.prizeId, cfg.minutes);
-      }
-    }
-    updateCountdownBar();
-  });
-
-  countdownResetBtn?.addEventListener('click', () => {
-    const cfg = getCountdownConfig();
-    if (!cfg) return;
-    prizeManager.resetCountdown(cfg.prizeId, cfg.minutes);
-    updateCountdownBar();
-  });
-
-  const countdownCancelBtn = document.getElementById('countdown-cancel') as HTMLButtonElement | null;
-  countdownCancelBtn?.addEventListener('click', () => {
-    saveCountdownConfig(null);
-    prizeManager.clearCountdown();
-    autoDrawEnabled = false;
-    autoDrawFired = false;
-    countdownAutoBtn?.classList.remove('active');
-    // eslint-disable-next-line no-use-before-define
-    renderPrizeButtons();
-    updateCountdownBar();
-  });
-
-  countdownAutoBtn?.addEventListener('click', () => {
-    autoDrawEnabled = !autoDrawEnabled;
-    autoDrawFired = false;
-    countdownAutoBtn.classList.toggle('active', autoDrawEnabled);
-    countdownAutoBtn.title = autoDrawEnabled
-      ? t('autoDrawOnTitle')
-      : t('autoTitle');
-  });
-
-  const customConfetti = confetti.create(confettiCanvas, {
-    resize: true,
-    useWorker: true
-  });
-
-  const confettiAnimation = () => {
-    const windowWidth = window.innerWidth
-      || document.documentElement.clientWidth
-      || document.body.clientWidth;
-    const confettiScale = Math.max(0.5, Math.min(1, windowWidth / 1100));
-    customConfetti({
-      particleCount: 1,
-      gravity: 0.8,
-      spread: 90,
-      origin: { y: 0.6 },
-      colors: [CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)]],
-      scalar: confettiScale
-    });
-    confettiAnimationId = window.requestAnimationFrame(confettiAnimation);
-  };
+  let refreshCountdownUi = (): void => {};
 
   const stopWinningAnimation = () => {
     if (confettiAnimationId) window.cancelAnimationFrame(confettiAnimationId);
@@ -349,32 +359,7 @@ initStars();
     else drawButton.title = '';
   };
 
-  const updateParticipantCount = () => {
-    const count = slot ? slot.names.length : 0;
-    if (participantCountEl) participantCountEl.textContent = t('participantCount', { count });
-    try { localStorage.setItem('draw-participant-count', String(count)); } catch (e) { /* ignore */ }
-  };
-
-  const filterOutWinners = (names: string[]): string[] => {
-    const allWinners = new Set(
-      prizeManager.allPrizes.flatMap((p) => p.winners.map((w) => w.trim().toLowerCase()))
-    );
-    return names.filter((n) => !allWinners.has(n.trim().toLowerCase()));
-  };
-
-  const showDedupeNotice = (removed: number) => {
-    if (!dedupeNoticeEl) return;
-    if (removed > 0) {
-      dedupeNoticeEl.textContent = t('dedupeRemoved', { count: removed });
-      dedupeNoticeEl.classList.add('visible');
-    } else {
-      dedupeNoticeEl.textContent = '';
-      dedupeNoticeEl.classList.remove('visible');
-    }
-  };
-
-  // Prize buttons
-  const renderPrizeButtons = () => {
+  const renderPrizeButtons = (): void => {
     prizeButtonsContainer.innerHTML = '';
     const cfg = getCountdownConfig();
     prizeManager.allPrizes.forEach((prize) => {
@@ -382,6 +367,7 @@ initStars();
       const isFull = prize.winners.length >= prize.count;
       const isActive = prizeManager.currentPrize?.id === prize.id;
       const hasCountdown = cfg?.prizeId === prize.id;
+      btn.dataset.prizeId = prize.id;
       btn.className = `prize-select-btn${isActive ? ' active' : ''}${isFull ? ' full' : ''}`;
       const btnName = document.createElement('span');
       btnName.className = 'prize-btn-name';
@@ -397,11 +383,189 @@ initStars();
         renderPrizeButtons();
         updateCurrentPrizeLabel();
         updateDrawButton();
-        updateCountdownBar();
+        refreshCountdownUi();
         stopWinningAnimation();
       });
       prizeButtonsContainer.appendChild(btn);
     });
+    syncControlLocks();
+  };
+
+  const updateCountdownBar = () => {
+    const cfg = getCountdownConfig();
+    const p = prizeManager.currentPrize;
+    if (!countdownBarEl || !cfg || !p || cfg.prizeId !== p.id) {
+      if (countdownBarEl) countdownBarEl.style.display = 'none';
+      return;
+    }
+    countdownBarEl.style.display = 'flex';
+    const secs = getCountdownSecsRemaining(cfg);
+    if (countdownBarTimeEl) {
+      countdownBarTimeEl.textContent = fmtSecs(secs);
+      countdownBarTimeEl.classList.toggle('urgent', secs <= 60 && secs > 0);
+    }
+    const countdownRunning = isCountdownRunning(cfg);
+    if (countdownToggleBtn) countdownToggleBtn.textContent = countdownRunning ? t('countdownPauseBtn') : t('countdownStartBtn');
+
+    // Auto draw: trigger when countdown finishes naturally
+    if (secs === 0 && countdownRunning) {
+      if (autoDrawEnabled && !autoDrawFired) {
+        autoDrawFired = true;
+        autoDrawEnabled = false;
+        autoCountdownCleanupPending = true;
+        syncCountdownAutoUi();
+        setTimeout(() => {
+          const ap = prizeManager.currentPrize;
+          if (!ap || prizeManager.isCurrentPrizeFull()) {
+            disableCountdownFeature(true);
+            renderPrizeButtons();
+            updateCountdownBar();
+            showToast(t('autoDrawWarnFull'));
+            return;
+          }
+          if (!slot || !slot.names.length) {
+            disableCountdownFeature(true);
+            renderPrizeButtons();
+            updateCountdownBar();
+            showToast(t('autoDrawWarnEmpty'));
+            return;
+          }
+          const sp = calcSpinParams(slot.names.length);
+          currentSpinDurationMs = sp.items * sp.msPerItem;
+          slot.updateSpinParams(sp.items, sp.msPerItem);
+          slot.spin();
+        }, 600);
+      } else if (!autoDrawEnabled) {
+        disableCountdownFeature(true);
+        renderPrizeButtons();
+        updateCountdownBar();
+        return;
+      }
+    }
+    if (secs > 0) autoDrawFired = false;
+  };
+  refreshCountdownUi = updateCountdownBar;
+
+  setInterval(updateCountdownBar, 1000);
+
+  countdownToggleBtn?.addEventListener('click', () => {
+    const cfg = getCountdownConfig();
+    if (!cfg) return;
+    if (isCountdownRunning(cfg)) {
+      prizeManager.pauseCountdown(getCountdownSecsRemaining(cfg));
+    } else {
+      try {
+        const raw = localStorage.getItem('draw-countdown');
+        const state = raw ? JSON.parse(raw) : null;
+        const resumeFrom = (state?.prizeId === cfg.prizeId && state?.pausedRemaining !== null)
+          ? state.pausedRemaining as number : undefined;
+        prizeManager.startCountdown(cfg.prizeId, cfg.minutes, resumeFrom);
+      } catch {
+        prizeManager.startCountdown(cfg.prizeId, cfg.minutes);
+      }
+    }
+    updateCountdownBar();
+    syncControlLocks();
+  });
+
+  countdownResetBtn?.addEventListener('click', () => {
+    const cfg = getCountdownConfig();
+    if (!cfg) return;
+    prizeManager.resetCountdown(cfg.prizeId, cfg.minutes);
+    updateCountdownBar();
+    syncControlLocks();
+  });
+
+  const countdownCancelBtn = document.getElementById('countdown-cancel') as HTMLButtonElement | null;
+  countdownCancelBtn?.addEventListener('click', () => {
+    disableCountdownFeature(true);
+
+    renderPrizeButtons();
+    updateCountdownBar();
+    syncControlLocks();
+  });
+
+  countdownAutoBtn?.addEventListener('click', () => {
+    autoDrawEnabled = !autoDrawEnabled;
+    autoDrawFired = false;
+    syncCountdownAutoUi();
+  });
+
+  const customConfetti = confetti.create(confettiCanvas, {
+    resize: true,
+    useWorker: true
+  });
+
+  const confettiAnimation = () => {
+    const windowWidth = window.innerWidth
+      || document.documentElement.clientWidth
+      || document.body.clientWidth;
+    const confettiScale = Math.max(0.5, Math.min(1, windowWidth / 1100));
+    customConfetti({
+      particleCount: 1,
+      gravity: 0.8,
+      spread: 90,
+      origin: { y: 0.6 },
+      colors: [CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)]],
+      scalar: confettiScale
+    });
+    confettiAnimationId = window.requestAnimationFrame(confettiAnimation);
+  };
+
+  const updateParticipantCount = () => {
+    const count = slot ? slot.names.length : 0;
+    if (participantCountEl) participantCountEl.textContent = t('participantCount', { count });
+    try { localStorage.setItem('draw-participant-count', String(count)); } catch (e) { /* ignore */ }
+  };
+
+  const filterOutWinners = (names: string[]): string[] => {
+    const allWinners = new Set(
+      prizeManager.allPrizes.flatMap((p) => p.winners.map((w) => w.trim().toLowerCase()))
+    );
+    return names.filter((n) => !allWinners.has(n.trim().toLowerCase()));
+  };
+
+  const getNameListStats = (text: string): {
+    rawCount: number;
+    uniqueCount: number;
+    duplicateCount: number;
+    winnerRemovedCount: number;
+    poolCount: number;
+  } => {
+    const rawNames = text.split(/\n/).map((n) => n.trim()).filter(Boolean);
+    const uniqueKeys = new Set<string>();
+    rawNames.forEach((name) => uniqueKeys.add(name.toLowerCase()));
+    const filtered = filterOutWinners(rawNames);
+    return {
+      rawCount: rawNames.length,
+      uniqueCount: uniqueKeys.size,
+      duplicateCount: rawNames.length - uniqueKeys.size,
+      winnerRemovedCount: rawNames.length - filtered.length,
+      poolCount: filtered.length
+    };
+  };
+
+  const updateNameListStats = (text: string): void => {
+    const stats = getNameListStats(text);
+    if (nameListRawCountEl) nameListRawCountEl.textContent = String(stats.rawCount);
+    if (nameListPoolCountEl) nameListPoolCountEl.textContent = String(stats.poolCount);
+    if (nameListDuplicateCountEl) {
+      nameListDuplicateCountEl.textContent = String(stats.duplicateCount);
+    }
+    if (nameListWinnerRemovedCountEl) {
+      nameListWinnerRemovedCountEl.textContent = String(stats.winnerRemovedCount);
+    }
+  };
+
+  const showDedupeNotice = (removed: number) => {
+    if (!dedupeNoticeEl) return;
+    if (removed > 0) {
+      dedupeNoticeEl.textContent = t('dedupeRemoved', { count: removed });
+      dedupeNoticeEl.classList.add('visible');
+    } else {
+      dedupeNoticeEl.textContent = '';
+      dedupeNoticeEl.classList.remove('visible');
+    }
   };
 
   // Records panel
@@ -626,13 +790,10 @@ initStars();
 
   // Spin callbacks
   const onSpinStart = () => {
+    spinInProgress = true;
     stopWinningAnimation();
     drawButton.disabled = true;
-    settingsButton.disabled = true;
-    prizeButtonsContainer.querySelectorAll<HTMLButtonElement>('.prize-select-btn').forEach((btn) => {
-      // eslint-disable-next-line no-param-reassign
-      btn.disabled = true;
-    });
+    syncControlLocks();
     const seed = Date.now();
     if (drawSeedEl) {
       drawSeedEl.textContent = t('seedLabel', { seed: String(seed) });
@@ -692,17 +853,22 @@ initStars();
     // Update ticker — show real winner names
     refreshTicker();
 
-    // ── Aftermath: hold 1s linger before re-enabling UI ──────
-    await new Promise<void>((resolve) => { setTimeout(resolve, 1000); });
+    // ── Aftermath: hold 1.5s linger before re-enabling UI ────
+    await new Promise<void>((resolve) => { setTimeout(resolve, 1500); });
     slotEl?.classList.remove('slot--aftermath');
     // ─────────────────────────────────────────────────────────
+
+    if (autoCountdownCleanupPending) {
+      disableCountdownFeature(true);
+    }
 
     renderPrizeButtons();
     updateCurrentPrizeLabel();
     updateDrawButton();
     updateParticipantCount();
     try { localStorage.removeItem('draw-recovery-pending'); localStorage.removeItem('draw-recovery-names'); } catch (e) { /* ignore */ }
-    settingsButton.disabled = false;
+    spinInProgress = false;
+    syncControlLocks();
   };
 
   // Slot instance
@@ -711,10 +877,19 @@ initStars();
     maxReelItems: MAX_REEL_ITEMS,
     onSpinStart,
     onSpinEnd,
-    onNameListChanged: () => { stopWinningAnimation(); updateParticipantCount(); }
+    onNameListChanged: () => {
+      stopWinningAnimation();
+      saveStoredNames(NAME_LIST_STORAGE_KEY, slot.names);
+      updateParticipantCount();
+    }
   });
+  const persistedNames = loadStoredNames(NAME_LIST_STORAGE_KEY);
+  if (persistedNames.length) {
+    slot.names = persistedNames;
+  }
   updateDrawButton();
   updateParticipantCount();
+  syncControlLocks();
 
   // Main clock
   const mainClockTime = document.getElementById('main-clock-time');
@@ -759,6 +934,7 @@ initStars();
         if (Array.isArray(parsed)) names = parsed.filter((n) => typeof n === 'string');
       } catch { /* ignore */ }
       slot.names = names;
+      saveStoredNames(NAME_LIST_DRAFT_STORAGE_KEY, names);
       updateParticipantCount();
       updateDrawButton();
       clearRecovery();
@@ -793,11 +969,15 @@ initStars();
     }
   };
   applyDrawTitle(localStorage.getItem('draw-title') ?? '');
+  syncSpinDurationUi(getSpinDurationSec());
 
   const onSettingsOpen = () => {
-    nameListTextArea.value = slot.names.join('\n');
+    const draftNames = loadStoredNames(NAME_LIST_DRAFT_STORAGE_KEY);
+    nameListTextArea.value = (draftNames.length ? draftNames : slot.names).join('\n');
+    updateNameListStats(nameListTextArea.value);
     removeNameFromListCheckbox.checked = slot.shouldRemoveWinnerFromNameList;
     enableSoundCheckbox.checked = !soundEffects.mute;
+    syncSpinDurationUi(getSpinDurationSec());
     if (drawTitleInput) drawTitleInput.value = localStorage.getItem('draw-title') ?? '';
     renderPrizeConfig();
     refreshCountdownCfgSelect();
@@ -836,6 +1016,15 @@ initStars();
 
   settingsButton.addEventListener('click', onSettingsOpen);
 
+  spinDurationRange.addEventListener('input', () => {
+    syncSpinDurationUi(parseInt(spinDurationRange.value, 10) || DEFAULT_SPIN_DURATION_SEC);
+  });
+
+  nameListTextArea.addEventListener('input', () => {
+    saveNameDraft(nameListTextArea.value);
+    updateNameListStats(nameListTextArea.value);
+  });
+
   settingsSaveButton.addEventListener('click', () => {
     const rawNames = nameListTextArea.value
       ? nameListTextArea.value.split(/\n/).filter((n) => Boolean(n.trim()))
@@ -843,8 +1032,10 @@ initStars();
     const filtered = filterOutWinners(rawNames);
     showDedupeNotice(rawNames.length - filtered.length);
     slot.names = filtered;
+    saveStoredNames(NAME_LIST_DRAFT_STORAGE_KEY, filtered);
     slot.shouldRemoveWinnerFromNameList = removeNameFromListCheckbox.checked;
     soundEffects.mute = !enableSoundCheckbox.checked;
+    saveSpinDurationSec(parseInt(spinDurationRange.value, 10) || DEFAULT_SPIN_DURATION_SEC);
     const rows = Array.from(prizeConfigList.querySelectorAll('.prize-config-row'));
     const newPrizes = rows.map((row) => {
       const dt = (row.querySelector('.pc-drawtime') as HTMLInputElement).value.trim();
@@ -899,6 +1090,8 @@ initStars();
       const filtered = filterOutWinners(names);
       showDedupeNotice(names.length - filtered.length);
       nameListTextArea.value = filtered.join('\n');
+      saveStoredNames(NAME_LIST_DRAFT_STORAGE_KEY, filtered);
+      updateNameListStats(nameListTextArea.value);
       if (dedupeNoticeEl && filtered.length > 0) {
         const base = dedupeNoticeEl.textContent || '';
         dedupeNoticeEl.textContent = `${t('csvLoaded', { count: filtered.length })}${base ? `  ·  ${base}` : ''}`;
@@ -951,6 +1144,7 @@ initStars();
       [names[i], names[j]] = [names[j], names[i]];
     }
     nameListTextArea.value = names.join('\n');
+    updateNameListStats(nameListTextArea.value);
   });
 
   // Merge duplicates — keep one entry per unique name
@@ -964,6 +1158,7 @@ initStars();
     });
     const removed = names.length - merged.length;
     nameListTextArea.value = merged.join('\n');
+    updateNameListStats(nameListTextArea.value);
     if (dedupeNoticeEl) {
       if (removed > 0) {
         dedupeNoticeEl.textContent = t('mergedDuplicates', { count: removed });
@@ -981,6 +1176,7 @@ initStars();
     // eslint-disable-next-line no-alert
     if (!window.confirm(t('clearListConfirm'))) return;
     nameListTextArea.value = '';
+    updateNameListStats(nameListTextArea.value);
     if (dedupeNoticeEl) { dedupeNoticeEl.textContent = ''; dedupeNoticeEl.classList.remove('visible'); }
   });
 

@@ -100,13 +100,32 @@ include ../mixins/icons
               input#csv-upload(type="file" accept=".csv" style="display:none")
               span(data-i18n="uploadCsvBtn") Upload CSV
           .name-list-toolbar
-            button#namelist-mask-btn.namelist-tool-btn(title="Hide personal info" data-i18n-title="maskBtnTitle") 👁
-            button#namelist-merge-btn.namelist-tool-btn(title="Merge duplicates" data-i18n-title="mergeBtnTitle") 🔗
-            button#namelist-clear-btn.namelist-tool-btn.namelist-tool-btn--danger(title="Clear list" data-i18n-title="clearListBtnTitle") 🗑
+            button#namelist-mask-btn.namelist-tool-btn(title="Hide personal info" data-i18n-title="maskBtnTitle" aria-label="Hide personal info")
+              span.namelist-tool-btn__emoji.namelist-tool-btn__emoji--privacy
+              span.namelist-tool-btn__label(data-i18n="maskBtnLabel") Privacy
+            button#namelist-merge-btn.namelist-tool-btn(title="Merge duplicates" data-i18n-title="mergeBtnTitle" aria-label="Merge duplicates")
+              span.namelist-tool-btn__emoji.namelist-tool-btn__emoji--merge
+              span.namelist-tool-btn__label(data-i18n="mergeBtnLabel") Merge
+            button#namelist-clear-btn.namelist-tool-btn.namelist-tool-btn--danger(title="Clear list" data-i18n-title="clearListBtnTitle" aria-label="Clear list")
+              span.namelist-tool-btn__emoji.namelist-tool-btn__emoji--clear
+              span.namelist-tool-btn__label(data-i18n="clearBtnLabel") Clear
           textarea.input-field.input-field--textarea(rows="8" placeholder="One name per line (supports 10,000+ participants).\nFor CSV: one row = one participant. If a row has multiple columns, they are merged into one name." id="name-list" data-i18n-placeholder="nameListPlaceholder")
           button#namelist-shuffle-btn.namelist-shuffle-bar
             span 🔀
             span(data-i18n="shuffleBtnTitle") Random sort
+          #name-list-stats.name-list-stats
+            .name-list-stats__item
+              span.name-list-stats__label(data-i18n="nameListRawCountLabel") Entries
+              span#name-list-raw-count.name-list-stats__value 0
+            .name-list-stats__item
+              span.name-list-stats__label(data-i18n="nameListPoolCountLabel") Pool
+              span#name-list-pool-count.name-list-stats__value 0
+            .name-list-stats__item
+              span.name-list-stats__label(data-i18n="nameListDuplicateCountLabel") Duplicates
+              span#name-list-duplicate-count.name-list-stats__value 0
+            .name-list-stats__item
+              span.name-list-stats__label(data-i18n="nameListWinnerRemovedLabel") Removed winners
+              span#name-list-winner-removed-count.name-list-stats__value 0
           #dedupe-notice.dedupe-notice
 
         div.input-group.input-group--2-column
@@ -120,6 +139,22 @@ include ../mixins/icons
           label.input--switch
             input(type="checkbox" checked="true" id="enable-sound")
             span.slider
+
+        div.input-group
+          .spin-duration-header
+            label.input-label(for="spin-duration-range" data-i18n="spinDurationLabel") Draw Scroll Time
+            span.spin-duration-value
+              span#spin-duration-value 20
+              span(data-i18n="secondsUnit") sec
+          input#spin-duration-range.spin-duration-range(type="range" min="5" max="60" step="5" value="20")
+          .spin-duration-scale
+            span 5
+            span 10
+            span 20
+            span 30
+            span 40
+            span 50
+            span 60
 
         div.input-group
           .prize-settings-title-row

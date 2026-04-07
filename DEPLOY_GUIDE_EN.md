@@ -22,6 +22,16 @@ This guide walks you through setting up your own lucky draw system from scratch 
 
 ---
 
+## Operational Notes
+
+- The participant list and the draft list are saved in the same browser automatically, so refreshes, accidental tab closes, and power interruptions can be recovered on the same machine.
+- The name-list panel now shows live stats for total entries, valid prize-pool size, duplicates, and already-won names removed from the pool.
+- Countdown is single-use per setup. If Auto Draw runs when the timer reaches zero, that countdown configuration clears itself after the draw.
+- While countdown is running, prize switching and Settings are locked to avoid mistakes during the event.
+- Draw duration can be adjusted in Settings in `5-second` steps.
+
+---
+
 ## Step 1: Install Required Tools
 
 ### Node.js 18.x (must be version 18)
@@ -206,6 +216,7 @@ Settings (⚙️ top right) → **Name List** → paste names one per line, or c
 CSV import supports multiple columns — all columns are merged into a single name per row.
 
 Use the toolbar to **shuffle**, **mask all names**, **merge duplicates**, or **clear** the list.
+Check the stats below the list to confirm the real draw pool before clicking **Save**.
 
 Click **Save**. Past winners are automatically removed from the pool on import.
 
@@ -217,6 +228,7 @@ Click **Save**.
 ### 3. Set up a countdown (optional)
 Settings → **Countdown Timer** → assign a duration to any prize.
 On the countdown bar, enable **Auto** to trigger the draw automatically when time runs out.
+Once the timer starts, other prize buttons and Settings are locked until that countdown ends or is canceled.
 
 ### 4. Open the display page
 Click the **📺 Display** link (bottom right) → opens `display.html` in a new tab.

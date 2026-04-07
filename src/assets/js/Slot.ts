@@ -19,9 +19,6 @@ export default class Slot {
   /** List of names to draw from */
   private nameList: string[];
 
-  /** Whether there is a previous winner element displayed in reel */
-  private havePreviousWinner: boolean;
-
   /** Container that hold the reel items */
   private reelContainer: HTMLElement | null;
 
@@ -31,8 +28,8 @@ export default class Slot {
   /** Whether winner should be removed from name list */
   private shouldRemoveWinner: NonNullable<SlotConfigurations['removeWinner']>;
 
-  /** Reel animation object instance */
-  private reelAnimation?: Animation;
+  /** Total duration for the flash-style draw animation */
+  private spinDurationMs: number;
 
   /** Callback function that runs before spinning reel */
   private onSpinStart?: NonNullable<SlotConfigurations['onSpinStart']>;
@@ -62,32 +59,13 @@ export default class Slot {
     }: SlotConfigurations
   ) {
     this.nameList = [];
-    this.havePreviousWinner = false;
     this.reelContainer = document.querySelector(reelContainerSelector);
     this.maxReelItems = maxReelItems;
     this.shouldRemoveWinner = removeWinner;
     this.onSpinStart = onSpinStart;
     this.onSpinEnd = onSpinEnd;
     this.onNameListChanged = onNameListChanged;
-
-    // Create reel animation
-    this.reelAnimation = this.reelContainer?.animate(
-      [
-        { transform: 'none', filter: 'blur(0)' },
-        { filter: 'blur(1px)', offset: 0.5 },
-        // Here we transform the reel to move up and stop at the top of last item
-        // "(Number of item - 1) * height of reel item" of wheel is the amount of pixel to move up
-        // 7.5rem * 16 = 120px, which equals to reel item height
-        { transform: `translateY(-${(this.maxReelItems - 1) * (7.5 * 16)}px)`, filter: 'blur(0)' }
-      ],
-      {
-        duration: this.maxReelItems * 80, // 80ms per item
-        easing: 'ease-in-out',
-        iterations: 1
-      }
-    );
-
-    this.reelAnimation?.cancel();
+    this.spinDurationMs = this.maxReelItems * 80;
   }
 
   /**
@@ -103,8 +81,6 @@ export default class Slot {
 
     reelItemsToRemove
       .forEach((element) => element.remove());
-
-    this.havePreviousWinner = false;
 
     if (this.onNameListChanged) {
       this.onNameListChanged();
@@ -158,13 +134,7 @@ export default class Slot {
    */
   public updateSpinParams(items: number, msPerItem: number): void {
     this.maxReelItems = items;
-    if (!this.reelAnimation?.effect) return;
-    (this.reelAnimation.effect as KeyframeEffect).setKeyframes([
-      { transform: 'none', filter: 'blur(0)' },
-      { filter: 'blur(1px)', offset: 0.5 },
-      { transform: `translateY(-${(items - 1) * (7.5 * 16)}px)`, filter: 'blur(0)' }
-    ]);
-    this.reelAnimation.effect.updateTiming({ duration: items * msPerItem });
+    this.spinDurationMs = items * msPerItem;
   }
 
   /**
@@ -181,23 +151,12 @@ export default class Slot {
       this.onSpinStart();
     }
 
-    const { reelContainer, reelAnimation, shouldRemoveWinner } = this;
-    if (!reelContainer || !reelAnimation) {
+    const { reelContainer, shouldRemoveWinner } = this;
+    if (!reelContainer) {
       return false;
     }
 
-    // Pick winner via shuffle; each intermediate slot is an independent random pick
-    // so the reel looks fully scrambled with no repeating pattern
     const winner = Slot.shuffleNames<string>(this.nameList)[0];
-    const needed = this.maxReelItems - Number(this.havePreviousWinner) - 1;
-    const intermediates: string[] = [];
-    for (let i = 0; i < needed; i += 1) {
-      // eslint-disable-next-line no-bitwise
-      intermediates.push(this.nameList[Math.random() * this.nameList.length | 0]);
-    }
-    const randomNames = [...intermediates, winner];
-
-    const fragment = document.createDocumentFragment();
 
     const maskName = (name: string): string => {
       const parts = name.split(/(\s+|—|-)/);
@@ -209,17 +168,9 @@ export default class Slot {
       }).join('');
     };
 
-    randomNames.forEach((name) => {
-      const newReelItem = document.createElement('div');
-      // All items masked during spin; winner element is revealed after animation ends
-      newReelItem.textContent = maskName(name);
-      fragment.appendChild(newReelItem);
-    });
-
-    reelContainer.appendChild(fragment);
-
-    console.info('Displayed items: ', randomNames);
-    console.info('Winner: ', randomNames[randomNames.length - 1]);
+    reelContainer.innerHTML = '';
+    const displayItem = document.createElement('div');
+    reelContainer.appendChild(displayItem);
 
     // Remove winner from name list if necessary (all instances, to handle duplicates)
     if (shouldRemoveWinner) {
@@ -227,29 +178,28 @@ export default class Slot {
     }
 
     console.info('Remaining: ', this.nameList);
+    const start = Date.now();
+    const fastPhaseMs = Math.max(0, this.spinDurationMs - 600);
+    let nextUpdateAt = 0;
 
-    // Play the spin animation
-    const animationPromise = new Promise((resolve) => {
-      reelAnimation.onfinish = resolve;
-    });
+    while (Date.now() - start < this.spinDurationMs) {
+      const elapsed = Date.now() - start;
+      const inSlowPhase = elapsed >= fastPhaseMs;
+      const delay = inSlowPhase ? 120 : 45;
 
-    reelAnimation.play();
+      if (elapsed >= nextUpdateAt) {
+        // eslint-disable-next-line no-bitwise
+        const candidate = this.nameList[Math.random() * this.nameList.length | 0] ?? winner;
+        displayItem.textContent = maskName(candidate);
+        nextUpdateAt = elapsed + delay;
+      }
 
-    await animationPromise;
+      // Keep the flashing animation responsive without relying on a rolling reel transform.
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise((resolve) => { setTimeout(resolve, 16); });
+    }
 
-    // Sets the current playback time to the end of the animation
-    // Fix issue for animatin not playing after the initial play on Safari
-    reelAnimation.finish();
-
-    Array.from(reelContainer.children)
-      .slice(0, reelContainer.children.length - 1)
-      .forEach((element) => element.remove());
-
-    // Reveal winner name (was masked during spin); `winner` is declared at top of spin()
-    const winnerEl = reelContainer.lastElementChild as HTMLElement | null;
-    if (winnerEl) winnerEl.textContent = winner;
-
-    this.havePreviousWinner = true;
+    displayItem.textContent = winner;
 
     if (this.onSpinEnd) {
       this.onSpinEnd();

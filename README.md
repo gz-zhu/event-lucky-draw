@@ -12,21 +12,25 @@ A stylish lucky draw app for live events — animated slot reel, prize tiers, wi
 ## ✨ Features
 
 **Draw**
-- 🎰 Animated slot reel with marquee light-bulb chasing effect on the border
+- 🎰 Fast flashing candidate-name draw effect with marquee light-bulb border
 - 🏆 Multiple prize tiers — configurable name, winner count, scheduled draw time, and description
 - 🔀 Name masking during spin; winner name revealed after animation ends
 - 🔢 Draw seed shown per draw for full auditability
 - 🚫 Auto-deduplication — past winners are automatically removed from the pool
 - ⚡ Interruption recovery — restores the participant pool if the browser closes mid-draw
-- 🎚 Dynamic spin speed — adjusts automatically based on participant count and remaining slots
+- 🎚 Configurable draw duration in Settings (`5s` steps)
 
 **Participants**
 - 📂 Import via CSV (multi-column support) or paste names directly
 - 🔧 Name list toolbar: shuffle, mask all names, merge duplicates, clear
+- 📊 Name list stats panel shows entries, prize pool, duplicates, and removed winners
+- 💾 Participant list and draft list persist after refresh / accidental close / power interruption on the same browser
 
 **Countdown & Auto Draw**
 - ⏱ Per-prize countdown timer — configure duration in Settings
 - 🤖 Auto Draw mode — draw triggers automatically when countdown reaches zero
+- 🔒 While a countdown is running, prize switching and settings are locked to prevent mistakes
+- ✅ Countdown is single-use per setup — after it finishes and auto-draw runs, the countdown is cleared automatically
 
 **Display & Records**
 - 📺 Separate display page (`/display.html`) for projector / big screen
@@ -97,6 +101,7 @@ Full step-by-step instructions for local use, Vercel deployment, and custom doma
 ### 1. Add participants
 Settings (⚙️ top right) → **Name List** → paste names one per line, or click **Upload CSV**.
 Use the toolbar to shuffle, mask, merge duplicates, or clear the list. Click **Save**.
+Check the stats below the list to confirm how many names are in the pool, how many duplicates were found, and how many past winners were excluded.
 
 ### 2. Configure prizes
 Settings → **Prize Settings** → set name and winner count per prize → **Save**.
@@ -151,21 +156,25 @@ Based on [random-name-picker](https://github.com/icelam/random-name-picker) by [
 ## ✨ 功能一覽
 
 **抽獎核心**
-- 🎰 動態拉霸轉輪，邊框搭載跑馬燈閃燈效果
+- 🎰 快速閃現候選名字的抽選效果，邊框搭載跑馬燈閃燈效果
 - 🏆 多獎項設定 — 可自訂獎項名稱、得獎人數、預定開獎時間、獎品說明
 - 🔀 轉動期間名字遮蔽，動畫結束後揭曉得獎者
 - 🔢 每次抽獎顯示抽獎種子，可事後稽核
 - 🚫 自動排重 — 已得獎者自動從名單移除
 - ⚡ 中斷復原 — 瀏覽器意外關閉後可還原名單
-- 🎚 動態轉速 — 根據參加人數與剩餘名額自動調整
+- 🎚 可在 Settings 內設定抽選時間（每 5 秒一格）
 
 **參加者管理**
 - 📂 支援 CSV 多欄位匯入，或直接貼上名字
 - 🔧 名單工具列：洗牌、遮蔽、合併重複、清除
+- 📊 名單下方提供統計資訊：輸入筆數、獎池人數、重複筆數、已中獎排除
+- 💾 名單與草稿會保留在同一瀏覽器中，重新整理、誤關頁面或斷電後可恢復
 
 **倒數計時與自動抽獎**
 - ⏱ 每個獎項可單獨設定倒數計時
 - 🤖 開啟「自動」模式，倒數歸零時自動執行抽獎
+- 🔒 倒數進行中會鎖定其他獎項與設定，避免誤操作
+- ✅ 倒數屬於一次性設定，結束並自動抽獎後會自動清除
 
 **展示頁與紀錄**
 - 📺 獨立大屏展示頁（`/display.html`），投影機專用
@@ -237,6 +246,7 @@ git push
 ### 1. 新增參加者
 點擊右上角 ⚙️ **Settings** → **Name List** → 逐行貼上名字，或點擊 **Upload CSV** 匯入。
 使用工具列進行洗牌、遮蔽、合併重複、清除。點擊 **Save**。
+名單下方的統計區可以直接看到目前輸入數、獎池人數、重複項與已中獎排除數量。
 
 ### 2. 設定獎項
 Settings → **Prize Settings** → 輸入獎項名稱與得獎人數 → **Save**。
@@ -291,21 +301,25 @@ TypeScript · Pug · SCSS · Webpack 5 · Web Animations API · AudioContext API
 ## ✨ 機能一覧
 
 **抽選**
-- 🎰 アニメーションスロットリール（縁取りに流れるイルミネーション演出）
+- 🎰 候補者名が高速で切り替わる抽選演出（縁取りに流れるイルミネーション演出）
 - 🏆 複数の賞ティア — 名前・当選人数・予定抽選時間・説明を個別設定
 - 🔀 スピン中は名前をマスキング、アニメーション終了後に当選者名を公開
 - 🔢 各抽選にドローシードを表示（事後検証対応）
 - 🚫 自動重複排除 — 当選者は次回から自動的に除外
 - ⚡ 中断復元 — ブラウザが予期せず閉じても参加者リストを復元
-- 🎚 ダイナミックスピン速度 — 参加人数と残席数に応じて自動調整
+- 🎚 Settings で抽選時間を設定可能（5秒刻み）
 
 **参加者管理**
 - 📂 CSVインポート（複数列対応）または直接貼り付け
 - 🔧 ツールバー：シャッフル、マスキング、重複統合、クリア
+- 📊 リスト下部に件数表示 — 入力数、抽選対象数、重複数、当選済み除外数
+- 💾 参加者リストと下書きは同じブラウザ内に保持され、更新・誤操作・停電後も復元可能
 
 **カウントダウンと自動抽選**
 - ⏱ 賞ごとにカウントダウンタイマーを設定可能
 - 🤖 オートモード — タイムアップで自動抽選実行
+- 🔒 カウントダウン中は他の賞や設定操作をロックして誤操作を防止
+- ✅ カウントダウン設定は1回限り — 終了して自動抽選後は自動クリア
 
 **表示ページと記録**
 - 📺 プロジェクター／大型スクリーン向け専用表示ページ（`/display.html`）
@@ -377,6 +391,7 @@ git push
 ### 1. 参加者を追加
 右上の ⚙️ **Settings** → **Name List** → 1行1名で貼り付けるか **Upload CSV** でインポート。
 ツールバーでシャッフル・マスキング・重複統合・クリアが可能。**Save** をクリック。
+リスト下の件数表示で、現在の入力数・抽選対象数・重複数・当選済み除外数をすぐ確認できます。
 
 ### 2. 賞を設定
 Settings → **Prize Settings** → 賞の名前と当選人数を入力 → **Save**。

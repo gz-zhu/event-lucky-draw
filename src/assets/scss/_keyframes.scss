@@ -64,15 +64,13 @@
   0%,
   100% {
     text-shadow:
-      0 0 20px rgba(255, 215, 0, 0.9),
-      0 0 50px rgba(255, 180, 0, 0.5),
-      0 0 90px rgba(255, 140, 0, 0.2);
+      0 0 8px rgba(255, 255, 255, 0.35),
+      0 0 18px rgba(220, 230, 245, 0.16);
   }
   50% {
     text-shadow:
-      0 0 35px rgba(255, 215, 0, 1),
-      0 0 80px rgba(255, 180, 0, 0.75),
-      0 0 140px rgba(255, 140, 0, 0.4);
+      0 0 12px rgba(255, 255, 255, 0.52),
+      0 0 26px rgba(225, 235, 250, 0.22);
   }
 }
 
@@ -82,22 +80,7 @@
     transform: scale(1);
   }
   50% {
-    transform: scale(1.04);
-  }
-}
-
-@keyframes aftermath-slot-aura {
-  0% {
-    box-shadow:
-      0 0 0 3px rgba(255, 215, 0, 0.9),
-      0 0 50px rgba(255, 215, 0, 0.45),
-      0 0 100px rgba(255, 180, 0, 0.2);
-  }
-  100% {
-    box-shadow:
-      0 0 0 3px rgba(255, 215, 0, 0),
-      0 0 0px rgba(255, 215, 0, 0),
-      0 0 0px rgba(255, 180, 0, 0);
+    transform: scale(1.015);
   }
 }
 
