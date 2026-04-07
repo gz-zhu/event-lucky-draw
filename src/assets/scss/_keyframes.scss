@@ -60,6 +60,47 @@
   }
 }
 
+@keyframes aftermath-winner-glow {
+  0%,
+  100% {
+    text-shadow:
+      0 0 20px rgba(255, 215, 0, 0.9),
+      0 0 50px rgba(255, 180, 0, 0.5),
+      0 0 90px rgba(255, 140, 0, 0.2);
+  }
+  50% {
+    text-shadow:
+      0 0 35px rgba(255, 215, 0, 1),
+      0 0 80px rgba(255, 180, 0, 0.75),
+      0 0 140px rgba(255, 140, 0, 0.4);
+  }
+}
+
+@keyframes aftermath-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+@keyframes aftermath-slot-aura {
+  0% {
+    box-shadow:
+      0 0 0 3px rgba(255, 215, 0, 0.9),
+      0 0 50px rgba(255, 215, 0, 0.45),
+      0 0 100px rgba(255, 180, 0, 0.2);
+  }
+  100% {
+    box-shadow:
+      0 0 0 3px rgba(255, 215, 0, 0),
+      0 0 0px rgba(255, 215, 0, 0),
+      0 0 0px rgba(255, 180, 0, 0);
+  }
+}
+
 @keyframes title-platinum {
   from {
     filter: drop-shadow(0 1px 0 rgba(120, 100, 60, 0.3))

@@ -430,6 +430,21 @@
   pointer-events: none;
 }
 
+// ── Aftermath: winner lingering glow ─────────────────────────
+.slot--aftermath {
+  .slot__outer {
+    animation: aftermath-slot-aura 2.5s ease-out forwards;
+    border-radius: $slot-border-radius;
+  }
+
+  #reel > div:last-child {
+    animation:
+      aftermath-winner-glow 1.3s ease-in-out infinite,
+      aftermath-pulse 1.3s ease-in-out infinite;
+    will-change: transform, text-shadow;
+  }
+}
+
 // ── Prize selection buttons ───────────────────────────────────
 .prize-buttons {
   display: flex;
@@ -1074,6 +1089,33 @@
 
   &.visible {
     display: block;
+  }
+}
+
+// ── Shuffle bar button ────────────────────────────────────────
+.namelist-shuffle-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.55rem 1rem;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 0.5rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #fff;
   }
 }
 

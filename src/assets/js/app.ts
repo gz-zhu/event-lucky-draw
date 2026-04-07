@@ -649,6 +649,12 @@ initStars();
   const onSpinEnd = async () => {
     confettiAnimation();
     sunburstSvg.style.display = 'block';
+
+    // ── Aftermath: start glow the moment winner is revealed ───
+    const slotEl = document.querySelector<HTMLElement>('.slot');
+    slotEl?.classList.add('slot--aftermath');
+    // ─────────────────────────────────────────────────────────
+
     await soundEffects.win();
 
     const winnerEl = document.querySelector('#reel > div:last-child');
@@ -685,6 +691,11 @@ initStars();
 
     // Update ticker — show real winner names
     refreshTicker();
+
+    // ── Aftermath: hold 1s linger before re-enabling UI ──────
+    await new Promise<void>((resolve) => { setTimeout(resolve, 1000); });
+    slotEl?.classList.remove('slot--aftermath');
+    // ─────────────────────────────────────────────────────────
 
     renderPrizeButtons();
     updateCurrentPrizeLabel();
