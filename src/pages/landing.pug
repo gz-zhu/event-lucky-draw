@@ -104,7 +104,9 @@ include ../mixins/icons
             button#namelist-merge-btn.namelist-tool-btn(title="Merge duplicates" data-i18n-title="mergeBtnTitle") 🔗
             button#namelist-clear-btn.namelist-tool-btn.namelist-tool-btn--danger(title="Clear list" data-i18n-title="clearListBtnTitle") 🗑
           textarea.input-field.input-field--textarea(rows="8" placeholder="One name per line (supports 10,000+ participants).\nFor CSV: one row = one participant. If a row has multiple columns, they are merged into one name." id="name-list" data-i18n-placeholder="nameListPlaceholder")
-          button#namelist-shuffle-btn.namelist-shuffle-bar(data-i18n="shuffleBtnTitle") 🔀 Random sort
+          button#namelist-shuffle-btn.namelist-shuffle-bar
+            span 🔀
+            span(data-i18n="shuffleBtnTitle") Random sort
           #dedupe-notice.dedupe-notice
 
         div.input-group.input-group--2-column
