@@ -520,8 +520,51 @@
       .info-clock { font-size: 0.7rem; }
       .prizes-grid { grid-template-columns: 1fr; }
     }
+
+    #fullscreen-btn {
+  position: fixed;
+  bottom: 1.2rem;
+  right: 1.2rem;
+  z-index: 100;
+
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(10,10,10,0.45);
+  backdrop-filter: blur(12px);
+
+  border: 1px solid rgba(255,255,255,0.15);
+
+  color: rgba(255,255,255,0.85);
+  cursor: pointer;
+
+  transition: all 0.25s ease;
+}
+
+#fullscreen-btn:hover {
+  border-color: rgba(255,215,0,0.6);
+  color: #ffd700;
+  box-shadow: 0 0 12px rgba(255,215,0,0.4);
+}
   </style>
 </head>
+
+<button id="fullscreen-btn" title="Fullscreen">
+  <svg viewBox="0 0 24 24" width="20" height="20">
+    <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" 
+          fill="none" 
+          stroke="currentColor" 
+          stroke-width="1.6" 
+          stroke-linecap="round" 
+          stroke-linejoin="round"/>
+  </svg>
+</button>
+
 <body>
 
 <canvas id="lights"></canvas>
@@ -926,6 +969,17 @@
   }
   setInterval(pollCountdown, 1000);
   applyCountdownState(null);
+
+  const fsBtn = document.getElementById('fullscreen-btn');
+
+fsBtn.addEventListener('click', () => {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+});
+
 </script>
 </body>
 </html>
