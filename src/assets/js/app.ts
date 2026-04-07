@@ -4,7 +4,7 @@ import Slot from '@js/Slot';
 import SoundEffects from '@js/SoundEffects';
 import PrizeManager from '@js/PrizeManager';
 import {
-  t, setLang, applyLang, getLocale, type Lang
+  t, setLang, applyLang, type Lang
 } from '@js/i18n';
 
 const initStars = () => {
@@ -710,9 +710,9 @@ initStars();
   const mainClockDate = document.getElementById('main-clock-date');
   const tickClock = () => {
     const now = new Date();
-    if (mainClockTime) mainClockTime.textContent = now.toLocaleTimeString(getLocale());
+    if (mainClockTime) mainClockTime.textContent = now.toLocaleTimeString('en-GB');
     if (mainClockDate) {
-      mainClockDate.textContent = now.toLocaleDateString(getLocale(), {
+      mainClockDate.textContent = now.toLocaleDateString('en-GB', {
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
       });
     }

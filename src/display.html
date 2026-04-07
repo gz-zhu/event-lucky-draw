@@ -609,13 +609,22 @@
       countdown: '⏱ カウントダウン', paused: '⏸ 一時停止', ready: '⏱ 準備完了',
       timesUp: '🎉 時間終了！', tickerLabel: '🏆 当選者', seedLabel: 'シード',
       locale: 'ja-JP'
+    },
+    my: {
+      participants: 'ပါဝင်သူများ', winners: 'အနိုင်ရသူများ', remaining: 'ကျန်သော',
+      prizes: 'ဆုများ', done: '✓ ပြီးဆုံး', upcoming: 'မဆုဖွင့်ရသေး',
+      spotsLine1: 'နေရာ', spotsLine2: 'ကျန်တော့',
+      noWinnersYet: 'မည်သူမျှ မအနိုင်ရသေး',
+      countdown: '⏱ အချိန်ကုန်ဆုံးချိန်', paused: '⏸ ရပ်ဆိုင်းထား', ready: '⏱ အသင့်ဖြစ်',
+      timesUp: '🎉 အချိန်ကုန်ပြီ!', tickerLabel: '🏆 အနိုင်ရသူများ', seedLabel: 'SEED',
+      locale: 'my-MM'
     }
   };
 
   var currentLang = 'en';
   try {
     var saved = localStorage.getItem('app-lang');
-    if (saved === 'zh' || saved === 'ja') currentLang = saved;
+    if (saved === 'zh' || saved === 'ja' || saved === 'my') currentLang = saved;
   } catch(e) {}
   var i18n = DISPLAY_I18N[currentLang];
 
@@ -668,10 +677,9 @@
   // ── Clock ──────────────────────────────────────────────────
   function tick() {
     var now = new Date();
-    var locale = i18n.locale;
-    document.getElementById('clock').textContent = now.toLocaleTimeString(locale);
+    document.getElementById('clock').textContent = now.toLocaleTimeString('en-GB');
     document.getElementById('date-display').textContent =
-      now.toLocaleDateString(locale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      now.toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   }
   setInterval(tick, 1000); tick();
 
@@ -838,7 +846,7 @@
     if (e.key === 'draw-title') applyDrawTitle();
     if (e.key === 'app-lang') {
       var newLang = e.newValue;
-      if (newLang === 'zh' || newLang === 'ja' || newLang === 'en') {
+      if (newLang === 'zh' || newLang === 'ja' || newLang === 'en' || newLang === 'my') {
         currentLang = newLang;
         applyStaticText();
         refresh();

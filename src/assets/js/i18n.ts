@@ -1,4 +1,4 @@
-export type Lang = 'en' | 'zh' | 'ja';
+export type Lang = 'en' | 'zh' | 'ja' | 'my';
 
 const LANG_KEY = 'app-lang';
 
@@ -270,6 +270,95 @@ const dict: Record<Lang, Dict> = {
     displayTimesUp: '🎉 時間終了！',
     displayTickerLabel: '🏆 当選者',
     displaySeedLabel: 'シード'
+  },
+
+  my: {
+    // ── Static UI ──────────────────────────────────────────────
+    recordsTitle: 'မှတ်တမ်းများ',
+    displayLink: '📺 မျက်နှာပြင်',
+    tickerLabel: '🏆 အနိုင်ရသူများ',
+    restoreBtn: 'ပြန်လည်ရယူရန်',
+    dismissBtn: 'ပိတ်ရန်',
+    pleaseSelectPrize: 'ဆုတစ်ခု ရွေးချယ်ပါ',
+    countdownStartBtn: 'စတင်ရန်',
+    countdownResetBtn: 'ပြန်လည်သတ်မှတ်ရန်',
+    countdownCancelBtn: 'ပယ်ဖျက်ရန်',
+    autoBtn: 'အလိုအလျောက်',
+    autoTitle: 'အချိန်ကုန်သောအခါ အလိုအလျောက် ဆုဖွင့်မည်',
+    drawBtn: 'ဆုဖွင့်ရန်',
+    exportCsvBtn: 'CSV ထုတ်ရန်',
+    clearRecordsBtn: 'ဖျက်ရန်',
+    settingsTitle: 'ဆက်တင်များ',
+    resetAllBtn: 'အားလုံး ပြန်သတ်မှတ်ရန်',
+    drawTitleLabel: 'ပွဲတော်ခေါင်းစဉ်',
+    drawTitlePlaceholder: 'ဥပမာ - နှစ်ပတ်လည် ညစာစားပွဲ 2026',
+    nameListLabel: 'ပါဝင်သူစာရင်း',
+    uploadCsvBtn: 'CSV တင်ရန်',
+    maskBtnTitle: 'ကိုယ်ရေးအချက်အလက် ဝှက်ရန်',
+    shuffleBtnTitle: 'ကျပန်းစီစဉ်ရန်',
+    mergeBtnTitle: 'ထပ်နေသောအမည် ပေါင်းစည်းရန်',
+    clearListBtnTitle: 'စာရင်း ရှင်းလင်းရန်',
+    nameListPlaceholder: 'တစ်ကြောင်းတွင် အမည်တစ်ခု ထည့်ပါ (10,000+ ဦး ထောက်ပံ့)။\nCSV: တစ်ကြောင်း = ပါဝင်သူတစ်ဦး၊ ကော်လံများ ပေါင်းစည်းမည်။',
+    removeWinnerLabel: 'အနိုင်ရသူကို စာရင်းမှ ဖယ်ရှားရန်',
+    enableSoundLabel: 'အသံဖွင့်ရန်',
+    prizeSettingsLabel: 'ဆုဆိုင်ရာ ဆက်တင်များ',
+    resetPrizesBtn: 'ဆုဆက်တင် ပြန်သတ်မှတ်ရန်',
+    prizeHeaderName: 'အမည်',
+    prizeHeaderCount: 'အရေအတွက်',
+    prizeHeaderDrawTime: 'ဆုဖွင့်ချိန်',
+    addPrizeBtn: '+ ဆုထပ်ထည့်ရန်',
+    countdownLabel: '⏱ အချိန်ကုန်ဆုံးချိန်',
+    countdownHint: 'ဆုတစ်ခုနှင့် ကြာချိန်သတ်မှတ်ပါ။ ထိုဆုဖွင့်နေချိန် မျက်နှာပြင်တွင် စတင် / ရပ်ဆိုင်း / ပြန်သတ်မှတ် ဘားထင်ပေါ်မည်။',
+    selectPrize: '— ဆုရွေးချယ်ပါ —',
+    countdownUnit: 'မိနစ်',
+    countdownClearHint: 'ဆုမရွေးပါက အချိန်ကုန်ဆုံးချိန် ပိတ်ထားမည်။',
+    saveBtn: 'သိမ်းဆည်းရန်',
+    discardBtn: 'မသိမ်းဘဲ ပိတ်ရန်',
+    recordsHeading: 'မှတ်တမ်းများ',
+    // ── Dynamic strings ────────────────────────────────────────
+    countdownPauseBtn: 'ခဏရပ်ရန်',
+    autoDrawOnTitle: 'အလိုအလျောက် ဖွင့်ထား — အချိန်ကုန်သောအခါ အလိုအလျောက် ဆုဖွင့်မည်',
+    autoDrawWarnFull: '⚠ အလိုအလျောက်ဆုဖွင့်: ဆုပြည့်နေ သို့မဟုတ် မရွေးရသေး',
+    autoDrawWarnEmpty: '⚠ အလိုအလျောက်ဆုဖွင့်: ပါဝင်သူ မရှိသေးပါ',
+    drawingLabel: 'ဆုဖွင့်နေသည်: {{name}} (ကျန် {{count}} ဦး)',
+    pleaseSelectPrizeFirst: 'ဦးစွာ ဆုတစ်ခု ရွေးချယ်ပါ',
+    allWinnersDrawn: 'ဤဆုအတွက် အနိုင်ရသူများ ပြည့်ဆုံးပြီ',
+    addParticipantsFirst: 'ဆက်တင်တွင် ပါဝင်သူများ ဦးစွာ ထည့်ပါ',
+    participantCount: 'ပါဝင်သူ {{count}} ဦး',
+    dedupeRemoved: '⚠ ထပ်နေသော အနိုင်ရသူ {{count}} ဦး ဖယ်ရှားလိုက်သည်',
+    prizeMeta: '{{drawn}}/{{total}} ဦး',
+    recordsGroupCount: '{{drawn}}/{{total}} ဦး အနိုင်ရ',
+    noRecordsYet: 'မှတ်တမ်း မရှိသေးပါ',
+    clearRecordsConfirm: 'မှတ်တမ်းအားလုံး ဖျက်မည်လား? ဤလုပ်ဆောင်ချက်ကို ပြန်မပြောင်းနိုင်ပါ။',
+    resetPrizesConfirm: 'ဆုဆက်တင်ကို ပြန်သတ်မှတ်မည်လား? ဆုဆက်တင်နှင့် မှတ်တမ်းများ အားလုံး ပျောက်ပျက်သွားမည်။',
+    resetAllConfirm: 'ဆက်တင်အားလုံး ပြန်သတ်မှတ်မည်လား? ပွဲတော်ခေါင်းစဉ်၊ ပါဝင်သူစာရင်း၊ ဆုဆက်တင်၊ မှတ်တမ်းနှင့် ဒေတာအားလုံး ဖျက်မည်။',
+    recoveryBanner: '⚠ ဆုဖွင့်ခြင်း ကြားဖြတ်ရပ်တန့်ခဲ့သည်။ {{count}} ဦးကို ပြန်ထည့်မည်လား?',
+    csvLoaded: '✓ CSV မှ {{count}} ဦး တင်ပြီးပြီ',
+    firebaseError: '⚠ Firebase sync မအောင်မြင် — ဒေတာကို ဒေသတွင်းသာ သိမ်းဆည်းပြီ',
+    showPersonalInfo: 'ကိုယ်ရေးအချက်အလက် ပြရန်',
+    hidePersonalInfo: 'ကိုယ်ရေးအချက်အလက် ဝှက်ရန်',
+    mergedDuplicates: '✓ ထပ်နေသော {{count}} ခု ဖယ်ရှားလိုက်သည်',
+    noDuplicatesFound: '✓ ထပ်နေသောအမည် မရှိပါ',
+    clearListConfirm: 'ပါဝင်သူစာရင်း အားလုံး ဖျက်မည်လား?',
+    seedLabel: 'SEED · {{seed}}',
+    prizePlaceholder: 'ဆုအမည်',
+    prizeDescPlaceholder: 'ဆုပစ္စည်း ဖော်ပြချက် (မဖြစ်မနေ မဟုတ်)',
+    prizeDefaultName: 'ဆု',
+    // ── Display page strings ───────────────────────────────────
+    displayParticipants: 'ပါဝင်သူများ',
+    displayWinners: 'အနိုင်ရသူများ',
+    displayRemaining: 'ကျန်သော',
+    displayPrizes: 'ဆုများ',
+    displayDone: '✓ ပြီးဆုံး',
+    displayUpcoming: 'မဆုဖွင့်ရသေး',
+    displaySpotsRemaining: 'နေရာ\nကျန်တော့',
+    displayNoWinnersYet: 'မည်သူမျှ မအနိုင်ရသေး',
+    displayCountdown: '⏱ အချိန်ကုန်ဆုံးချိန်',
+    displayPaused: '⏸ ရပ်ဆိုင်းထား',
+    displayReady: '⏱ အသင့်ဖြစ်',
+    displayTimesUp: '🎉 အချိန်ကုန်ပြီ!',
+    displayTickerLabel: '🏆 အနိုင်ရသူများ',
+    displaySeedLabel: 'SEED'
   }
 };
 
@@ -279,7 +368,7 @@ let currentLang: Lang = 'en';
 // Load persisted language immediately so t() works from first call
 try {
   const saved = localStorage.getItem(LANG_KEY) as Lang | null;
-  if (saved === 'en' || saved === 'zh' || saved === 'ja') currentLang = saved;
+  if (saved === 'en' || saved === 'zh' || saved === 'ja' || saved === 'my') currentLang = saved;
 } catch (e) { /* ignore */ }
 
 // ── Public API ──────────────────────────────────────────────────
@@ -287,7 +376,9 @@ try {
 export function getLang(): Lang { return currentLang; }
 
 export function getLocale(): string {
-  const locales: Record<Lang, string> = { en: 'en-GB', zh: 'zh-TW', ja: 'ja-JP' };
+  const locales: Record<Lang, string> = {
+    en: 'en-GB', zh: 'zh-TW', ja: 'ja-JP', my: 'my-MM'
+  };
   return locales[currentLang];
 }
 
