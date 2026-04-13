@@ -66,6 +66,13 @@ initStars();
   const settingsContent = document.getElementById('settings-panel') as HTMLDivElement | null;
   const settingsSaveButton = document.getElementById('settings-save') as HTMLButtonElement | null;
   const settingsCloseButton = document.getElementById('settings-close') as HTMLButtonElement | null;
+  const langButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-lang]'));
+  const settingsTabButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('[data-settings-tab]')
+  );
+  const settingsTabPanels = Array.from(
+    document.querySelectorAll<HTMLElement>('[data-settings-panel]')
+  );
   const sunburstSvg = document.getElementById('sunburst') as HTMLImageElement | null;
   const confettiCanvas = document.getElementById('confetti-canvas') as HTMLCanvasElement | null;
   const nameListTextArea = document.getElementById('name-list') as HTMLTextAreaElement | null;
@@ -97,7 +104,7 @@ initStars();
     && settingsWrapper && settingsContent && settingsSaveButton
     && settingsCloseButton && sunburstSvg && confettiCanvas
     && nameListTextArea && removeNameFromListCheckbox && enableSoundCheckbox
-    && prizeButtonsContainer && currentPrizeLabel
+    && prizeButtonsContainer
     && recordsPanel && recordsToggle && recordsClose && recordsBody
     && exportCsvButton && clearRecordsButton
     && prizeConfigList && addPrizeRowButton
@@ -169,39 +176,74 @@ initStars();
   // ── Countdown config (standalone module) ─────────────────────
   const countdownBarEl = document.getElementById('countdown-bar') as HTMLDivElement | null;
   const countdownBarTimeEl = document.getElementById('countdown-bar-time') as HTMLDivElement | null;
+  const countdownBarProgressEl = document.getElementById('countdown-bar-progress') as HTMLDivElement | null;
   const countdownToggleBtn = document.getElementById('countdown-toggle') as HTMLButtonElement | null;
   const countdownResetBtn = document.getElementById('countdown-reset') as HTMLButtonElement | null;
-  const countdownCfgPrize = document.getElementById('countdown-cfg-prize') as HTMLSelectElement | null;
-  const countdownCfgMins = document.getElementById('countdown-cfg-mins') as HTMLInputElement | null;
-  const countdownAutoBtn = document.getElementById('countdown-auto') as HTMLButtonElement | null;
+  const countdownSecondsInput = document.getElementById('countdown-seconds') as HTMLInputElement | null;
+  const countdownAutoBtn = document.getElementById('countdown-auto') as HTMLInputElement | null;
 
   let autoDrawEnabled = false;
   let autoDrawFired = false;
-  let autoCountdownCleanupPending = false;
   let spinInProgress = false;
   const NAME_LIST_STORAGE_KEY = 'draw-name-list';
   const NAME_LIST_DRAFT_STORAGE_KEY = 'draw-name-list-draft';
+  const COUNTDOWN_PRESET_STORAGE_KEY = 'draw-countdown-secs-by-prize';
 
   interface CountdownConfig { prizeId: string; minutes: number; }
+  interface CountdownPresetMap { [prizeId: string]: number; }
 
   const getCountdownConfig = (): CountdownConfig | null => {
     try {
-      const raw = localStorage.getItem('draw-countdown-config');
-      return raw ? JSON.parse(raw) : null;
-    } catch { return null; }
-  };
-
-  const saveCountdownConfig = (cfg: CountdownConfig | null): void => {
-    try {
-      if (cfg) {
-        localStorage.setItem('draw-countdown-config', JSON.stringify(cfg));
-      } else {
-        localStorage.removeItem('draw-countdown-config');
-      }
-    } catch (e) { /* ignore */ }
+      const raw = localStorage.getItem('draw-countdown');
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed?.prizeId || !Number.isFinite(parsed?.minutes)) return null;
+      return { prizeId: parsed.prizeId, minutes: parsed.minutes };
+    } catch {
+      return null;
+    }
   };
 
   const fmtSecs = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+  const normalizeCountdownSecs = (value: number): number => {
+    const safeValue = Number.isFinite(value) ? value : 0;
+    return Math.min(3600, Math.max(0, Math.round(safeValue)));
+  };
+  const getCountdownPresetMap = (): CountdownPresetMap => {
+    try {
+      const raw = localStorage.getItem(COUNTDOWN_PRESET_STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      if (!parsed || typeof parsed !== 'object') return {};
+      return Object.entries(parsed).reduce<CountdownPresetMap>((acc, [prizeId, secs]) => {
+        acc[prizeId] = normalizeCountdownSecs(Number(secs));
+        return acc;
+      }, {});
+    } catch {
+      return {};
+    }
+  };
+
+  const saveCountdownPresetMap = (map: CountdownPresetMap): void => {
+    try {
+      localStorage.setItem(COUNTDOWN_PRESET_STORAGE_KEY, JSON.stringify(map));
+    } catch (e) { /* ignore */ }
+  };
+
+  const getCountdownPresetSecs = (prizeId?: string | null): number => {
+    if (!prizeId) return 0;
+    return normalizeCountdownSecs(getCountdownPresetMap()[prizeId] ?? 0);
+  };
+
+  const setCountdownPresetSecs = (prizeId: string, secs: number): void => {
+    const map = getCountdownPresetMap();
+    const normalizedSecs = normalizeCountdownSecs(secs);
+    if (normalizedSecs > 0) {
+      map[prizeId] = normalizedSecs;
+    } else {
+      delete map[prizeId];
+    }
+    saveCountdownPresetMap(map);
+  };
 
   const getCountdownSecsRemaining = (cfg: CountdownConfig): number => {
     try {
@@ -271,30 +313,62 @@ initStars();
     saveStoredNames(NAME_LIST_DRAFT_STORAGE_KEY, names);
   };
 
+  type SettingsTabId = 'name-list' | 'prize-settings' | 'general';
+
+  const setActiveSettingsTab = (tabId: SettingsTabId): void => {
+    settingsTabButtons.forEach((buttonRef) => {
+      const button = buttonRef;
+      const isActive = button.dataset.settingsTab === tabId;
+      button.classList.toggle('is-active', isActive);
+      button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      button.tabIndex = isActive ? 0 : -1;
+    });
+
+    settingsTabPanels.forEach((panelRef) => {
+      const panel = panelRef;
+      const isActive = panel.dataset.settingsPanel === tabId;
+      panel.classList.toggle('is-active', isActive);
+      panel.hidden = !isActive;
+    });
+  };
+
   function syncCountdownAutoUi(): void {
     if (!countdownAutoBtn) return;
-    countdownAutoBtn.classList.toggle('active', autoDrawEnabled);
+    countdownAutoBtn.checked = autoDrawEnabled;
     countdownAutoBtn.title = autoDrawEnabled
       ? t('autoDrawOnTitle')
       : t('autoTitle');
   }
 
-  function disableCountdownFeature(clearInputs = false): void {
-    const cfg = getCountdownConfig();
-    saveCountdownConfig(null);
+  const syncCountdownInputForPrize = (): number => {
+    const { currentPrize } = prizeManager;
+    const secs = getCountdownPresetSecs(currentPrize?.id);
+    if (countdownSecondsInput) countdownSecondsInput.value = String(secs);
+    return secs;
+  };
+
+  const applyHomepageCountdownConfig = (secs: number): void => {
+    const { currentPrize } = prizeManager;
+    if (!currentPrize) return;
+    const normalizedSecs = normalizeCountdownSecs(secs);
+    setCountdownPresetSecs(currentPrize.id, normalizedSecs);
+    prizeManager.clearCountdown();
+    autoDrawFired = false;
+    if (normalizedSecs > 0) {
+      prizeManager.resetCountdown(currentPrize.id, normalizedSecs / 60);
+    }
+  };
+
+  function clearCountdownForPrize(prizeId: string, resetPreset = true): void {
     prizeManager.clearCountdown();
     autoDrawEnabled = false;
     autoDrawFired = false;
-    autoCountdownCleanupPending = false;
     syncCountdownAutoUi();
-
-    if (clearInputs && cfg) {
-      if (countdownCfgPrize && countdownCfgPrize.value === cfg.prizeId) {
-        countdownCfgPrize.value = '';
-      }
-      if (countdownCfgMins && parseInt(countdownCfgMins.value ?? '', 10) === cfg.minutes) {
-        countdownCfgMins.value = '';
-      }
+    if (resetPreset) {
+      setCountdownPresetSecs(prizeId, 0);
+    }
+    if (prizeManager.currentPrize?.id === prizeId && countdownSecondsInput) {
+      countdownSecondsInput.value = '0';
     }
   }
 
@@ -343,10 +417,7 @@ initStars();
   };
 
   const updateCurrentPrizeLabel = () => {
-    const p = prizeManager.currentPrize;
-    currentPrizeLabel.textContent = p
-      ? t('drawingLabel', { name: p.name, count: prizeManager.remainingCount() })
-      : t('pleaseSelectPrize');
+    if (currentPrizeLabel) currentPrizeLabel.style.display = 'none';
   };
 
   const updateDrawButton = () => {
@@ -366,7 +437,7 @@ initStars();
       const btn = document.createElement('button');
       const isFull = prize.winners.length >= prize.count;
       const isActive = prizeManager.currentPrize?.id === prize.id;
-      const hasCountdown = cfg?.prizeId === prize.id;
+      const hasCountdown = getCountdownPresetSecs(prize.id) > 0 || cfg?.prizeId === prize.id;
       btn.dataset.prizeId = prize.id;
       btn.className = `prize-select-btn${isActive ? ' active' : ''}${isFull ? ' full' : ''}`;
       const btnName = document.createElement('span');
@@ -382,6 +453,7 @@ initStars();
         prizeManager.selectPrize(prize.id);
         renderPrizeButtons();
         updateCurrentPrizeLabel();
+        syncCountdownInputForPrize();
         updateDrawButton();
         refreshCountdownUi();
         stopWinningAnimation();
@@ -392,56 +464,73 @@ initStars();
   };
 
   const updateCountdownBar = () => {
-    const cfg = getCountdownConfig();
     const p = prizeManager.currentPrize;
-    if (!countdownBarEl || !cfg || !p || cfg.prizeId !== p.id) {
+    const cfg = getCountdownConfig();
+    if (!countdownBarEl || !p) {
       if (countdownBarEl) countdownBarEl.style.display = 'none';
       return;
     }
     countdownBarEl.style.display = 'flex';
-    const secs = getCountdownSecsRemaining(cfg);
+    const secsInput = syncCountdownInputForPrize();
+    const activeCfg = cfg && cfg.prizeId === p.id ? cfg : null;
+    const totalSecs = activeCfg
+      ? normalizeCountdownSecs(Math.round(activeCfg.minutes * 60))
+      : secsInput;
+    const secs = activeCfg ? getCountdownSecsRemaining(activeCfg) : totalSecs;
+    const countdownRunning = activeCfg ? isCountdownRunning(activeCfg) : false;
+    const shouldCleanup = Boolean(activeCfg && secs === 0);
+    const autoWasEnabled = autoDrawEnabled;
+
     if (countdownBarTimeEl) {
       countdownBarTimeEl.textContent = fmtSecs(secs);
       countdownBarTimeEl.classList.toggle('urgent', secs <= 60 && secs > 0);
     }
-    const countdownRunning = isCountdownRunning(cfg);
+    if (countdownBarProgressEl) {
+      const progress = totalSecs > 0 ? Math.max(0, Math.min(100, (secs / totalSecs) * 100)) : 0;
+      countdownBarProgressEl.style.width = `${progress}%`;
+    }
     if (countdownToggleBtn) countdownToggleBtn.textContent = countdownRunning ? t('countdownPauseBtn') : t('countdownStartBtn');
+    if (countdownSecondsInput) countdownSecondsInput.disabled = countdownRunning;
+    countdownBarEl.classList.toggle('is-running', countdownRunning);
+    countdownBarEl.classList.toggle('is-idle', !countdownRunning);
 
-    // Auto draw: trigger when countdown finishes naturally
-    if (secs === 0 && countdownRunning) {
-      if (autoDrawEnabled && !autoDrawFired) {
+    if (shouldCleanup) {
+      clearCountdownForPrize(p.id);
+      renderPrizeButtons();
+
+      if (countdownRunning && autoWasEnabled && !autoDrawFired) {
         autoDrawFired = true;
-        autoDrawEnabled = false;
-        autoCountdownCleanupPending = true;
-        syncCountdownAutoUi();
         setTimeout(() => {
           const ap = prizeManager.currentPrize;
           if (!ap || prizeManager.isCurrentPrizeFull()) {
-            disableCountdownFeature(true);
-            renderPrizeButtons();
-            updateCountdownBar();
             showToast(t('autoDrawWarnFull'));
+            updateCountdownBar();
             return;
           }
           if (!slot || !slot.names.length) {
-            disableCountdownFeature(true);
-            renderPrizeButtons();
-            updateCountdownBar();
             showToast(t('autoDrawWarnEmpty'));
+            updateCountdownBar();
             return;
           }
           const sp = calcSpinParams(slot.names.length);
           currentSpinDurationMs = sp.items * sp.msPerItem;
           slot.updateSpinParams(sp.items, sp.msPerItem);
           slot.spin();
-        }, 600);
-      } else if (!autoDrawEnabled) {
-        disableCountdownFeature(true);
-        renderPrizeButtons();
-        updateCountdownBar();
-        return;
+        }, 450);
+      } else {
+        autoDrawFired = false;
       }
+
+      if (countdownBarTimeEl) countdownBarTimeEl.textContent = '00:00';
+      if (countdownBarProgressEl) countdownBarProgressEl.style.width = '0%';
+      if (countdownToggleBtn) countdownToggleBtn.textContent = t('countdownStartBtn');
+      if (countdownSecondsInput) countdownSecondsInput.disabled = false;
+      countdownBarEl.classList.remove('is-running');
+      countdownBarEl.classList.add('is-idle');
+      syncControlLocks();
+      return;
     }
+
     if (secs > 0) autoDrawFired = false;
   };
   refreshCountdownUi = updateCountdownBar;
@@ -449,11 +538,27 @@ initStars();
   setInterval(updateCountdownBar, 1000);
 
   countdownToggleBtn?.addEventListener('click', () => {
-    const cfg = getCountdownConfig();
-    if (!cfg) return;
-    if (isCountdownRunning(cfg)) {
-      prizeManager.pauseCountdown(getCountdownSecsRemaining(cfg));
+    const { currentPrize } = prizeManager;
+    if (!currentPrize) return;
+
+    const secs = normalizeCountdownSecs(parseInt(countdownSecondsInput?.value ?? '0', 10));
+    let cfg = getCountdownConfig();
+    const currentCfg = cfg && cfg.prizeId === currentPrize.id ? cfg : null;
+
+    if (currentCfg && isCountdownRunning(currentCfg)) {
+      prizeManager.pauseCountdown(getCountdownSecsRemaining(currentCfg));
     } else {
+      if (secs <= 0) {
+        showToast(t('countdownSetSecondsFirst'));
+        return;
+      }
+      if (!currentCfg) {
+        applyHomepageCountdownConfig(secs);
+        cfg = getCountdownConfig();
+        if (!cfg || cfg.prizeId !== currentPrize.id) return;
+      } else {
+        cfg = currentCfg;
+      }
       try {
         const raw = localStorage.getItem('draw-countdown');
         const state = raw ? JSON.parse(raw) : null;
@@ -469,24 +574,38 @@ initStars();
   });
 
   countdownResetBtn?.addEventListener('click', () => {
-    const cfg = getCountdownConfig();
-    if (!cfg) return;
-    prizeManager.resetCountdown(cfg.prizeId, cfg.minutes);
+    const { currentPrize } = prizeManager;
+    if (!currentPrize) return;
+    clearCountdownForPrize(currentPrize.id);
+    renderPrizeButtons();
     updateCountdownBar();
     syncControlLocks();
   });
 
   const countdownCancelBtn = document.getElementById('countdown-cancel') as HTMLButtonElement | null;
   countdownCancelBtn?.addEventListener('click', () => {
-    disableCountdownFeature(true);
-
+    const { currentPrize } = prizeManager;
+    if (!currentPrize) return;
+    clearCountdownForPrize(currentPrize.id);
     renderPrizeButtons();
     updateCountdownBar();
     syncControlLocks();
   });
 
-  countdownAutoBtn?.addEventListener('click', () => {
-    autoDrawEnabled = !autoDrawEnabled;
+  countdownSecondsInput?.addEventListener('change', () => {
+    const secs = normalizeCountdownSecs(parseInt(countdownSecondsInput.value, 10));
+    countdownSecondsInput.value = String(secs);
+    const { currentPrize } = prizeManager;
+    if (!currentPrize) return;
+    const cfg = getCountdownConfig();
+    if (cfg?.prizeId === currentPrize.id && isCountdownRunning(cfg)) return;
+    applyHomepageCountdownConfig(secs);
+    updateCountdownBar();
+    renderPrizeButtons();
+  });
+
+  countdownAutoBtn?.addEventListener('change', () => {
+    autoDrawEnabled = countdownAutoBtn.checked;
     autoDrawFired = false;
     syncCountdownAutoUi();
   });
@@ -681,46 +800,54 @@ initStars();
 
   let activePickerClose: (() => void) | null = null;
 
-  // Sync countdown prize select from current config rows (before Save)
-  const syncCountdownSelectFromRows = () => {
-    if (!countdownCfgPrize) return;
-    const previousValue = countdownCfgPrize.value;
-    countdownCfgPrize.innerHTML = `<option value="">${t('selectPrize')}</option>`;
-    prizeConfigList.querySelectorAll<HTMLElement>('.prize-config-row').forEach((row) => {
-      const rowId = row.dataset.id ?? '';
-      const nameInput = row.querySelector('.pc-name') as HTMLInputElement | null;
-      const rowName = nameInput?.value.trim() || 'Prize';
-      if (!rowId) return;
-      const opt = document.createElement('option');
-      opt.value = rowId;
-      opt.textContent = rowName;
-      if (previousValue === rowId) opt.selected = true;
-      countdownCfgPrize.appendChild(opt);
-    });
-  };
-
   // Prize config in settings
+
+  function refreshPrizeCardOrder(): void {
+    Array.from(prizeConfigList.querySelectorAll<HTMLElement>('.prize-config-row')).forEach((row, index) => {
+      const title = row.querySelector<HTMLElement>('.prize-config-card__index');
+      if (title) title.textContent = `${t('prizeDefaultName')} ${index + 1}`;
+    });
+  }
 
   const makePrizeRow = (id: string, name: string, count: number, drawTime: string, description = ''): HTMLDivElement => {
     const row = document.createElement('div');
     row.className = 'prize-config-row';
     row.dataset.id = id;
     row.innerHTML = `
-      <input class="input-field pc-name" type="text" placeholder="${t('prizePlaceholder')}" value="${name}">
-      <input class="input-field pc-count" type="number" min="1" value="${count}" style="text-align:center">
-      <input class="input-field pc-drawtime" type="text" pattern="[0-2][0-9]:[0-5][0-9]"
-        placeholder="HH:MM" value="${drawTime}" style="text-align:center;cursor:pointer" readonly>
-      <button class="solid-button solid-button--danger pc-del" style="padding:0.4rem 0.8rem;font-size:0.875rem">✕</button>
-      <input class="input-field pc-desc" type="text" placeholder="${t('prizeDescPlaceholder')}" value="${description}">
+      <div class="prize-config-card__header">
+        <div class="prize-config-card__index">${t('prizeDefaultName')}</div>
+        <button class="pc-del prize-config-card__delete" type="button" aria-label="Delete prize">✕</button>
+      </div>
+      <div class="prize-config-card__grid">
+        <label class="prize-config-card__field">
+          <span class="prize-config-card__label">${t('prizeHeaderName')}</span>
+          <input class="input-field pc-name" type="text" placeholder="${t('prizePlaceholder')}" value="${name}">
+        </label>
+        <label class="prize-config-card__field">
+          <span class="prize-config-card__label">${t('prizeHeaderCount')}</span>
+          <input class="input-field pc-count" type="number" min="1" value="${count}" style="text-align:center">
+        </label>
+        <label class="prize-config-card__field">
+          <span class="prize-config-card__label">${t('prizeHeaderDrawTime')}</span>
+          <input class="input-field pc-drawtime" type="text" pattern="[0-2][0-9]:[0-5][0-9]"
+            placeholder="HH:MM" value="${drawTime}" style="text-align:center;cursor:pointer" readonly>
+        </label>
+        <label class="prize-config-card__field prize-config-card__field--full">
+          <span class="prize-config-card__label">${t('prizeDescLabel')}</span>
+          <input class="input-field pc-desc" type="text" placeholder="${t('prizeDescPlaceholder')}" value="${description}">
+        </label>
+      </div>
     `;
-    (row.querySelector('.pc-name') as HTMLInputElement).addEventListener('input', syncCountdownSelectFromRows);
-
     const dtText = row.querySelector('.pc-drawtime') as HTMLInputElement;
     const {
       popup, hourSel, minSel, okBtn
     } = buildTimePicker();
     // pc-del handler placed after buildTimePicker so `popup` is already in scope
-    row.querySelector('.pc-del')!.addEventListener('click', () => { popup.remove(); row.remove(); });
+    row.querySelector('.pc-del')!.addEventListener('click', () => {
+      popup.remove();
+      row.remove();
+      refreshPrizeCardOrder();
+    });
     const closePopup = () => { popup.style.display = 'none'; };
 
     popup.addEventListener('click', (e) => e.stopPropagation());
@@ -761,10 +888,8 @@ initStars();
     prizeManager.allPrizes.forEach((prize) => {
       prizeConfigList.appendChild(makePrizeRow(prize.id, prize.name, prize.count, prize.drawTime ?? '', prize.description ?? ''));
     });
+    refreshPrizeCardOrder();
   };
-
-  // Sync countdown select when rows are added or removed
-  new MutationObserver(syncCountdownSelectFromRows).observe(prizeConfigList, { childList: true });
 
   document.getElementById('reset-prizes')?.addEventListener('click', () => {
     // eslint-disable-next-line no-alert
@@ -786,6 +911,7 @@ initStars();
 
   addPrizeRowButton.addEventListener('click', () => {
     prizeConfigList.appendChild(makePrizeRow(String(Date.now()), '', 1, ''));
+    refreshPrizeCardOrder();
   });
 
   // Spin callbacks
@@ -857,10 +983,6 @@ initStars();
     await new Promise<void>((resolve) => { setTimeout(resolve, 1500); });
     slotEl?.classList.remove('slot--aftermath');
     // ─────────────────────────────────────────────────────────
-
-    if (autoCountdownCleanupPending) {
-      disableCountdownFeature(true);
-    }
 
     renderPrizeButtons();
     updateCurrentPrizeLabel();
@@ -942,21 +1064,6 @@ initStars();
     recoveryDismiss?.addEventListener('click', clearRecovery);
   }
 
-  // Settings panel
-  const refreshCountdownCfgSelect = () => {
-    if (!countdownCfgPrize) return;
-    const cfg = getCountdownConfig();
-    countdownCfgPrize.innerHTML = `<option value="">${t('selectPrize')}</option>`;
-    prizeManager.allPrizes.forEach((p) => {
-      const opt = document.createElement('option');
-      opt.value = p.id;
-      opt.textContent = p.name;
-      if (cfg?.prizeId === p.id) opt.selected = true;
-      countdownCfgPrize.appendChild(opt);
-    });
-    if (countdownCfgMins) countdownCfgMins.value = cfg ? String(cfg.minutes) : '';
-  };
-
   // Draw title helpers (declared before onSettingsOpen to avoid no-use-before-define)
   const drawTitleDisplay = document.getElementById('draw-title-display') as HTMLElement | null;
   const drawTitleInput = document.getElementById('draw-title-input') as HTMLInputElement | null;
@@ -971,7 +1078,7 @@ initStars();
   applyDrawTitle(localStorage.getItem('draw-title') ?? '');
   syncSpinDurationUi(getSpinDurationSec());
 
-  const onSettingsOpen = () => {
+  const onSettingsOpen = (tabId: SettingsTabId = 'name-list') => {
     const draftNames = loadStoredNames(NAME_LIST_DRAFT_STORAGE_KEY);
     nameListTextArea.value = (draftNames.length ? draftNames : slot.names).join('\n');
     updateNameListStats(nameListTextArea.value);
@@ -980,8 +1087,9 @@ initStars();
     syncSpinDurationUi(getSpinDurationSec());
     if (drawTitleInput) drawTitleInput.value = localStorage.getItem('draw-title') ?? '';
     renderPrizeConfig();
-    refreshCountdownCfgSelect();
-    settingsWrapper.style.display = 'block';
+    setActiveSettingsTab(tabId);
+    settingsContent.scrollTop = 0;
+    settingsWrapper.style.display = 'flex';
   };
 
   const onSettingsClose = () => {
@@ -1014,7 +1122,14 @@ initStars();
     document.exitFullscreen();
   });
 
-  settingsButton.addEventListener('click', onSettingsOpen);
+  settingsTabButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const tabId = button.dataset.settingsTab as SettingsTabId | undefined;
+      if (tabId) setActiveSettingsTab(tabId);
+    });
+  });
+
+  settingsButton.addEventListener('click', () => onSettingsOpen('name-list'));
 
   spinDurationRange.addEventListener('input', () => {
     syncSpinDurationUi(parseInt(spinDurationRange.value, 10) || DEFAULT_SPIN_DURATION_SEC);
@@ -1050,17 +1165,6 @@ initStars();
     });
     prizeManager.setPrizes(newPrizes);
 
-    // Save countdown config
-    const cfgPrizeId = countdownCfgPrize?.value ?? '';
-    const cfgMins = parseInt(countdownCfgMins?.value ?? '', 10);
-    if (cfgPrizeId && cfgMins > 0) {
-      saveCountdownConfig({ prizeId: cfgPrizeId, minutes: cfgMins });
-      prizeManager.resetCountdown(cfgPrizeId, cfgMins);
-    } else {
-      saveCountdownConfig(null);
-      prizeManager.clearCountdown();
-    }
-
     // Save draw title
     const titleVal = drawTitleInput?.value ?? '';
     try { localStorage.setItem('draw-title', titleVal); } catch (e) { /* ignore */ }
@@ -1068,6 +1172,7 @@ initStars();
 
     renderPrizeButtons();
     updateCurrentPrizeLabel();
+    syncCountdownInputForPrize();
     updateDrawButton();
     updateParticipantCount();
     updateCountdownBar();
@@ -1076,6 +1181,14 @@ initStars();
 
   settingsCloseButton.addEventListener('click', onSettingsClose);
   document.getElementById('settings-close-x')?.addEventListener('click', onSettingsClose);
+  settingsWrapper.addEventListener('click', (event) => {
+    if (event.target === settingsWrapper) onSettingsClose();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && settingsWrapper.style.display !== 'none') {
+      onSettingsClose();
+    }
+  });
   // CSV upload
   csvUpload?.addEventListener('change', () => {
     const file = csvUpload.files?.[0];
@@ -1105,6 +1218,7 @@ initStars();
   // Init
   renderPrizeButtons();
   updateCurrentPrizeLabel();
+  syncCountdownInputForPrize();
   updateCountdownBar();
   drawButton.disabled = true;
 
@@ -1181,27 +1295,37 @@ initStars();
   });
 
   // Language switcher
-  const langSelect = document.getElementById('lang-select') as HTMLSelectElement | null;
-  if (langSelect) {
-    langSelect.value = (localStorage.getItem('app-lang') as Lang | null) ?? 'en';
-    langSelect.addEventListener('change', () => {
-      const lang = langSelect.value as Lang;
+  const applyLangSwitcherState = (lang: Lang): void => {
+    langButtons.forEach((button) => {
+      button.classList.toggle('is-active', button.dataset.lang === lang);
+    });
+  };
+
+  const rerenderForLanguage = () => {
+    renderPrizeButtons();
+    updateCurrentPrizeLabel();
+    updateDrawButton();
+    updateParticipantCount();
+    updateCountdownBar();
+    syncCountdownAutoUi();
+    refreshTicker();
+    if (recordsPanel.style.display !== 'none') renderRecords();
+    if (settingsWrapper.style.display !== 'none') {
+      renderPrizeConfig();
+    }
+  };
+
+  const initialLang = (localStorage.getItem('app-lang') as Lang | null) ?? 'en';
+  applyLangSwitcherState(initialLang);
+  langButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const lang = (button.dataset.lang as Lang | undefined) ?? 'en';
       setLang(lang);
       applyLang();
-      // Re-render all dynamic content in new language
-      renderPrizeButtons();
-      updateCurrentPrizeLabel();
-      updateDrawButton();
-      updateParticipantCount();
-      updateCountdownBar();
-      refreshTicker();
-      if (recordsPanel.style.display !== 'none') renderRecords();
-      if (settingsWrapper.style.display !== 'none') {
-        renderPrizeConfig();
-        refreshCountdownCfgSelect();
-      }
+      applyLangSwitcherState(lang);
+      rerenderForLanguage();
     });
-  }
+  });
 
   // Warn before closing/refreshing
   window.addEventListener('beforeunload', (e) => {
