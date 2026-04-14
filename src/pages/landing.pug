@@ -75,6 +75,17 @@ include ../mixins/icons
         img(src="~@images/sunburst.svg" alt="sunburst")
 
     button#draw-button.solid-button(disabled data-i18n="drawBtn") Draw
+    #current-prize-info.current-prize-info(style="display:none")
+      .current-prize-info__title
+        span.current-prize-info__icon 🏆
+        span#current-prize-name.current-prize-info__name
+      .current-prize-info__meta
+        .current-prize-info__pill
+          span.current-prize-info__pill-label(data-i18n="currentPrizePoolLabel") Pool
+          span#current-prize-pool.current-prize-info__pill-value 0
+        .current-prize-info__pill
+          span.current-prize-info__pill-label(data-i18n="currentPrizeSlotsLabel") Slots left
+          span#current-prize-slots.current-prize-info__pill-value 0
     #participant-count.participant-count
     #draw-seed.draw-seed
 

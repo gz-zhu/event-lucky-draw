@@ -80,6 +80,10 @@ initStars();
   const enableSoundCheckbox = document.getElementById('enable-sound') as HTMLInputElement | null;
   const prizeButtonsContainer = document.getElementById('prize-buttons') as HTMLDivElement | null;
   const currentPrizeLabel = document.getElementById('current-prize-label') as HTMLDivElement | null;
+  const currentPrizeInfoEl = document.getElementById('current-prize-info') as HTMLDivElement | null;
+  const currentPrizeNameEl = document.getElementById('current-prize-name') as HTMLSpanElement | null;
+  const currentPrizePoolEl = document.getElementById('current-prize-pool') as HTMLSpanElement | null;
+  const currentPrizeSlotsEl = document.getElementById('current-prize-slots') as HTMLSpanElement | null;
   const recordsPanel = document.getElementById('records-panel') as HTMLDivElement | null;
   const recordsToggle = document.getElementById('records-toggle') as HTMLButtonElement | null;
   const recordsClose = document.getElementById('records-close') as HTMLButtonElement | null;
@@ -418,6 +422,18 @@ initStars();
 
   const updateCurrentPrizeLabel = () => {
     if (currentPrizeLabel) currentPrizeLabel.style.display = 'none';
+    const { currentPrize } = prizeManager;
+    if (!currentPrizeInfoEl) return;
+    if (!currentPrize) {
+      currentPrizeInfoEl.style.display = 'none';
+      return;
+    }
+
+    const remainingSlots = Math.max(0, currentPrize.count - currentPrize.winners.length);
+    if (currentPrizeNameEl) currentPrizeNameEl.textContent = currentPrize.name;
+    if (currentPrizePoolEl) currentPrizePoolEl.textContent = String(slot ? slot.names.length : 0);
+    if (currentPrizeSlotsEl) currentPrizeSlotsEl.textContent = String(remainingSlots);
+    currentPrizeInfoEl.style.display = 'flex';
   };
 
   const updateDrawButton = () => {
@@ -803,6 +819,7 @@ initStars();
   // Prize config in settings
 
   function refreshPrizeCardOrder(): void {
+    if (!prizeConfigList) return;
     Array.from(prizeConfigList.querySelectorAll<HTMLElement>('.prize-config-row')).forEach((row, index) => {
       const title = row.querySelector<HTMLElement>('.prize-config-card__index');
       if (title) title.textContent = `${t('prizeDefaultName')} ${index + 1}`;
