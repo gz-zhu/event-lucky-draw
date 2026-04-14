@@ -1,3 +1,9 @@
+@use 'sass:string';
+@use './breakpoints' as *;
+@use './colors' as *;
+@use './mixins' as *;
+@use './variables' as *;
+
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap');
 
 .brand-tag {
@@ -172,8 +178,8 @@
     --safe-area-inset-right: env(safe-area-inset-right);
   }
 
-  @supports (padding: unquote('max(0px)')) {
-    right: unquote('max(1rem, var(--safe-area-inset-right))');
+  @supports (padding: string.unquote('max(0px)')) {
+    right: string.unquote('max(1rem, var(--safe-area-inset-right))');
   }
 
   .icon-button {

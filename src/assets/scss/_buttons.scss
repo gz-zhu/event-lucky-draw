@@ -1,3 +1,6 @@
+@use './colors' as *;
+@use './mixins' as *;
+
 .solid-button {
   display: inline-block;
   border: none;

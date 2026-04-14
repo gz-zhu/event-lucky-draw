@@ -92,6 +92,7 @@ module.exports = merge(baseWebpackConfig, {
           {
             loader: 'sass-loader',
             options: {
+              api: 'modern',
               sourceMap: true
             }
           }

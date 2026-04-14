@@ -1,3 +1,7 @@
+@use './colors' as *;
+@use './mixins' as *;
+@use './variables' as *;
+
 .input-group {
   margin: 0 0 4rem 0;
 
