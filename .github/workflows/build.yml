@@ -2,7 +2,7 @@ name: Build
 on:
   push:
     branches:
-      - 'master'
+      - 'main'
     tags-ignore:
       - '**' # prevent double build on release tag
   pull_request:
