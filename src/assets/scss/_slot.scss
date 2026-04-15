@@ -87,8 +87,8 @@
     animation: title-platinum 6s ease-in-out infinite alternate;
 
     @media #{$mobile} {
-      font-size: 3.5rem;
-      letter-spacing: 0.04em;
+      font-size: clamp(2.7rem, 13vw, 4rem);
+      letter-spacing: 0.02em;
     }
   }
   width: 100%;
@@ -1097,14 +1097,72 @@
 }
 
 @media #{$mobile} {
+  .brand-tag {
+    display: none;
+  }
+
+  #lucky-draw {
+    padding: 6.2rem 0 8.5rem;
+  }
+
+  .title {
+    margin: 0.25rem 0 0.9rem;
+    padding: 0 1rem;
+  }
+
+  .main-clock-wrap {
+    position: static;
+    left: auto;
+    top: auto;
+    margin: 0 auto 1rem;
+    text-align: center;
+    z-index: auto;
+  }
+
+  .main-clock-time {
+    font-size: clamp(2.4rem, 11vw, 3.4rem);
+    letter-spacing: 0.03em;
+  }
+
+  .main-clock-date {
+    font-size: clamp(0.95rem, 4.8vw, 1.35rem);
+    letter-spacing: 0.04em;
+  }
+
+  .prize-buttons {
+    width: min(calc(100vw - 1.4rem), 28rem);
+    margin: 0 auto 1rem;
+    padding: 0;
+    gap: 0.7rem;
+  }
+
   .lang-switcher {
     left: 0.75rem;
     bottom: 0.75rem;
   }
 
+  .control-group {
+    top: 0.8rem;
+    right: 0.8rem;
+
+    .icon-button {
+      margin: 0 0 0 0.85rem;
+    }
+  }
+
   .prize-select-btn {
-    min-width: 8.6rem;
-    padding: 0.5rem 0.85rem;
+    flex: 1 1 calc(50% - 0.35rem);
+    min-width: 0;
+    max-width: calc(50% - 0.35rem);
+    padding: 0.45rem 0.55rem;
+
+    .prize-btn-name {
+      font-size: 0.82rem;
+    }
+
+    .prize-btn-meta {
+      font-size: 0.62rem;
+    }
   }
 
   .current-prize-label__name {

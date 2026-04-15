@@ -327,6 +327,285 @@
       flex-shrink: 0;
     }
 
+    .display-live {
+      position: relative;
+      width: min(100%, 47rem);
+      margin: 0 auto 1.05rem;
+      padding: 0.2rem 0 0.35rem;
+      flex-shrink: 0;
+    }
+
+    .display-live::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at center, rgba(255, 235, 200, 0.14), transparent 58%);
+      pointer-events: none;
+      opacity: 0.9;
+    }
+
+    .display-live__header {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.4rem;
+      padding: 0 0.15rem;
+    }
+
+    .display-live__eyebrow {
+      font-size: 0.56rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255, 215, 0, 0.7);
+    }
+
+    .display-live__prize {
+      margin-top: 0.12rem;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.92);
+      letter-spacing: 0.04em;
+      min-height: 1rem;
+    }
+
+    .display-live__status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.2rem 0.52rem;
+      border-radius: 999px;
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.82);
+      background: rgba(24, 25, 34, 0.34);
+      border: 1px solid rgba(255,255,255,0.18);
+      flex-shrink: 0;
+    }
+
+    .display-live__status::before {
+      content: '';
+      width: 0.48rem;
+      height: 0.48rem;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.35);
+      box-shadow: 0 0 10px rgba(255,255,255,0.2);
+    }
+
+    .display-live.is-spinning .display-live__status {
+      color: #ffe9b5;
+      background: rgba(255, 166, 0, 0.12);
+      border-color: rgba(255, 200, 92, 0.34);
+    }
+
+    .display-live.is-spinning .display-live__status::before {
+      background: #ffd35c;
+      box-shadow: 0 0 14px rgba(255, 211, 92, 0.8);
+      animation: slot-pulse 1s ease-in-out infinite;
+    }
+
+    .display-live.is-settled .display-live__status {
+      color: #dbffea;
+      background: rgba(78, 196, 124, 0.14);
+      border-color: rgba(125, 221, 128, 0.3);
+    }
+
+    .display-live.is-settled .display-live__status::before {
+      background: #7ddb80;
+      box-shadow: 0 0 14px rgba(125, 221, 128, 0.75);
+    }
+
+    .display-live__slot {
+      position: relative;
+      z-index: 1;
+      width: min(100%, 43rem);
+      margin: 0 auto;
+    }
+
+    .display-live__slot-shell {
+      position: relative;
+      border-radius: 1rem;
+      padding: 0.7rem;
+      min-height: 5.15rem;
+      background:
+        rgba(255, 255, 255, 0.14) url('assets/images/light-blubs.svg') center center / cover no-repeat,
+        linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.02));
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,0.26);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.16),
+        0 12px 26px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+
+    .display-live__slot-shell::before {
+      content: '';
+      position: absolute;
+      inset: 0.48rem;
+      border-radius: 0.85rem;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02)),
+        rgba(210, 220, 232, 0.04);
+      box-shadow: inset 0 -16px 30px rgba(27, 34, 43, 0.08);
+      pointer-events: none;
+    }
+
+    .display-live__slot-shell::after {
+      content: '';
+      position: absolute;
+      inset: 0.22rem;
+      border-radius: 0.92rem;
+      border: 1px solid rgba(255,255,255,0.12);
+      pointer-events: none;
+    }
+
+    .display-live__lights {
+      position: absolute;
+      inset: 0.18rem;
+      border-radius: 0.92rem;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .display-live__bulb {
+      position: absolute;
+      width: 0.54rem;
+      height: 0.54rem;
+      margin: -0.27rem 0 0 -0.27rem;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.38);
+      opacity: 0.34;
+      transform: scale(0.9);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.18),
+        0 0 2px rgba(255,255,255,0.12);
+      transition:
+        opacity 140ms linear,
+        transform 140ms linear,
+        background 140ms linear,
+        box-shadow 140ms linear;
+    }
+
+    .display-live__bulb.is-lit {
+      background: rgba(255,255,255,0.98);
+      opacity: 1;
+      transform: scale(1);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.26),
+        0 0 8px rgba(255,255,255,0.95),
+        0 0 16px rgba(255,255,255,0.72);
+    }
+
+    .display-live__slot-window {
+      position: relative;
+      z-index: 1;
+      min-height: 3.55rem;
+      width: calc(100% - 1.2rem);
+      margin: 0.38rem auto;
+      border-radius: 0.82rem;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.06)),
+        rgba(231, 238, 246, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.45rem 1.25rem;
+      overflow: hidden;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.2),
+        inset 0 -18px 28px rgba(10, 18, 28, 0.1);
+    }
+
+    .display-live__slot-window::before,
+    .display-live__slot-window::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 28%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .display-live__slot-window::before {
+      top: 0;
+      background: linear-gradient(180deg, rgba(255,255,255,0.2), rgba(255,255,255,0));
+    }
+
+    .display-live__slot-window::after {
+      bottom: 0;
+      background: linear-gradient(180deg, rgba(255,255,255,0), rgba(10, 18, 28, 0.08));
+    }
+
+    .display-live__reel {
+      position: relative;
+      z-index: 0;
+      width: 100%;
+      text-align: center;
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.25rem, 2.2vw, 2.1rem);
+      font-weight: 700;
+      line-height: 1.08;
+      letter-spacing: 0.02em;
+      color: transparent;
+      background: linear-gradient(180deg, #ffffff 0%, #edf2f8 32%, #ffffff 56%, #cbd4df 82%, #f6f8fb 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: 0 2px 14px rgba(255,255,255,0.18);
+      transition: transform 0.2s ease, opacity 0.2s ease;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .display-live.is-spinning .display-live__reel {
+      animation: reel-flicker 0.12s linear infinite;
+    }
+
+    .display-live.is-settled .display-live__reel {
+      color: #ffffff;
+      -webkit-text-fill-color: #ffffff;
+      text-shadow:
+        0 0 10px rgba(255,255,255,0.4),
+        0 0 26px rgba(255,255,255,0.34),
+        0 0 40px rgba(255, 215, 120, 0.26);
+      animation: aftermath-pulse-display 1.35s ease-in-out infinite;
+    }
+
+    .display-live__hint {
+      position: relative;
+      z-index: 1;
+      margin-top: 0.38rem;
+      font-size: 0.62rem;
+      color: rgba(255,255,255,0.48);
+      letter-spacing: 0.06em;
+      min-height: 0.8rem;
+      text-align: center;
+    }
+
+    @keyframes slot-pulse {
+      0%, 100% { transform: scale(0.9); opacity: 0.7; }
+      50% { transform: scale(1.1); opacity: 1; }
+    }
+
+    @keyframes reel-flicker {
+      0% { transform: translateY(-7%); opacity: 0.84; filter: blur(0.4px); }
+      100% { transform: translateY(7%); opacity: 1; filter: blur(0); }
+    }
+
+    @keyframes aftermath-pulse-display {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.035); }
+    }
+
     @keyframes title-platinum {
       from {
         filter: drop-shadow(0 1px 0 rgba(120,100,60,0.3))
@@ -492,24 +771,27 @@
       background: rgba(255,255,255,0.07);
       border-left: 2px solid rgba(255,215,0,0.5);
       border-radius: 0.3rem;
-      padding: 0.2rem 0.5rem;
+      padding: 0.28rem 0.5rem;
       font-size: 0.75rem;
       font-weight: 400;
       color: #ffffff;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 0.4rem;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: flex-start;
+      gap: 0.16rem;
       text-shadow: 0 1px 3px rgba(0,0,0,0.5);
-      white-space: nowrap;
-      overflow: hidden;
+      white-space: normal;
+      overflow: visible;
     }
 
     .winner-chip .winner-name {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      flex: 1;
       min-width: 0;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      line-height: 1.28;
     }
 
     .prize-card--done .winner-chip {
@@ -520,8 +802,10 @@
       font-size: 0.62rem;
       font-weight: 400;
       color: rgba(255,255,255,0.4);
-      white-space: nowrap;
+      white-space: normal;
       flex-shrink: 0;
+      align-self: flex-start;
+      line-height: 1.2;
     }
 
     .prize-card__pending {
@@ -634,6 +918,24 @@
   <!-- Right: Prize cards -->
   <div class="prizes-panel">
     <div class="draw-event-title" id="draw-event-title"></div>
+    <div class="display-live" id="display-live">
+      <div class="display-live__header">
+        <div>
+          <div class="display-live__eyebrow">Live Draw</div>
+          <div class="display-live__prize" id="display-live-prize">Waiting for next draw</div>
+        </div>
+        <div class="display-live__status" id="display-live-status">Standby</div>
+      </div>
+      <div class="display-live__slot">
+        <div class="display-live__slot-shell">
+          <div class="display-live__lights" id="display-live-lights"></div>
+          <div class="display-live__slot-window">
+            <div class="display-live__reel" id="display-live-reel">Lucky Draw</div>
+          </div>
+        </div>
+      </div>
+      <div class="display-live__hint" id="display-live-hint">The display will mirror the homepage draw when spinning starts.</div>
+    </div>
     <div class="prizes-panel__title" id="prizes-panel-title">Prizes</div>
     <div class="prizes-grid" id="prizes-body"></div>
   </div>
@@ -749,6 +1051,207 @@
     catch(e) { return []; }
   }
 
+  function loadArrayStorage(key) {
+    try {
+      var raw = localStorage.getItem(key);
+      var parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed.filter(function(name) { return typeof name === 'string'; }) : [];
+    } catch(e) {
+      return [];
+    }
+  }
+
+  function maskName(name) {
+    return String(name || '').split(/(\s+|—|-)/).map(function(part) {
+      if (/^\s+$/.test(part) || part === '—' || part === '-') return part;
+      if (part.length <= 2) return part;
+      var keep = Math.ceil(part.length / 3);
+      return part.slice(0, keep) + '***';
+    }).join('');
+  }
+
+  function getRecoveryPending() {
+    try { return localStorage.getItem('draw-recovery-pending') === '1'; }
+    catch(e) { return false; }
+  }
+
+  const liveWrapEl = document.getElementById('display-live');
+  const livePrizeEl = document.getElementById('display-live-prize');
+  const liveStatusEl = document.getElementById('display-live-status');
+  const liveReelEl = document.getElementById('display-live-reel');
+  const liveHintEl = document.getElementById('display-live-hint');
+  const liveLightsEl = document.getElementById('display-live-lights');
+  let liveSpinTimer = null;
+  let liveSpinNamesHash = '';
+  let lastDetectedWinner = null;
+  let previousPrizesSnapshot = [];
+  let liveBulbTimer = null;
+  let liveBulbs = [];
+
+  function buildLiveBulbs() {
+    if (!liveLightsEl) return;
+    liveLightsEl.innerHTML = '';
+    liveBulbs = [];
+
+    var rect = liveLightsEl.getBoundingClientRect();
+    var width = Math.max(0, rect.width);
+    var height = Math.max(0, rect.height);
+    if (!width || !height) return;
+
+    var rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    var inset = 0.72 * rootFontSize;
+    var spacing = 3.2 * rootFontSize;
+
+    var topCount = Math.max(2, Math.round((width - inset * 2) / spacing) + 1);
+    var sideCount = Math.max(2, Math.round((height - inset * 2) / spacing) + 1);
+
+    function createBulb(x, y, edge, indexOnEdge) {
+      var bulb = document.createElement('span');
+      bulb.className = 'display-live__bulb';
+      bulb.style.left = x + 'px';
+      bulb.style.top = y + 'px';
+      bulb.dataset.edge = edge;
+      bulb.dataset.edgeIndex = String(indexOnEdge);
+      liveLightsEl.appendChild(bulb);
+      liveBulbs.push(bulb);
+    }
+
+    for (var i = 0; i < topCount; i += 1) {
+      var x = inset + ((width - inset * 2) * i / Math.max(1, topCount - 1));
+      createBulb(x, inset, 'top', i);
+      createBulb(x, height - inset, 'bottom', i);
+    }
+
+    for (var j = 1; j < sideCount - 1; j += 1) {
+      var y = inset + ((height - inset * 2) * j / Math.max(1, sideCount - 1));
+      createBulb(inset, y, 'left', j);
+      createBulb(width - inset, y, 'right', j);
+    }
+  }
+
+  function animateLiveBulbs() {
+    if (!liveBulbs.length) return;
+    if (liveBulbTimer) clearInterval(liveBulbTimer);
+
+    var phase = 0;
+    liveBulbTimer = setInterval(function() {
+      phase = (phase + 1) % 6;
+      liveBulbs.forEach(function(bulb) {
+        var edge = bulb.dataset.edge || 'top';
+        var edgeIndex = parseInt(bulb.dataset.edgeIndex || '0', 10);
+        var edgeShift = edge === 'top' ? 0 : edge === 'right' ? 1 : edge === 'bottom' ? 2 : 3;
+        var lit = ((edgeIndex + phase + edgeShift) % 3) === 0;
+        bulb.classList.toggle('is-lit', lit);
+      });
+    }, 160);
+  }
+
+  function initLiveBulbs() {
+    buildLiveBulbs();
+    animateLiveBulbs();
+  }
+
+  function getCurrentPrize(prizes) {
+    return prizes.find(function(prize) {
+      var winners = Array.isArray(prize.winners) ? prize.winners : [];
+      return winners.length < Number(prize.count || 0);
+    }) || prizes[0] || null;
+  }
+
+  function detectNewWinner(prevPrizes, prizes) {
+    for (var i = 0; i < prizes.length; i += 1) {
+      var nextPrize = prizes[i];
+      var prevPrize = prevPrizes.find(function(item) { return item.id === nextPrize.id; }) || null;
+      var nextWinners = Array.isArray(nextPrize.winners) ? nextPrize.winners : [];
+      var prevWinners = prevPrize && Array.isArray(prevPrize.winners) ? prevPrize.winners : [];
+      if (nextWinners.length > prevWinners.length) {
+        return {
+          name: nextWinners[nextWinners.length - 1],
+          prizeName: nextPrize.name || '',
+          prizeId: nextPrize.id || ''
+        };
+      }
+    }
+    return null;
+  }
+
+  function stopLiveSpin() {
+    if (liveSpinTimer) {
+      clearInterval(liveSpinTimer);
+      liveSpinTimer = null;
+    }
+    liveSpinNamesHash = '';
+  }
+
+  function setLiveState(mode, prizeName, reelText, hintText) {
+    if (liveWrapEl) {
+      liveWrapEl.classList.toggle('is-spinning', mode === 'spinning');
+      liveWrapEl.classList.toggle('is-settled', mode === 'settled');
+    }
+    if (livePrizeEl) livePrizeEl.textContent = prizeName || 'Waiting for next draw';
+    if (liveStatusEl) {
+      liveStatusEl.textContent = mode === 'spinning'
+        ? 'Drawing'
+        : mode === 'settled'
+          ? 'Winner'
+          : 'Standby';
+    }
+    if (liveReelEl) liveReelEl.textContent = reelText || 'Ready';
+    if (liveHintEl) liveHintEl.textContent = hintText || '';
+  }
+
+  function renderLiveSlot(prizes) {
+    var currentPrize = getCurrentPrize(prizes);
+    var isSpinning = getRecoveryPending();
+    var recoveryNames = loadArrayStorage('draw-recovery-names');
+    var namesHash = JSON.stringify(recoveryNames);
+
+    if (isSpinning && recoveryNames.length) {
+      if (liveSpinNamesHash !== namesHash) {
+        stopLiveSpin();
+        liveSpinNamesHash = namesHash;
+        setLiveState(
+          'spinning',
+          currentPrize ? currentPrize.name : 'Live Draw',
+          maskName(recoveryNames[0]),
+          'Mirroring the homepage rolling draw in real time.'
+        );
+        liveSpinTimer = setInterval(function() {
+          if (!liveReelEl || !recoveryNames.length) return;
+          var index = Math.floor(Math.random() * recoveryNames.length);
+          liveReelEl.textContent = maskName(recoveryNames[index]);
+        }, 90);
+      } else if (livePrizeEl && currentPrize) {
+        livePrizeEl.textContent = currentPrize.name;
+      }
+      return;
+    }
+
+    stopLiveSpin();
+
+    if (lastDetectedWinner && lastDetectedWinner.name) {
+      setLiveState(
+        'settled',
+        lastDetectedWinner.prizeName || (currentPrize ? currentPrize.name : 'Latest Winner'),
+        lastDetectedWinner.name,
+        'Newest result from the main draw screen.'
+      );
+      return;
+    }
+
+    if (currentPrize) {
+      setLiveState(
+        'idle',
+        currentPrize.name,
+        'Ready',
+        'Waiting for the next spin to begin.'
+      );
+      return;
+    }
+
+    setLiveState('idle', 'Waiting for next draw', 'Ready', 'Add prizes and participants to start drawing.');
+  }
+
   // ── Render prize cards (combined winners + upcoming) ───────
   function renderPrizes(prizes) {
     const body = document.getElementById('prizes-body');
@@ -844,11 +1347,18 @@
   function refresh() {
     const prizes = load();
     const hash = JSON.stringify(prizes);
-    if (hash === lastDataHash) return;
+    if (hash === lastDataHash) {
+      renderLiveSlot(prizes);
+      return;
+    }
+    var detectedWinner = detectNewWinner(previousPrizesSnapshot, prizes);
+    if (detectedWinner) lastDetectedWinner = detectedWinner;
+    previousPrizesSnapshot = JSON.parse(hash);
     lastDataHash = hash;
     renderPrizes(prizes);
     renderTicker(prizes);
     renderStats(prizes);
+    renderLiveSlot(prizes);
   }
 
   // Firebase realtime sync
@@ -888,7 +1398,8 @@
 
   applyStaticText();
   refresh();
-  setInterval(refresh, 2000);
+  initLiveBulbs();
+  window.addEventListener('resize', initLiveBulbs);
 
   // Draw title
   const drawEventTitleEl = document.getElementById('draw-event-title');
@@ -904,6 +1415,7 @@
   window.addEventListener('storage', function(e) {
     if (e.key === 'prize-manager-data') refresh();
     if (e.key === 'draw-title') applyDrawTitle();
+    if (e.key === 'draw-recovery-pending' || e.key === 'draw-recovery-names') refresh();
     if (e.key === 'app-lang') {
       var newLang = e.newValue;
       if (newLang === 'zh' || newLang === 'ja' || newLang === 'en' || newLang === 'my') {
@@ -993,6 +1505,7 @@
   }
   setInterval(pollCountdown, 1000);
   applyCountdownState(null);
+  setInterval(refresh, 350);
 
   const fsBtn = document.getElementById('fullscreen-btn');
 
