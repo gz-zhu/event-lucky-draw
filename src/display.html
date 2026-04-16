@@ -1081,12 +1081,16 @@
   const liveReelEl = document.getElementById('display-live-reel');
   const liveHintEl = document.getElementById('display-live-hint');
   const liveLightsEl = document.getElementById('display-live-lights');
+  const READY_REEL_TEXT = 'Ready!';
+  const DRAW_IDLE_RESET_MS = 4 * 60 * 1000;
   let liveSpinTimer = null;
   let liveSpinNamesHash = '';
   let lastDetectedWinner = null;
   let previousPrizesSnapshot = [];
   let liveBulbTimer = null;
   let liveBulbs = [];
+  let syncedCurrentPrizeId = null;
+  let lastCompletedDrawAt = 0;
 
   function buildLiveBulbs() {
     if (!liveLightsEl) return;
@@ -1158,6 +1162,19 @@
     }) || prizes[0] || null;
   }
 
+  function getSelectedPrize(prizes) {
+    var selectedPrizeId = syncedCurrentPrizeId;
+    if (!selectedPrizeId) {
+      try { selectedPrizeId = localStorage.getItem('current-prize-id'); }
+      catch (e) { selectedPrizeId = null; }
+    }
+    if (selectedPrizeId) {
+      var selectedPrize = prizes.find(function(prize) { return prize.id === selectedPrizeId; }) || null;
+      if (selectedPrize) return selectedPrize;
+    }
+    return getCurrentPrize(prizes);
+  }
+
   function detectNewWinner(prevPrizes, prizes) {
     for (var i = 0; i < prizes.length; i += 1) {
       var nextPrize = prizes[i];
@@ -1183,6 +1200,12 @@
     liveSpinNamesHash = '';
   }
 
+  function hasRecentDrawActivity() {
+    return Number.isFinite(lastCompletedDrawAt)
+      && lastCompletedDrawAt > 0
+      && (Date.now() - lastCompletedDrawAt) < DRAW_IDLE_RESET_MS;
+  }
+
   function setLiveState(mode, prizeName, reelText, hintText) {
     if (liveWrapEl) {
       liveWrapEl.classList.toggle('is-spinning', mode === 'spinning');
@@ -1196,12 +1219,12 @@
           ? 'Winner'
           : 'Standby';
     }
-    if (liveReelEl) liveReelEl.textContent = reelText || 'Ready';
+    if (liveReelEl) liveReelEl.textContent = reelText || READY_REEL_TEXT;
     if (liveHintEl) liveHintEl.textContent = hintText || '';
   }
 
   function renderLiveSlot(prizes) {
-    var currentPrize = getCurrentPrize(prizes);
+    var currentPrize = getSelectedPrize(prizes);
     var isSpinning = getRecoveryPending();
     var recoveryNames = loadArrayStorage('draw-recovery-names');
     var namesHash = JSON.stringify(recoveryNames);
@@ -1229,7 +1252,12 @@
 
     stopLiveSpin();
 
-    if (lastDetectedWinner && lastDetectedWinner.name) {
+    if (
+      lastDetectedWinner
+      && lastDetectedWinner.name
+      && hasRecentDrawActivity()
+      && (!currentPrize || !lastDetectedWinner.prizeId || lastDetectedWinner.prizeId === currentPrize.id)
+    ) {
       setLiveState(
         'settled',
         lastDetectedWinner.prizeName || (currentPrize ? currentPrize.name : 'Latest Winner'),
@@ -1243,13 +1271,13 @@
       setLiveState(
         'idle',
         currentPrize.name,
-        'Ready',
+        READY_REEL_TEXT,
         'Waiting for the next spin to begin.'
       );
       return;
     }
 
-    setLiveState('idle', 'Waiting for next draw', 'Ready', 'Add prizes and participants to start drawing.');
+    setLiveState('idle', 'Waiting for next draw', READY_REEL_TEXT, 'Add prizes and participants to start drawing.');
   }
 
   // ── Render prize cards (combined winners + upcoming) ───────
@@ -1383,6 +1411,18 @@
       }, function() {
         if (fbStatus) { fbStatus.textContent = '🔴 offline'; fbStatus.style.color = 'rgba(255,100,100,0.6)'; }
       });
+      onValue(ref(db, 'currentPrizeId'), function(snapshot) {
+        syncedCurrentPrizeId = snapshot.val() || null;
+        if (syncedCurrentPrizeId) localStorage.setItem('current-prize-id', syncedCurrentPrizeId);
+        else localStorage.removeItem('current-prize-id');
+        refresh();
+      });
+      onValue(ref(db, 'lastCompletedDrawAt'), function(snapshot) {
+        lastCompletedDrawAt = Number(snapshot.val() || 0);
+        if (lastCompletedDrawAt > 0) localStorage.setItem('draw-last-spin-ended-at', String(lastCompletedDrawAt));
+        else localStorage.removeItem('draw-last-spin-ended-at');
+        refresh();
+      });
       // Listen to countdown state from main app
       onValue(ref(db, 'countdown'), function(snapshot) {
         var state = snapshot.val();
@@ -1397,6 +1437,8 @@
   });
 
   applyStaticText();
+  try { lastCompletedDrawAt = Number(localStorage.getItem('draw-last-spin-ended-at') || 0); }
+  catch (e) { lastCompletedDrawAt = 0; }
   refresh();
   initLiveBulbs();
   window.addEventListener('resize', initLiveBulbs);
@@ -1414,6 +1456,14 @@
   // Instant sync when main app writes to localStorage on the same device
   window.addEventListener('storage', function(e) {
     if (e.key === 'prize-manager-data') refresh();
+    if (e.key === 'current-prize-id') {
+      syncedCurrentPrizeId = e.newValue || null;
+      refresh();
+    }
+    if (e.key === 'draw-last-spin-ended-at') {
+      lastCompletedDrawAt = Number(e.newValue || 0);
+      refresh();
+    }
     if (e.key === 'draw-title') applyDrawTitle();
     if (e.key === 'draw-recovery-pending' || e.key === 'draw-recovery-names') refresh();
     if (e.key === 'app-lang') {

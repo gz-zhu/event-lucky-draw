@@ -127,6 +127,9 @@ initStars();
   const DEFAULT_SPIN_DURATION_SEC = 20;
   const SPIN_DURATION_STEP_SEC = 5;
   const SPIN_DURATION_STORAGE_KEY = 'draw-spin-duration-sec';
+  const REEL_READY_TEXT = 'Ready!';
+  const DRAW_IDLE_RESET_MS = 4 * 60 * 1000;
+  const DRAW_LAST_COMPLETED_AT_KEY = 'draw-last-spin-ended-at';
 
   const normalizeSpinDurationSec = (value: number): number => {
     const safeValue = Number.isFinite(value) ? value : DEFAULT_SPIN_DURATION_SEC;
@@ -176,6 +179,7 @@ initStars();
   const prizeManager = new PrizeManager();
   let confettiAnimationId: number;
   let slot: Slot;
+  let idleReelResetTimer: number | undefined;
 
   // ── Countdown config (standalone module) ─────────────────────
   const countdownBarEl = document.getElementById('countdown-bar') as HTMLDivElement | null;
@@ -183,6 +187,7 @@ initStars();
   const countdownBarProgressEl = document.getElementById('countdown-bar-progress') as HTMLDivElement | null;
   const countdownToggleBtn = document.getElementById('countdown-toggle') as HTMLButtonElement | null;
   const countdownResetBtn = document.getElementById('countdown-reset') as HTMLButtonElement | null;
+  const countdownCancelBtn = document.getElementById('countdown-cancel') as HTMLButtonElement | null;
   const countdownSecondsInput = document.getElementById('countdown-seconds') as HTMLInputElement | null;
   const countdownAutoBtn = document.getElementById('countdown-auto') as HTMLInputElement | null;
 
@@ -379,7 +384,25 @@ initStars();
   function syncControlLocks(): void {
     const runningPrizeId = getRunningCountdownPrizeId();
     const countdownLocked = Boolean(runningPrizeId);
+    const currentCfg = getCountdownConfig();
+    const countdownRunningForCurrentPrize = Boolean(
+      currentCfg
+      && prizeManager.currentPrize
+      && currentCfg.prizeId === prizeManager.currentPrize.id
+      && isCountdownRunning(currentCfg)
+    );
     settingsButton!.disabled = spinInProgress || countdownLocked;
+    if (countdownToggleBtn) countdownToggleBtn.disabled = spinInProgress;
+    if (countdownResetBtn) countdownResetBtn.disabled = spinInProgress;
+    if (countdownCancelBtn) countdownCancelBtn.disabled = spinInProgress;
+    if (countdownSecondsInput) {
+      countdownSecondsInput.disabled = spinInProgress || countdownRunningForCurrentPrize;
+    }
+    if (countdownAutoBtn) countdownAutoBtn.disabled = spinInProgress;
+    if (countdownBarEl) {
+      countdownBarEl.classList.toggle('is-disabled', spinInProgress);
+      countdownBarEl.setAttribute('aria-disabled', spinInProgress ? 'true' : 'false');
+    }
 
     prizeButtonsContainer!.querySelectorAll<HTMLButtonElement>('.prize-select-btn').forEach((btn) => {
       const prizeId = btn.dataset.prizeId ?? '';
@@ -418,6 +441,35 @@ initStars();
   const stopWinningAnimation = () => {
     if (confettiAnimationId) window.cancelAnimationFrame(confettiAnimationId);
     sunburstSvg.style.display = 'none';
+  };
+
+  const renderReadyReel = () => {
+    const reelEl = document.getElementById('reel');
+    if (!reelEl || spinInProgress) return;
+    reelEl.innerHTML = '';
+    const readyItem = document.createElement('div');
+    readyItem.textContent = REEL_READY_TEXT;
+    reelEl.appendChild(readyItem);
+  };
+
+  const scheduleIdleReelReset = () => {
+    if (idleReelResetTimer) window.clearTimeout(idleReelResetTimer);
+    let completedAt = 0;
+    try {
+      completedAt = parseInt(localStorage.getItem(DRAW_LAST_COMPLETED_AT_KEY) ?? '', 10);
+    } catch (e) { /* ignore */ }
+    if (!Number.isFinite(completedAt) || completedAt <= 0) {
+      renderReadyReel();
+      return;
+    }
+    const remainingMs = DRAW_IDLE_RESET_MS - (Date.now() - completedAt);
+    if (remainingMs <= 0) {
+      renderReadyReel();
+      return;
+    }
+    idleReelResetTimer = window.setTimeout(() => {
+      renderReadyReel();
+    }, remainingMs);
   };
 
   const updateCurrentPrizeLabel = () => {
@@ -506,7 +558,7 @@ initStars();
       countdownBarProgressEl.style.width = `${progress}%`;
     }
     if (countdownToggleBtn) countdownToggleBtn.textContent = countdownRunning ? t('countdownPauseBtn') : t('countdownStartBtn');
-    if (countdownSecondsInput) countdownSecondsInput.disabled = countdownRunning;
+    if (countdownSecondsInput) countdownSecondsInput.disabled = spinInProgress || countdownRunning;
     countdownBarEl.classList.toggle('is-running', countdownRunning);
     countdownBarEl.classList.toggle('is-idle', !countdownRunning);
 
@@ -540,7 +592,7 @@ initStars();
       if (countdownBarTimeEl) countdownBarTimeEl.textContent = '00:00';
       if (countdownBarProgressEl) countdownBarProgressEl.style.width = '0%';
       if (countdownToggleBtn) countdownToggleBtn.textContent = t('countdownStartBtn');
-      if (countdownSecondsInput) countdownSecondsInput.disabled = false;
+      if (countdownSecondsInput) countdownSecondsInput.disabled = spinInProgress;
       countdownBarEl.classList.remove('is-running');
       countdownBarEl.classList.add('is-idle');
       syncControlLocks();
@@ -598,7 +650,6 @@ initStars();
     syncControlLocks();
   });
 
-  const countdownCancelBtn = document.getElementById('countdown-cancel') as HTMLButtonElement | null;
   countdownCancelBtn?.addEventListener('click', () => {
     const { currentPrize } = prizeManager;
     if (!currentPrize) return;
@@ -934,6 +985,7 @@ initStars();
   // Spin callbacks
   const onSpinStart = () => {
     spinInProgress = true;
+    if (idleReelResetTimer) window.clearTimeout(idleReelResetTimer);
     stopWinningAnimation();
     drawButton.disabled = true;
     syncControlLocks();
@@ -1005,6 +1057,7 @@ initStars();
     updateCurrentPrizeLabel();
     updateDrawButton();
     updateParticipantCount();
+    scheduleIdleReelReset();
     try { localStorage.removeItem('draw-recovery-pending'); localStorage.removeItem('draw-recovery-names'); } catch (e) { /* ignore */ }
     spinInProgress = false;
     syncControlLocks();
@@ -1026,6 +1079,7 @@ initStars();
   if (persistedNames.length) {
     slot.names = persistedNames;
   }
+  scheduleIdleReelReset();
   updateDrawButton();
   updateParticipantCount();
   syncControlLocks();
@@ -1347,5 +1401,9 @@ initStars();
   // Warn before closing/refreshing
   window.addEventListener('beforeunload', (e) => {
     e.preventDefault();
+  });
+
+  window.addEventListener('storage', (event) => {
+    if (event.key === DRAW_LAST_COMPLETED_AT_KEY) scheduleIdleReelReset();
   });
 })();

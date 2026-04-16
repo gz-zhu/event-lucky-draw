@@ -74,12 +74,13 @@ export default class PrizeManager {
 
   selectPrize(id: string): void {
     this.currentPrizeId = id;
-    try { localStorage.setItem('current-prize-id', id); } catch (e) { /* ignore */ }
+    this.saveCurrentPrizeSelection();
   }
 
   addWinner(name: string): void {
     const prize = this.currentPrize;
     if (!prize) return;
+    const completedAt = Date.now();
     prize.winners.push(name);
     if (!prize.winnerTimestamps) prize.winnerTimestamps = [];
     prize.winnerTimestamps.push(new Date().toLocaleString('en-GB', {
@@ -87,6 +88,14 @@ export default class PrizeManager {
     }));
     if (!prize.winnerSeeds) prize.winnerSeeds = [];
     prize.winnerSeeds.push(localStorage.getItem('draw-last-seed') ?? '');
+    try { localStorage.setItem('draw-last-spin-ended-at', String(completedAt)); } catch (e) { /* ignore */ }
+    try {
+      set(ref(db, 'lastCompletedDrawAt'), completedAt).catch(() => {
+        document.dispatchEvent(new CustomEvent('firebase-sync-error'));
+      });
+    } catch (e) {
+      document.dispatchEvent(new CustomEvent('firebase-sync-error'));
+    }
     this.saveToStorage();
     this.saveToFirebase();
   }
@@ -107,7 +116,7 @@ export default class PrizeManager {
       winners: this.prizes.find((old) => old.id === p.id)?.winners ?? []
     }));
     this.currentPrizeId = null;
-    try { localStorage.removeItem('current-prize-id'); } catch (e) { /* ignore */ }
+    this.saveCurrentPrizeSelection();
     this.saveToStorage();
     this.saveToFirebase();
   }
@@ -192,6 +201,20 @@ export default class PrizeManager {
     try {
       localStorage.setItem('prize-manager-data', JSON.stringify(this.prizes));
     } catch (e) { /* storage unavailable */ }
+  }
+
+  private saveCurrentPrizeSelection(): void {
+    try {
+      if (this.currentPrizeId) localStorage.setItem('current-prize-id', this.currentPrizeId);
+      else localStorage.removeItem('current-prize-id');
+    } catch (e) { /* ignore */ }
+    try {
+      set(ref(db, 'currentPrizeId'), this.currentPrizeId).catch(() => {
+        document.dispatchEvent(new CustomEvent('firebase-sync-error'));
+      });
+    } catch (e) {
+      document.dispatchEvent(new CustomEvent('firebase-sync-error'));
+    }
   }
 
   private static loadFromStorage(): Prize[] {

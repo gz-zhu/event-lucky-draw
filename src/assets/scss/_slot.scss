@@ -851,6 +851,7 @@
 
 // ── Per-prize countdown bar ───────────────────────────────────
 .countdown-bar {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -867,6 +868,41 @@
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.03),
     0 14px 30px rgba(0, 0, 0, 0.14);
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 0;
+    box-shadow: none;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
+    z-index: 3;
+  }
+
+  &.is-disabled {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.14);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.02),
+      0 8px 18px rgba(0, 0, 0, 0.08);
+    opacity: 0.52;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  &.is-disabled::after {
+    opacity: 0;
+  }
+
+  &.is-disabled > * {
+    filter: saturate(0.72) brightness(0.9);
+  }
 
   &__summary {
     display: flex;
